@@ -1,0 +1,162 @@
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Desarrollo ordenado Tema: Desarrollo urbano 
+Objetivo: Incrementar la disponibilidad de espacios públicos mejor planificados en el municipio Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población mayor de 18 años que considera el descuido de parques y jardines como problemática Periodicidad: Trimestral 
+Descripción: Mide la proporción de personas mayores de 18 años que perciben el descuido de parques y jardines como problemática Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población de 18 años y más que considera el descuido de parques y 
+jardines como problemática 
+Variable B: Población de 18 años y más que considera el descuido de parques y jardines como 
+problemática 
+Valor Unidad de medida  Valor Unidad de medida  
+40.8% Porcentaje  385,899 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+945,367 Personas     
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+40.8% Porcentaje Sep-24 38.6% 34.7% 30.7% 
+ 
+Eje: Desarrollo ordenado Tema: Desarrollo urbano 
+Objetivo: Mejorar la planeación urbana para garantizar un crecimiento ordenado del municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Crecimiento de la mancha urbana Periodicidad: Anual 
+Descripción: Mide la tasa media de crecimiento anual de la superficie urbana en relación a la tasa media de crecimiento anual de 
+la población 
+Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Tasa media de crecimiento anual de la superficie urbana en relación a la tasa media 
+de crecimiento anual de la población 
+Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+1.4 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+1.4 Tasa 2023 1.8 1.0 0.9 
+ 
+01
+  METAS E INDICADORES
+MÉRIDA CONTIGO ES MEJOR
+Eje: Desarrollo ordenado Tema: Movilidad sostenible y universal 
+Objetivo: Incrementar el acceso a sistemas de transporte seguros, asequibles y eficientes Tipo de algoritmo: Tasa 
+Indicador: Tasa de automóviles por cada 100 mil habitantes Periodicidad: Anual 
+Descripción: Mide el número de vehículos por cada 100 mil habitantes Fórmula de cálculo: A=(B/C)*100000 
+Tendencia: Descendente 
+      
+Variable A: Tasa de automóviles por cada 100 mil habitantes Variable B: Número de automóviles 
+Valor Unidad de medida  Valor Unidad de medida  
+44,555 Tasa  471,404 Automóviles  
+Periodo Fuente  Periodo Fuente  
+2023 Vehículos de Motor Registrados en Circulación 2023, INEGI 2023 Vehículos de Motor Registrados en Circulación 2023, INEGI 
+      
+Variable C: Población total del municipio Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+1,058,017 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Reconstrucción y proyecciones de la población de los municipios 
+de México 1990-2040, CONAPO 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+44,555 Tasa 2023 43,422 40,451 37,481 
+ 
+Eje: Desarrollo ordenado Tema: Movilidad sostenible y universal 
+Objetivo: Mejorar las condiciones de desplazamientos y accesibilidad en el municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Tasa de accidentes a peatones por cada 100 mil habitantes Periodicidad: Anual 
+Descripción: Mide el número de accidentes a peatones por cada 100 mil habitantes Fórmula de cálculo: A=(B/C)*100000 
+Tendencia: Descendente 
+      
+Variable A: Tasa de accidentes a peatones por cada 100 mil habitantes Variable B: Número de accidentes a peatones 
+Valor Unidad de medida  Valor Unidad de medida  
+6.7 Tasa  71 Accidentes  
+Periodo Fuente  Periodo Fuente  
+2023 Accidentes de Tránsito Terrestre en Zonas Urbanas y Suburbanas 
+2023, INEGI 
+2023 Accidentes de Tránsito Terrestre en Zonas Urbanas y Suburbanas 
+2023, INEGI 
+      
+Variable C: Población total del municipio Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+1,058,017 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Reconstrucción y proyecciones de la población de los municipios 
+de México 1990-2040, CONAPO 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+6.7 Tasa 2023 6.9 5.7 4.5 
+ 
+02
+Eje: Desarrollo ordenado Tema: Ciudades sostenibles 
+Objetivo: Reducir la desigualdad, consolidar asentamientos humanos inclusivos, seguros, resilientes y sostenibles en el municipio de 
+Mérida Tipo de algoritmo: Tasa 
+Indicador: Tasa de asentamientos en zonas de riesgo por cada 100 mil habitantes Periodicidad: Bienal  
+Descripción: Mide el número de personas asentadas en zonas de riesgo por cada 100 mil habitantes Fórmula de cálculo: A=(B/C)*100000 
+Tendencia: Descendente 
+      
+Variable A: Tasa de asentamiento poblacional en zona de riesgo por cada 100 mil habitantes Variable B: Número de personas asentadas en zona de peligro 
+Valor Unidad de medida  Valor Unidad de medida  
+1,022 Tasa  10,652 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Censo Nacional de Gobiernos Municipales y Demarcaciones 
+Territoriales de la Ciudad de México 2023, INEGI 
+2023 Censo Nacional de Gobiernos Municipales y Demarcaciones 
+Territoriales de la Ciudad de México 2023, INEGI 
+      
+Variable C: Población total del municipio Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+1,042,320 Personas     
+Periodo Fuente  Periodo Fuente  
+2022 Reconstrucción y proyecciones de la población de los municipios 
+de México 1990-2040, CONAPO 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+1,022 Tasa 2023 1,000 980 900 
+ 
+Eje: Desarrollo ordenado Tema: Ciudades sostenibles 
+Objetivo: Aumentar la inversión que contribuya al desarrollo estratégico sostenible y accesible Tipo de algoritmo: Número 
+Indicador: Número de trámites realizados en tema de "Compatibilidad urbanística" Periodicidad: Bienal  
+Descripción: Mide el número de trámites relacionados a la compatibilidad urbanística, que hace referencia a que el inmueble a 
+construir corresponde al uso establecido 
+Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Número de trámites realizados de "Compatibilidad urbanística" Variable B: 
+Valor Unidad de medida  Valor Unidad de medida  
+3,582 Trámites     
+Periodo Fuente  Periodo Fuente  
+2023 Censo Nacional de Gobiernos Municipales y Demarcaciones 
+Territoriales de la Ciudad de México 2023, INEGI 
+  
+      
+Variable C: Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+3,582 Trámites 2023 3,677 3,773 3,868 
+ 
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-202703

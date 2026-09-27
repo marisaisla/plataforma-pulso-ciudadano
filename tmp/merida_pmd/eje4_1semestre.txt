@@ -1,0 +1,264 @@
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Seguridad y buen gobierno Tema: Buen gobierno 
+Objetivo:  Mejorar la sostenibilidad de las finanzas públicas en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de ingresos propios del total de ingresos Periodicidad: Anual 
+Descripción: Mide la proporción de ingresos propios sobre los ingresos totales Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Ingresos propios Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+41.8% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+41.8% Porcentaje 2024 38.4% 40.0% 50.6% 
+ 
+Eje: Seguridad y buen gobierno Tema: Buen gobierno 
+Objetivo: Mejorar la eficiencia en la administración de los recursos financieros municipales para maximizar su impacto en el 
+municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Avance en la sección de “Presupuestación” del PbR-SED Periodicidad: Anual 
+Descripción: Mide el porcentaje de avance en la sección de presupuestación, la cual permite identificar la adecuada asignación, 
+distribución y destino de los recursos públicos 
+Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Avance alcanzado en la sección “Presupuestación” en el PbR-SED Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+95.0% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2024 Diagnóstico PbR-SED 2024, SHCP   
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+95.0% Porcentaje 2024 95.0% 98.0% 100.0% 
+ 
+01
+  METAS E INDICADORES
+MÉRIDA CONTIGO ES MEJOR
+Eje: Seguridad y buen gobierno Tema: Seguridad pública y prevención 
+Objetivo:  Disminuir las conductas violentas y/o delictivas en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de la población mayor de 18 años que se siente segura en la Ciudad Periodicidad: Trimestral 
+Descripción: Mide la proporción de la población mayor de 18 años que se siente segura en la Ciudad sobre el total de la población Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población mayor de 18 años que se siente segura en la ciudad Variable B: Población de 18 años y más que se siente segura en la Ciudad 
+Valor Unidad de medida  Valor Unidad de medida  
+75.4% Porcentaje  712,789 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+945,367 Personas     
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+75.4% Porcentaje Sep-24 75.8% 80.1% 84.4% 
+ 
+Eje: Seguridad y buen gobierno Tema: Seguridad pública y prevención 
+Objetivo:  Mejorar la confianza de la ciudadanía hacia la Policía Municipal Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población mayor de 18 años que identifica a la policía y confía en esta Periodicidad: Trimestral 
+Descripción: Mide la proporción de de la población mayor de 18 años que identifica y confía en la policía preventiva municipal sobre 
+el total de la población 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población mayor de 18 años que identifica a la policía preventiva 
+municipal y confía en esta 
+Variable B: Población de 18 años y más que confía mucho o algo en la en la policía preventiva 
+municipal 
+Valor Unidad de medida  Valor Unidad de medida  
+76.6% Porcentaje  489,719 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI 
+      
+Variable C: Población mayor de 18 años que identifica a la policía preventiva municipal Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+639,528 Personas     
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+76.6% Porcentaje Sep-24 72.7% 81.6% 90.4% 
+ 
+02
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Seguridad y buen gobierno Tema: Seguridad pública y prevención 
+Objetivo: Mejorar la impartición de justicia cívica en el municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Variación porcentual del número de faltas cívicas registradas en los procedimientos administrativos Periodicidad: Bienal  
+Descripción: Mide el crecimiento del número de faltas cívicas en los procedimientos administrativos Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Descendente 
+      
+Variable A: Variación en el número de faltas cívicas en los procedimientos administrativos Variable B: Número de faltas cívicas registradas en los procedimientos administrativos en el año 
+2023 
+Valor Unidad de medida  Valor Unidad de medida  
+16.1% Porcentaje  2,144 Faltas cívicas  
+Periodo Fuente  Periodo Fuente  
+2023 Censo Nacional de Gobiernos Municipales y Demarcaciones 
+Territoriales de la Ciudad de México 2023, INEGI 
+2023 Censo Nacional de Gobiernos Municipales y Demarcaciones 
+Territoriales de la Ciudad de México 2023, INEGI 
+      
+Variable C: Número de faltas cívicas registradas en los procedimientos administrativos en el año 
+2021 
+Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+1,847 Faltas cívicas     
+Periodo Fuente  Periodo Fuente  
+2021 Censo Nacional de Gobiernos Municipales y Demarcaciones 
+Territoriales de la Ciudad de México 2021, INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+16.1% Porcentaje 2023 -7.1% -7.9% -8.7% 
+ 
+03
+Eje: Seguridad y buen gobierno Tema: Gestión integral de riesgos y Protección civil 
+Objetivo: Incrementar la gestión integral del riesgo y la resiliencia en el municipio de Mérida Tipo de algoritmo: Número 
+Indicador: Número de declaratorias de desastres naturales Periodicidad: Anual 
+Descripción: Mide el número de declaratorias de desastre con el que los municipios pueden acceder a recursos federales para 
+hacer frente a los daños 
+Fórmula de cálculo: A=A 
+Tendencia: Constante 
+      
+Variable A: Número de declaratorias de desastres naturales Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+0  Declaratorias     
+Periodo Fuente  Periodo Fuente  
+2023  Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario pesimista Escenario meta Escenario favorable 
+0.0% Declaratorias 2023  0  0  0  
+ 
+MÉRIDA CONTIGO ES MEJOR
+Eje: Seguridad y buen gobierno Tema: Transparencia 
+Objetivo:  Incrementar la confianza ciudadana a través de la rendición de cuentas Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de la población mayor de 18 años que confía en el gobierno municipal Periodicidad: Bienal  
+Descripción: Mide la proporción de la población mayor de 18 años que confía en el gobierno municipal sobre el total de la población Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de la población mayor de 18 años que confía en el gobierno municipal Variable B: Población de 18 años y más que confía mucho o algo en el gobierno municipal 
+Valor Unidad de medida  Valor Unidad de medida  
+58.6% Porcentaje  526,690 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+      
+Variable C:  Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+58.6% Porcentaje 2023 59.0% 61.0% 62.9% 
+ 
+Eje: Seguridad y buen gobierno Tema: Transparencia 
+Objetivo:  Mejorar los mecanismos de acceso a la información pública Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de la población mayor de 18 años que percibe la falta de rendición de cuentas como problemática en la 
+Ciudad Periodicidad: Bienal  
+Descripción: Mide la proporción de la población mayor de 18 años que percibe la falta de rendición de cuentas como problemática 
+en la Ciudad sobre el total de la población 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de la población mayor de 18 años que percibe la falta de rendición de 
+cuentas como problemática 
+Variable B: Población de 18 años y más que considera la falta de rendición de cuentas como 
+problemática 
+Valor Unidad de medida  Valor Unidad de medida  
+8.6% Porcentaje  77,010 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+      
+Variable C:  Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+8.6% Porcentaje 2023 7.9% 7.0% 6.1% 
+ 04
+Eje: Seguridad y buen gobierno Tema: Buen gobierno 
+Objetivo:  Incrementar la participación activa de la ciudadanía en los asuntos públicos, ejerciendo su derecho a expresar opiniones, 
+tomar decisiones y contribuir al desarrollo en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de participación ciudadana Periodicidad: Anual 
+Descripción: Mide la proporción de personas que participa en las elecciones con respecto al total en la lista nominal Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Participación ciudadana Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+53.6% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+53.6% Porcentaje 2023 57.9% 67.2% 76.6% 
+ 
+Eje: Seguridad y buen gobierno Tema: Buen gobierno 
+Objetivo:  Incrementar las acciones municipales hacia el cumplimiento de los resultados que demanda el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de avance en la implementación del PbR-SED Periodicidad: Anual 
+Descripción: Mide el porcentaje de avance de la implementación del PbR-SED Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de avance en el diagnóstico PbR-SED Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+81.4% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2024 Diagnóstico PbR-SED 2024, SHCP   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+81.4% Porcentaje 2024 84.8% 89.3% 93.8% 
+ 
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-202705

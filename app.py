@@ -1,13 +1,20 @@
 from datetime import date
 import json
+from html import escape
+import math
 from pathlib import Path
+import re
 import unicodedata
 
+import altair as alt
 import pandas as pd
+import numpy as np
 import pydeck as pdk
+import pymupdf
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
+from pypdf import PdfReader
 
 from services.database import DB_PATH, execute, initialize_database, query, record_obtainment_run
 from services.capture import (
@@ -56,7 +63,7 @@ from services.territorial_pulse import (
 )
 
 
-st.set_page_config(page_title="Pulso Ciudadano · Dominio territorial", page_icon="📍", layout="wide")
+st.set_page_config(page_title="Go2Win · Tablero de mando electoral", page_icon="📍", layout="wide")
 initialize_database()
 
 st.markdown(
@@ -118,8 +125,19 @@ st.markdown(
     }
     .main .block-container {
         max-width: 1450px;
-        padding-top: 2rem;
+        padding-top: 1.35rem;
         padding-bottom: 3.5rem;
+    }
+    html { scroll-behavior: smooth; }
+    [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+        overflow-y: auto;
+        scroll-behavior: smooth;
+    }
+    [data-testid="stSidebarContent"] {
+        height: 100vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(186, 230, 253, .65) transparent;
     }
     .domain-hero {
         position: relative;
@@ -181,6 +199,92 @@ st.markdown(
         color: #164e63;
         font-size: .9rem;
     }
+    .domain-subnav {
+        position: sticky;
+        top: .75rem;
+        z-index: 20;
+        display: flex;
+        gap: .55rem;
+        align-items: center;
+        overflow-x: auto;
+        margin: -.15rem 0 1.15rem;
+        padding: .65rem .75rem;
+        border: 1px solid rgba(203, 213, 225, .9);
+        border-radius: 14px;
+        background: rgba(255,255,255,.93);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+        backdrop-filter: blur(12px);
+    }
+    .domain-subnav-label {
+        flex: 0 0 auto;
+        color: #0f766e;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+    }
+    .domain-subnav a {
+        flex: 0 0 auto;
+        padding: .38rem .68rem;
+        border: 1px solid #dbe5ec;
+        border-radius: 999px;
+        color: #0f3b52 !important;
+        background: #f8fafc;
+        font-size: .82rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .domain-subnav a:hover { background: #ecfeff; border-color: #5eead4; }
+    /* Tablero Electoral: composición ejecutiva tipo ficha de candidatura. */
+    .electoral-hero {
+        position: relative;
+        overflow: hidden;
+        margin: .2rem 0 1rem;
+        padding: 1.75rem 2rem;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 22px;
+        color: #fff;
+        background: linear-gradient(120deg, #102a43 0%, #1d4e72 54%, #0f766e 100%);
+        box-shadow: 0 18px 36px rgba(15, 40, 67, .20);
+    }
+    .electoral-hero::after {
+        content: '';
+        position: absolute;
+        width: 310px;
+        height: 310px;
+        right: -105px;
+        top: -155px;
+        border: 42px solid rgba(255,255,255,.10);
+        border-radius: 50%;
+    }
+    .electoral-eyebrow { color: #a7f3d0; font-size: .72rem; font-weight: 800; letter-spacing: .14em; }
+    .electoral-name { position: relative; z-index: 1; margin: .35rem 0 .15rem; font-size: 2.15rem; font-weight: 800; letter-spacing: -.045em; }
+    .electoral-detail { position: relative; z-index: 1; margin: 0; max-width: 760px; color: rgba(255,255,255,.85); font-size: .98rem; }
+    .electoral-chip { display: inline-block; position: relative; z-index: 1; margin: .8rem .35rem 0 0; padding: .28rem .62rem; border: 1px solid rgba(255,255,255,.26); border-radius: 999px; background: rgba(255,255,255,.10); font-size: .78rem; font-weight: 700; }
+    .electoral-kpi { min-height: 112px; margin: .15rem 0 1rem; padding: 1rem 1.05rem; border: 1px solid #dce7ee; border-radius: 16px; background: #fff; box-shadow: 0 8px 18px rgba(15, 40, 67, .07); }
+    .electoral-kpi-label { color: #64748b; font-size: .69rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .electoral-kpi-value { margin-top: .3rem; color: #102a43; font-size: 1.35rem; font-weight: 800; line-height: 1.05; }
+    .electoral-kpi-note { margin-top: .36rem; color: #475569; font-size: .78rem; line-height: 1.25; }
+    .electoral-section-title { margin: 1.1rem 0 .35rem; color: #102a43; font-size: 1.08rem; font-weight: 800; letter-spacing: -.015em; }
+    .scroll-anchor { position: relative; top: -90px; visibility: hidden; }
+    [data-testid="stPyDeckChart"] {
+        overflow: hidden;
+        border: 1px solid #dbe5ec;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+        background: #fff;
+    }
+    [data-testid="stTabs"] [role="tablist"] {
+        gap: .3rem;
+        padding: .3rem;
+        border: 1px solid #dbe5ec;
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+    [data-testid="stTabs"] [role="tab"] {
+        height: 2.25rem;
+        border-radius: 8px;
+        font-weight: 700;
+    }
     [data-testid="stMetric"] {
         padding: .95rem 1rem;
         border: 1px solid #dbe5ec;
@@ -217,6 +321,45 @@ st.markdown(
         font-weight: 700;
         font-size: .68rem;
         letter-spacing: .08em;
+    }
+    .dictamen-reader-hero {
+        background: linear-gradient(115deg, #082f49, #0f4c5c 62%, #164e63);
+        border-radius: 18px;
+        padding: 1.35rem 1.5rem;
+        color: #fff;
+        margin: .15rem 0 1rem;
+        box-shadow: 0 14px 30px rgba(8,47,73,.18);
+    }
+    .dictamen-reader-hero small { color: #67e8f9; font-weight: 800; letter-spacing: .1em; }
+    .dictamen-reader-hero h2 { color: #fff; margin: .35rem 0; font-size: 1.7rem; }
+    .dictamen-reader-hero p { color: #dbeafe; margin: 0; }
+    .dictamen-reading-note {
+        border-left: 4px solid #f59e0b;
+        background: #fff7ed;
+        color: #7c2d12;
+        border-radius: 0 10px 10px 0;
+        padding: .65rem .8rem;
+        font-size: .86rem;
+    }
+    .market-pie-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; min-height: 550px; padding: .5rem 0; }
+    .market-pie {
+        width: 430px; height: 430px; flex: 0 0 430px;
+        filter: drop-shadow(0 10px 16px rgba(15, 23, 42, .16));
+    }
+    .market-pie svg { width: 100%; height: 100%; overflow: visible; }
+    .market-pie-slice { stroke: #fff; stroke-width: 2px; cursor: pointer; transition: opacity .15s ease, transform .15s ease; transform-origin: 250px 250px; }
+    .market-pie-slice:hover { opacity: .8; transform: scale(1.035); }
+    .market-pie-center { fill: #fff; stroke: #e2e8f0; stroke-width: 1px; }
+    .market-pie-center-label { fill: #0f172a; font-weight: 800; font-size: 20px; text-anchor: middle; }
+    .market-pie-center-detail { fill: #64748b; font-size: 14px; text-anchor: middle; }
+    .market-pie-legend { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: .5rem 1rem; width: min(100%, 740px); }
+    .market-pie-legend-item { font-size: .72rem; color: #475569; line-height: 1.3; }
+    .market-pie-legend-item b { color: #0f172a; font-size: .75rem; }
+    .market-pie-legend-item span { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .3rem; }
+    @media (max-width: 900px) {
+        .market-pie-wrap { min-height: 0; }
+        .market-pie { width: 300px; height: 300px; flex-basis: 300px; }
+        .market-pie-legend { width: 100%; }
     }
     </style>
     """,
@@ -257,6 +400,18 @@ ELECTORAL_VOTE_LABELS = {
     "votes_cc_pvem_pt_morena": "Candidatura común PVEM-PT-Morena",
     "votes_pes": "Partido Encuentro Solidario", "votes_rsp": "Redes Sociales Progresistas",
     "votes_fxm": "Fuerza por México",
+    "votes_nay": "Nueva Alianza Yucatán", "votes_independent": "Candidatura independiente",
+    "votes_pan_pri_prd_nay": "Candidatura común PAN-PRI-PRD-NAY",
+    "votes_pan_pri_nay": "Candidatura común PAN-PRI-NAY",
+    "votes_pan_prd_nay": "Candidatura común PAN-PRD-NAY",
+    "votes_pri_prd_nay": "Candidatura común PRI-PRD-NAY",
+    "votes_pan_nay": "Candidatura común PAN-NAY", "votes_pri_nay": "Candidatura común PRI-NAY",
+    "votes_prd_nay": "Candidatura común PRD-NAY", "votes_prd_nay_2": "Candidatura común PRD-NAY",
+    "votes_qi": "Querétaro Independiente", "votes_fm": "Fuerza México",
+    "votes_qs": "Querétaro Seguro",
+    "votes_pan_qi": "Coalición PAN-QI", "votes_pri_pvem": "Coalición PRI-PVEM",
+    "votes_pan_prd_qi": "Coalición PAN-PRD-QI", "votes_prd_qi": "Coalición PRD-QI",
+    "votes_pt_qi": "Coalición PT-QI",
     "votes_pt_morena_naem": "Coalición PT-Morena-NAEM",
     "votes_cc_pt_morena_naem": "Candidatura común PT-Morena-NAEM",
     "votes_va_por_sonora": "Va por Sonora",
@@ -350,47 +505,73 @@ def render_domain_header(domain: str) -> None:
     )
 
 
+def render_domain_scroll_nav(items: list[tuple[str, str]]) -> None:
+    """Render a compact in-page navigator for long territorial screens."""
+    links = "".join(f'<a href="#{anchor}">{label}</a>' for label, anchor in items)
+    st.markdown(
+        f'<nav class="domain-subnav"><span class="domain-subnav-label">RECORRIDO</span>{links}</nav>',
+        unsafe_allow_html=True,
+    )
+
+
 OBJECTIVE_NAVIGATION = {
-    "ⓘ  Objetivo del proyecto": "Inicio",
+    "ⓘ  Inicio y objetivo": "Inicio",
+    "ⓘ  Orden de cargas": "Orden de cargas",
 }
-INFORMATION_NAVIGATION = {
-    "01  Perfiles y trayectorias": "Perfiles y trayectorias",
-    "02  Territorio y fuentes": "Territorio y fuentes",
-    "03  Perfil territorial": "Perfil territorial",
-    "04  Conexiones privadas": "Configuración de conexiones",
-    "05  Obtención de información": "Obtención de información",
-    "06  Bandeja de registros": "Bandeja de registros",
-    "07  Vinculación territorial": "Vinculación territorial",
+PROFILE_NAVIGATION = {
+    "01  Perfil y elección": "Perfiles y trayectorias",
+    "02  Dictamen de viabilidad": "Recorrido del dictamen",
+    "03  Fuentes y cobertura del expediente": "Dictamen de viabilidad",
+    "04  Información estratégica del candidato": "Tablero Electoral",
 }
-ANALYSIS_NAVIGATION = {
+GIS_NAVIGATION = {
+    "04  Visor electoral": "Visor electoral",
+    "05  Visor territorial": "Dominio territorial",
+    "06  Visor regional y PED": "Diagnóstico regional del PED",
+}
+DIAGNOSTIC_NAVIGATION = {
+    "07  Mercado electoral": "Mercado electoral",
     "08  Diagnóstico territorial": "Diagnóstico territorial",
-    "09  Priorización territorial": "Priorización territorial",
-    "10  Visor territorial": "Dominio territorial",
-    "11  Visor electoral": "Visor electoral",
-    "12  Diagnóstico regional del PED": "Diagnóstico regional del PED",
-    "13  Enfoques de análisis": "Enfoques de análisis",
-    "14  Prompts y consultas IA": "Prompts y consultas IA",
-    "15  Revisión e historial": "Revisión e historial",
+    "09  Mapa de oportunidad electoral": "Mapa de oportunidad electoral",
+    "09A  Cruce INEGI + INE": "Cruce INEGI + INE",
 }
-STRATEGY_NAVIGATION = {
-    "16  Estrategia territorial": "Estrategia territorial",
-    "17  Planes de acción": "Planes de acción",
-    "18  CRM territorial electoral": "CRM territorial electoral",
-    "19  Seguimiento de campo": "Seguimiento de campo",
+DECISION_NAVIGATION = {
+    "10  Escenarios electorales": "Escenarios electorales",
+    "11  Metas y control territorial": "Metas y control territorial",
 }
-COORDINATION_NAVIGATION = {
-    "20  Planeación estratégica": "Planeación",
-    "21  Tableros y reportes": "Tableros y reportes",
-    "22  Alertas territoriales": "Alertas territoriales",
-    "23  Modelos y aprendizaje": "Machine Learning",
+EXECUTION_NAVIGATION = {
+    "12  Priorización territorial": "Priorización territorial",
+    "13  Estrategia territorial": "Estrategia territorial",
+    "14  Planes de acción": "Planes de acción",
+    "15  Mapa de estrategia y operación": "Mapa de estrategia y operación",
+    "16  CRM territorial electoral": "CRM territorial electoral",
+    "17  Seguimiento de campo": "Seguimiento de campo",
+    "18  Tablero de evidencia y seguimiento": "Tableros y reportes",
+    "19  Alertas territoriales": "Alertas territoriales",
+}
+EVIDENCE_NAVIGATION = {
+    "20  Obtención de información": "Obtención de información",
+    "21  Bandeja de evidencia": "Bandeja de registros",
+    "22  Enfoques de análisis": "Enfoques de análisis",
+    "23  Vinculación territorial": "Vinculación territorial",
+    "24  Prompts y consultas IA": "Prompts y consultas IA",
+    "25  Revisión e historial": "Revisión e historial",
+}
+SETTINGS_NAVIGATION = {
+    "26  Territorios y fuentes": "Territorio y fuentes",
+    "27  Perfil territorial": "Perfil territorial",
+    "28  Conexiones privadas": "Configuración de conexiones",
+    "29  Planeación estratégica": "Planeación",
+    "29A  Seguimiento del PMD": "Seguimiento del PMD",
+    "30  Modelos y aprendizaje": "Machine Learning",
     "?  Manual de usuario": "Manual de usuario",
     "?  Manual técnico": "Manual técnico",
 }
 
 
 NAVIGATION_WIDGET_KEYS = (
-    "objective_navigation", "information_navigation", "analysis_navigation",
-    "strategy_navigation", "coordination_navigation",
+    "objective_navigation", "profile_navigation", "evidence_navigation", "gis_navigation", "diagnostic_navigation",
+    "decision_navigation", "execution_navigation", "settings_navigation",
 )
 
 FUTURE_MODULES = {
@@ -515,8 +696,12 @@ def render_territorial_diagnosis() -> None:
             f"Fuente: {election_rows[0]['source'] or 'registro local'}"
         )
         vote_rows = []
+        non_option_vote_keys = {"votes_total", "votes_nulos", "votes_no_reg", "votes_validos"}
         for key, value in election.items():
-            if key.startswith("votes_") and float(value or 0) > 0:
+            # Los totales y votos nulos no son una opción política. Incluirlos
+            # aquí podía mostrar porcentajes superiores a 100% al dividir el
+            # total emitido entre votos válidos.
+            if key.startswith("votes_") and key not in non_option_vote_keys and float(value or 0) > 0:
                 vote_rows.append({
                     "clave": key,
                     "Opción": key.replace("votes_", "").replace("_", " ").upper(),
@@ -775,6 +960,867 @@ def render_territorial_diagnosis() -> None:
         st.caption("No hay evidencia territorial vinculada para mostrar todavía.")
 
 
+def render_electoral_dashboard() -> None:
+    """Reusable executive electoral dashboard, scoped to the selected profile and state."""
+    st.caption("TABLERO ELECTORAL · FICHA EJECUTIVA DE CANDIDATURA")
+    options = profile_options()
+    if not options:
+        st.info("Registra un perfil para abrir su tablero electoral.")
+        return
+    selected_label = st.selectbox("Perfil del tablero", list(options), key="electoral_dashboard_profile")
+    profile_id = options[selected_label]
+    profile_name = selected_label.rsplit(" (#", 1)[0]
+    profile_row = query("SELECT actor_type, notes FROM profiles WHERE id = ?", (profile_id,))[0]
+    position_rows = query(
+        """SELECT office, condition, party_or_coalition, starts_at, ends_at
+           FROM profile_positions WHERE profile_id = ? ORDER BY is_current DESC, id DESC LIMIT 1""",
+        (profile_id,),
+    )
+    position = position_rows[0] if position_rows else None
+    state_rows = query(
+        """
+        SELECT DISTINCT state FROM (
+            SELECT state FROM profile_territories pt JOIN territories t ON t.id = pt.territory_id WHERE pt.profile_id = ?
+            UNION
+            SELECT state FROM reference_documents WHERE profile_id = ? AND state IS NOT NULL
+        ) WHERE state IS NOT NULL AND TRIM(state) <> '' ORDER BY state
+        """,
+        (profile_id, profile_id),
+    )
+    states = [row["state"] for row in state_rows]
+    selected_state = st.selectbox(
+        "Territorio de lectura", states, key=f"electoral_dashboard_state_{profile_id}"
+    ) if states else None
+    if not selected_state:
+        st.warning("Este perfil aún no tiene un estado asociado. Puedes asignarlo desde Perfil territorial.")
+        return
+    associated_municipalities = query(
+        """SELECT t.municipality
+           FROM profile_territories pt JOIN territories t ON t.id = pt.territory_id
+           WHERE pt.profile_id = ? AND t.state = ? AND t.territory_type = 'Municipio'
+           ORDER BY t.municipality""",
+        (profile_id, selected_state),
+    )
+
+    evidence_count = int(query("SELECT COUNT(*) AS total FROM publications WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    document_count = int(query("SELECT COUNT(*) AS total FROM reference_documents WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    conclusion_rows = query("SELECT * FROM viability_conclusions WHERE profile_id = ?", (profile_id,))
+    conclusion = conclusion_rows[0] if conclusion_rows else None
+    assessment_count = int(query("SELECT COUNT(*) AS total FROM viability_variable_assessments WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    competitor_count = int(query("SELECT COUNT(*) AS total FROM viability_competitors WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    survey_count = int(query("SELECT COUNT(*) AS total FROM viability_surveys WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    structure_count = int(query("SELECT COUNT(*) AS total FROM viability_structure_records WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    coalition_count = int(query("SELECT COUNT(*) AS total FROM viability_coalition_scenarios WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    resource_count = int(query("SELECT COUNT(*) AS total FROM viability_resource_records WHERE profile_id = ?", (profile_id,))[0]["total"] or 0)
+    source_count = int(query("SELECT COUNT(*) AS total FROM sources WHERE profile_id = ? AND active = 1", (profile_id,))[0]["total"] or 0)
+    analysis_count = int(query("SELECT COUNT(*) AS total FROM analyses a JOIN publications p ON p.id = a.publication_id WHERE p.profile_id = ?", (profile_id,))[0]["total"] or 0)
+    action_count = int(query("SELECT COUNT(*) AS total FROM territorial_action_plans tap JOIN territorial_strategies ts ON ts.id = tap.strategy_id WHERE ts.profile_id = ?", (profile_id,))[0]["total"] or 0)
+    assessment_rows = query(
+        "SELECT variable_code, status, evidence_note, actual_value, metric_unit FROM viability_variable_assessments WHERE profile_id = ?",
+        (profile_id,),
+    )
+    assessment_by_code = {row["variable_code"]: row for row in assessment_rows}
+    data_status = {
+        "municipal": int(query("SELECT COUNT(*) AS total FROM territorial_election_results WHERE state = ?", (selected_state,))[0]["total"] or 0),
+        "district": int(query("SELECT COUNT(*) AS total FROM territorial_district_results WHERE state = ?", (selected_state,))[0]["total"] or 0),
+        "section": int(query("SELECT COUNT(*) AS total FROM territorial_section_results WHERE state = ?", (selected_state,))[0]["total"] or 0),
+        "indicators": int(query("SELECT COUNT(*) AS total FROM territorial_indicators WHERE state = ?", (selected_state,))[0]["total"] or 0),
+    }
+    is_cholula_case = profile_name.startswith("Raymundo Cuautli") and selected_state == "Puebla"
+    viability_score_model = [
+        ("vote_intent", "Intención de voto personal", 10, 42, "Brecha relevante frente a la puntera"),
+        ("name_recognition", "Conocimiento del candidato", 6, 70, "Presencia acumulada"),
+        ("favorable_opinion", "Opinión positiva / negativos", 5, 62, "Requiere medición propia"),
+        ("territorial_structure", "Estructura territorial", 7, 80, "Activo principal"),
+        ("party_brand", "Fortaleza de marca partidista", 7, 76, "Impulso partidista"),
+        ("brand_transfer", "Transferencia marca-candidato", 5, 64, "No automática"),
+        ("electoral_experience", "Experiencia electoral", 4, 78, "Trayectoria amplia"),
+        ("institutional_position", "Posición institucional", 4, 78, "Exposición territorial"),
+        ("internal_unity", "Unidad interna", 6, 62, "Competencia abierta"),
+        ("nomination_probability", "Probabilidad de nominación", 7, 75, "Media-alta"),
+        ("party_vote_history", "Voto histórico del partido", 5, 58, "Debajo del PAN en 2024"),
+        ("mobilization", "Capacidad de movilización", 5, 75, "Potencial organizativo"),
+        ("strategic_territories", "Territorios estratégicos", 4, 78, "Clave territorial"),
+        ("urban_segments", "Segmentos urbanos / residenciales", 4, 56, "Área a fortalecer"),
+        ("undecided_voters", "Atracción de indecisos", 4, 60, "17.2% en julio"),
+        ("useful_vote", "Voto útil", 3, 68, "Depende de fragmentación"),
+        ("main_rival", "Fortaleza rival principal", 5, 38, "PAN / Lupita fuertes"),
+        ("opposition_fragmentation", "Fragmentación opositora", 3, 58, "Efecto ambiguo"),
+        ("reputational_risk", "Riesgo reputacional", 3, 45, "Flanco político"),
+        ("growth_potential", "Potencial de crecimiento", 3, 82, "Alto si consolida"),
+    ]
+    # Marco Bonilla cuenta con un dictamen base de 15 variables (15-sep-2026)
+    # y un modelo Go2Win ampliado a 20 variables.  Esta versión conserva las
+    # equivalencias semánticas del dictamen: seguridad no se presenta como
+    # transferencia de marca; campo/agua no como experiencia electoral; y la
+    # comunicación digital vuelve a ser una variable explícita.
+    if profile_id == 4:
+        viability_score_model = [
+            ("vote_intent", "Intención de voto personal", 9, 0, "Careos comparables; no es pronóstico."),
+            ("nomination_probability", "Posición interna y probabilidad de nominación", 8, 0, "Liderazgo interno PAN."),
+            ("institutional_position", "Gestión municipal", 8, 0, "Activo de gestión demostrable."),
+            ("name_recognition", "Conocimiento estatal", 6, 0, "Desigual fuera de la capital."),
+            ("territorial_structure", "Estructura de la capital", 6, 0, "Bastión que requiere auditoría."),
+            ("urban_segments", "Penetración en Ciudad Juárez", 9, 0, "Brecha territorial decisiva."),
+            ("strategic_territories", "Fortaleza en el centro-sur", 6, 0, "Base de compensación."),
+            ("party_brand", "Fortaleza de marca PAN", 5, 0, "Competitiva, debajo de Morena."),
+            ("party_vote_history", "Base electoral histórica del PAN", 3, 0, "Resultado histórico comparable."),
+            ("opposition_fragmentation", "Viabilidad de coalición y no fragmentación", 4, 0, "Sujeta a acuerdos y transferencia."),
+            ("brand_transfer", "Atributos de gestión y seguridad", 5, 0, "Fortaleza con riesgo de contraste."),
+            ("electoral_experience", "Agenda territorial: campo y agua", 4, 0, "Relevancia regional."),
+            ("mobilization", "Comunicación digital", 5, 0, "Debe ampliar alcance en el norte."),
+            ("internal_unity", "Unidad interna", 4, 0, "Ventaja relativa; requiere consolidación."),
+            ("favorable_opinion", "Margen de opinión positiva y bajo rechazo", 4, 0, "Mejor margen de crecimiento."),
+            ("reputational_risk", "Control de riesgo reputacional y legal", 3, 0, "Fiscalización y actos anticipados."),
+            ("growth_potential", "Potencial de crecimiento", 3, 0, "Alto con expansión territorial."),
+            ("main_rival", "Capacidad competitiva frente al rival principal", 4, 0, "Requiere tracking comparable."),
+            ("undecided_voters", "Capacidad de atraer indecisos", 2, 0, "Pendiente de medición propia."),
+            ("useful_vote", "Potencial de voto útil", 2, 0, "Sujeto a escenarios de coalición."),
+        ]
+    elif profile_name.startswith("Cecilia Anunciación Patrón"):
+        # El dictamen de Mérida contiene un modelo propio de ocho componentes.
+        # Se conserva sin forzarlo al modelo genérico de 20 variables.
+        viability_score_model = [
+            ("previous_election", "Resultado electoral previo", 16, 0, "Ventaja comprobada en 2024."),
+            ("approval_knowledge", "Aprobación y conocimiento", 15, 0, "Posición favorable en 2026."),
+            ("structure_nomination", "Estructura y nominación", 12, 0, "Incumbencia y control de red."),
+            ("management_results", "Gestión y resultados", 16, 0, "Activos visibles; escrutinio alto."),
+            ("territorial_coverage", "Cobertura territorial", 12, 0, "Brechas entre zonas de la ciudad."),
+            ("coalition_alliances", "Coalición y alianzas", 9, 0, "Configuración 2027 abierta."),
+            ("political_context", "Entorno político", 10, 0, "El gobierno estatal eleva la competencia."),
+            ("reputational_risk", "Control de riesgo reputacional", 10, 0, "Prevención permanente."),
+        ]
+    saved_scores = query(
+        "SELECT variable_code, score, notes FROM viability_electoral_scores WHERE profile_id = ?",
+        (profile_id,),
+    )
+    score_by_code = {row["variable_code"]: row for row in saved_scores}
+    electoral_evidence_rows = query(
+        """SELECT variable_code, status, evidence_note, source_label, source_url, reference_date
+           FROM viability_electoral_evidence WHERE profile_id = ?""",
+        (profile_id,),
+    )
+    electoral_evidence_by_code = {row["variable_code"]: row for row in electoral_evidence_rows}
+
+    office = position["office"] if position and position["office"] else "Cargo por documentar"
+    condition = position["condition"] if position and position["condition"] else profile_row["actor_type"]
+    party = position["party_or_coalition"] if position and position["party_or_coalition"] else "Partido o coalición por documentar"
+    st.markdown(
+        f"""
+        <section class="electoral-hero">
+            <div class="electoral-eyebrow">EXPEDIENTE DE CANDIDATURA · {escape(selected_state.upper())}</div>
+            <div class="electoral-name">{escape(profile_name)}</div>
+            <p class="electoral-detail">{escape(str(office))} · {escape(str(condition))}</p>
+            <span class="electoral-chip">{escape(str(party))}</span>
+            <span class="electoral-chip">Corte de información local</span>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+    top = st.columns(5)
+    kpis = [
+        ("Condición", str(condition), str(office)),
+        ("Viabilidad", conclusion["assessment_status"] if conclusion else "Pendiente", "Resultado de la valoración"),
+        ("Evidencia", f"{evidence_count} registros", "Publicaciones vinculadas"),
+        ("Análisis", f"{analysis_count} procesados", "Conversación y temas"),
+        ("Territorio", f"{len(associated_municipalities)} municipios", f"Documentos: {document_count}"),
+    ]
+    for column, (label, value, note) in zip(top, kpis):
+        column.markdown(
+            f'<div class="electoral-kpi"><div class="electoral-kpi-label">{escape(str(label))}</div>'
+            f'<div class="electoral-kpi-value">{escape(str(value))}</div>'
+            f'<div class="electoral-kpi-note">{escape(str(note))}</div></div>',
+            unsafe_allow_html=True,
+        )
+    if is_cholula_case:
+        st.info("Línea base del dictamen de San Andrés Cholula: índice global **67/100**, viabilidad de candidatura **75/100** y posición observada **12.1%**. No es una encuesta actual ni un pronóstico electoral.")
+
+    model_tab, executive_tab, variables_tab, coverage_tab, route_tab = st.tabs([
+        "Modelo de viabilidad", "Ficha del candidato", "Posicionamiento y competencia", "Territorio, estructura y escenarios", "Modelo y cobertura"
+    ])
+    with executive_tab:
+        st.markdown("#### Identidad política y territorio")
+        identity_a, identity_b, identity_c = st.columns(3)
+        identity_a.write(f"**Perfil:** {profile_name}")
+        identity_b.write(f"**Cargo o aspiración:** {position['office'] if position else 'Por documentar'}")
+        identity_c.write(f"**Ámbito:** {selected_state}")
+        if associated_municipalities:
+            st.caption(f"Municipios asociados al perfil: **{len(associated_municipalities)}**.")
+            with st.expander("Ver municipios asociados al perfil"):
+                municipality_frame = pd.DataFrame(associated_municipalities).rename(columns={"municipality": "Municipio"})
+                st.dataframe(municipality_frame, use_container_width=True, hide_index=True, height=240)
+        if position and position["party_or_coalition"]:
+            st.caption(f"Partido o coalición registrada: {position['party_or_coalition']}.")
+        if profile_row["notes"]:
+            st.caption(profile_row["notes"])
+        st.markdown("#### Información disponible en el expediente")
+        available_a, available_b, available_c, available_d = st.columns(4)
+        available_a.metric("Publicaciones", f"{evidence_count:,}", "Registros originales")
+        available_b.metric("Análisis", f"{analysis_count:,}", "Registros procesados")
+        available_c.metric("Documentos", f"{document_count:,}", "Dictámenes y referencias")
+        available_d.metric("Fuentes activas", f"{source_count:,}", "Fuentes vinculadas")
+        left, right = st.columns([1.15, 1])
+        with left:
+            st.markdown("#### Condición de candidatura")
+            if conclusion:
+                st.write(conclusion["conditions"] or conclusion["next_step"] or "El perfil cuenta con un dictamen documentado.")
+            else:
+                st.info("Aún no hay una conclusión de viabilidad registrada para este perfil.")
+            st.markdown("#### Activos del perfil")
+            st.write(conclusion["strengths"] if conclusion and conclusion["strengths"] else "Pendiente de documentar fortalezas con evidencia.")
+        with right:
+            st.markdown("#### Riesgos y condiciones")
+            st.write(conclusion["risks"] if conclusion and conclusion["risks"] else "Pendiente de documentar riesgos y condiciones de competencia.")
+            st.caption(f"Perfil: {profile_name} · Territorio: {selected_state} · Documentos cargados: {document_count}.")
+        documents = query(
+            """SELECT title AS documento, document_type AS tipo, source_url AS liga
+               FROM reference_documents WHERE profile_id = ? ORDER BY id DESC""",
+            (profile_id,),
+        )
+        if documents:
+            with st.expander(f"Ver {len(documents)} documento(s) incorporado(s) al expediente"):
+                st.dataframe(
+                    pd.DataFrame(documents),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={"liga": st.column_config.LinkColumn("Documento / fuente", display_text="Abrir")},
+                )
+
+        st.markdown("#### Evidencia incorporada al expediente")
+        evidence_left, evidence_right = st.columns([1, 1.15])
+        with evidence_left:
+            source_rows = query(
+                """SELECT source_type AS tipo, name AS fuente, account_or_url AS referencia
+                   FROM sources WHERE profile_id = ? AND active = 1 ORDER BY source_type, name""",
+                (profile_id,),
+            )
+            st.markdown(f"**Fuentes activas ({len(source_rows)})**")
+            if source_rows:
+                st.dataframe(
+                    pd.DataFrame(source_rows),
+                    use_container_width=True,
+                    hide_index=True,
+                    height=210,
+                    column_config={"referencia": st.column_config.LinkColumn("Referencia", display_text="Abrir")},
+                )
+            else:
+                st.caption("No hay fuentes activas vinculadas a este perfil.")
+        with evidence_right:
+            topic_rows = query(
+                """SELECT COALESCE(a.topic, 'Sin tema') AS tema, COUNT(*) AS menciones,
+                          SUM(CASE WHEN a.urgency = 'Alta' THEN 1 ELSE 0 END) AS urgentes
+                   FROM analyses a JOIN publications p ON p.id = a.publication_id
+                   WHERE p.profile_id = ?
+                   GROUP BY COALESCE(a.topic, 'Sin tema')
+                   ORDER BY menciones DESC LIMIT 8""",
+                (profile_id,),
+            )
+            st.markdown("**Temas identificados en la conversación**")
+            if topic_rows:
+                st.dataframe(pd.DataFrame(topic_rows), use_container_width=True, hide_index=True, height=210)
+            else:
+                st.caption("Aún no hay publicaciones analizadas para identificar temas.")
+
+        recent_evidence = query(
+            """SELECT COALESCE(p.title, substr(p.text, 1, 110)) AS evidencia,
+                      p.published_at AS fecha, a.sentiment AS sentimiento,
+                      a.topic AS tema, a.urgency AS urgencia, p.url AS liga
+               FROM publications p LEFT JOIN analyses a ON a.publication_id = p.id
+               WHERE p.profile_id = ? ORDER BY COALESCE(p.published_at, p.collected_at) DESC LIMIT 8""",
+            (profile_id,),
+        )
+        if recent_evidence:
+            with st.expander("Ver evidencia reciente vinculada al perfil"):
+                st.dataframe(
+                    pd.DataFrame(recent_evidence),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={"liga": st.column_config.LinkColumn("Fuente original", display_text="Abrir")},
+                )
+
+    with variables_tab:
+        competition_left, competition_right = st.columns(2)
+        with competition_left:
+            st.markdown("#### Competencia registrada")
+            competitors = query(
+                """SELECT name AS perfil, party_or_coalition AS partido_o_coalicion, condition AS condición,
+                          territory AS territorio, positioning_note AS lectura
+                   FROM viability_competitors WHERE profile_id = ? ORDER BY name""",
+                (profile_id,),
+            )
+            if competitors:
+                st.dataframe(pd.DataFrame(competitors), use_container_width=True, hide_index=True)
+            else:
+                st.caption("Sin perfiles competidores registrados para este caso.")
+        with competition_right:
+            st.markdown("#### Estudios y posicionamiento")
+            surveys = query(
+                """SELECT name AS estudio, pollster AS casa, fieldwork_date AS levantamiento,
+                          sample_size AS muestra, profile_result_pct AS resultado_pct
+                   FROM viability_surveys WHERE profile_id = ? ORDER BY created_at DESC""",
+                (profile_id,),
+            )
+            if surveys:
+                st.dataframe(pd.DataFrame(surveys), use_container_width=True, hide_index=True)
+            else:
+                st.caption("Sin estudios registrados. Agrega sólo encuestas con fuente y ficha técnica identificable.")
+        st.caption("El modelo ponderado de candidatura se consulta y actualiza en la primera pestaña: **Modelo de viabilidad**.")
+
+    with coverage_tab:
+        structural, scenarios = st.columns(2)
+        with structural:
+            st.markdown("#### Estructura territorial")
+            structure_rows = query(
+                """SELECT COALESCE(municipality, district, electoral_section, locality, state) AS territorio,
+                          coverage_status AS estatus, responsible AS responsable, evidence_note AS evidencia
+                   FROM viability_structure_records WHERE profile_id = ? ORDER BY state, municipality""",
+                (profile_id,),
+            )
+            if structure_rows:
+                st.dataframe(pd.DataFrame(structure_rows), use_container_width=True, hide_index=True)
+            else:
+                st.caption("Aún no hay estructura territorial registrada.")
+        with scenarios:
+            st.markdown("#### Escenarios y recursos")
+            coalition_rows = query(
+                """SELECT scenario_name AS escenario, parties AS fuerzas, scope AS alcance, status AS estatus
+                   FROM viability_coalition_scenarios WHERE profile_id = ? ORDER BY updated_at DESC""",
+                (profile_id,),
+            )
+            if coalition_rows:
+                st.dataframe(pd.DataFrame(coalition_rows), use_container_width=True, hide_index=True)
+            else:
+                st.caption("Aún no hay escenarios o coaliciones documentados.")
+        coverage = pd.DataFrame([
+            ("Dictamen de viabilidad", "Disponible" if document_count else "Pendiente", f"{document_count:,} documentos cargados"),
+            ("Modelo de variables", "Disponible" if assessment_count else "Pendiente", f"{assessment_count:,} variables documentadas"),
+            ("Competidores y encuestas", "Disponible" if (competitor_count or survey_count) else "Pendiente", f"{competitor_count:,} competidores · {survey_count:,} estudios"),
+            ("Resultados municipales oficiales", "Pendiente" if not data_status["municipal"] else "Cargado", f"{data_status['municipal']:,} registros"),
+            ("Resultados por distrito", "Pendiente" if not data_status["district"] else "Cargado", f"{data_status['district']:,} registros"),
+            ("Resultados por sección", "Pendiente" if not data_status["section"] else "Cargado", f"{data_status['section']:,} registros"),
+            ("Indicadores INEGI municipales", "Pendiente" if not data_status["indicators"] else "Cargado", f"{data_status['indicators']:,} indicadores"),
+            ("Escucha digital y medios del perfil", "Pendiente" if not evidence_count else "Cargado", f"{evidence_count:,} publicaciones; se revisan en el tablero de evidencia"),
+            ("Encuesta propia con ficha técnica", "Pendiente", "Necesaria para actualizar preferencia, conocimiento e imagen"),
+            ("Estructura, actividades y seguimiento de campo", "Pendiente", "Se captura en CRM territorial y Seguimiento de campo"),
+        ], columns=["Componente", "Estatus", "Cobertura actual"])
+        st.dataframe(coverage, use_container_width=True, hide_index=True)
+        st.warning(
+            f"El tablero no reemplaza los datos faltantes. Para **{selected_state}**, la cobertura mostrada arriba indica "
+            "qué fuentes ya sustentan el análisis y cuáles deben incorporarse antes de tomar decisiones operativas."
+        )
+
+    with model_tab:
+        st.markdown("#### Modelo de viabilidad electoral")
+        if profile_id == 4:
+            st.info(
+                "**Dos lecturas complementarias.** El dictamen base de Marco Bonilla usa 15 variables y reporta "
+                "**78/100** con corte al 15 de septiembre de 2026. Este tablero usa el modelo Go2Win ampliado "
+                "a 20 variables; incorpora intención de voto, base histórica, rival, indecisos y voto útil. "
+                "Por ello su índice se muestra como **preliminar** y no sustituye el 78/100 del dictamen."
+            )
+        elif profile_name.startswith("Cecilia Anunciación Patrón"):
+            st.info(
+                "**Modelo base del dictamen de Mérida.** Sus 8 variables y el índice de **84/100** corresponden "
+                "al corte del 25 de septiembre de 2026. No son una predicción: deberán actualizarse con tracking "
+                "comparable, evidencia de servicios y operación territorial por zona."
+            )
+        else:
+            st.caption(
+                "Es el tablero principal del dictamen: pondera posición competitiva, candidatura, estructura, territorio y riesgos. "
+                "No reemplaza encuestas ni predice una elección; ordena la evidencia para tomar decisiones."
+            )
+        score_rows = []
+        for code, label, weight, cholula_score, cholula_note in viability_score_model:
+            stored = score_by_code.get(code, {})
+            evidence = electoral_evidence_by_code.get(code, {})
+            score = stored.get("score")
+            if score is None and is_cholula_case:
+                score = cholula_score
+            score_rows.append({
+                "Variable": label,
+                "Peso": f"{weight}%",
+                "Puntaje": "—" if score is None else f"{float(score):.0f}/100",
+                "Aporte ponderado": "—" if score is None else round(float(score) * weight / 100, 1),
+                "Estatus": evidence.get("status", "Pendiente"),
+                "Fuente y corte": " · ".join(filter(None, [evidence.get("source_label"), evidence.get("reference_date")])) or "Por documentar",
+                "Lectura": stored.get("notes") or evidence.get("evidence_note") or (cholula_note if is_cholula_case else "Pendiente de evaluación"),
+                "_score": score,
+                "_code": code,
+            })
+        scored = [row for row in score_rows if row["_score"] is not None]
+        global_score = sum(float(row["_score"]) * next(weight for code, _, weight, _, _ in viability_score_model if code == row["_code"]) / 100 for row in scored)
+        score_col, completion_col, note_col = st.columns(3)
+        scoring_stage = (
+            "Modelo Go2Win ampliado · preliminar"
+            if profile_id == 4
+            else ("Modelo base del dictamen" if profile_name.startswith("Cecilia Anunciación Patrón")
+                  else ("Precalibración" if profile_id == 2 and len(scored) == 20 else ("Provisional" if len(scored) < 20 else "Modelo completo")))
+        )
+        score_col.metric("Índice ponderado", f"{global_score:.1f}/100", scoring_stage)
+        completion_col.metric("Variables calificadas", f"{len(scored)}/20", f"{round(len(scored) / 20 * 100)}%")
+        note_col.metric("Peso evaluado", f"{sum(next(weight for code, _, weight, _, _ in viability_score_model if code == row['_code']) for row in scored)}%")
+        st.dataframe(
+            pd.DataFrame(score_rows).drop(columns=["_score", "_code"]),
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Peso": st.column_config.TextColumn("Peso", width="small"),
+                "Puntaje": st.column_config.TextColumn("Puntaje", width="small"),
+                "Estatus": st.column_config.TextColumn("Estatus", width="small"),
+            },
+        )
+        st.caption("Los pesos suman 100%. Los puntajes deben asignarse con evidencia verificable y con fecha de corte.")
+        if profile_id == 2 and len(scored) == 20:
+            st.warning(
+                "Precalificación inicial basada en el dictamen de Colosio–Sonora con corte en septiembre de 2026. "
+                "Es una línea base analítica, no una encuesta, pronóstico ni medición actualizada."
+            )
+
+        with st.expander("Registrar o actualizar puntaje de una variable"):
+            variable_options = {label: code for code, label, _, _, _ in viability_score_model}
+            with st.form(f"electoral_score_form_{profile_id}"):
+                selected_label = st.selectbox("Variable", list(variable_options))
+                selected_code = variable_options[selected_label]
+                current = score_by_code.get(selected_code, {})
+                score_value = st.number_input("Puntaje (0 a 100)", min_value=0.0, max_value=100.0, value=float(current.get("score") or 0.0), step=1.0)
+                score_notes = st.text_area("Lectura y fuente de respaldo", value=current.get("notes") or "")
+                if st.form_submit_button("Guardar puntaje"):
+                    execute(
+                        """INSERT INTO viability_electoral_scores (profile_id, variable_code, score, notes, updated_at)
+                           VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                           ON CONFLICT(profile_id, variable_code) DO UPDATE SET
+                               score = excluded.score, notes = excluded.notes, updated_at = CURRENT_TIMESTAMP""",
+                        (profile_id, selected_code, score_value, score_notes.strip() or None),
+                    )
+                    st.success("Puntaje actualizado.")
+                    st.rerun()
+
+        with st.expander("Evidencia, fuente y fecha de corte"):
+            evidence_rows = []
+            for code, label, _, _, _ in viability_score_model:
+                linked = electoral_evidence_by_code.get(code, {})
+                evidence_rows.append({
+                    "Variable": label,
+                    "Estatus": linked.get("status", "Pendiente"),
+                    "Evidencia": linked.get("evidence_note") or "Sin evidencia registrada.",
+                    "Fuente": linked.get("source_label") or "—",
+                    "Corte": linked.get("reference_date") or "—",
+                    "Liga": linked.get("source_url"),
+                })
+            st.dataframe(
+                pd.DataFrame(evidence_rows),
+                use_container_width=True,
+                hide_index=True,
+                column_config={"Liga": st.column_config.LinkColumn("Fuente", display_text="Abrir")},
+            )
+            variable_options = {label: code for code, label, _, _, _ in viability_score_model}
+            with st.form(f"electoral_evidence_form_{profile_id}"):
+                evidence_variable = st.selectbox("Variable a documentar", list(variable_options), key=f"evidence_variable_{profile_id}")
+                evidence_code = variable_options[evidence_variable]
+                current_evidence = electoral_evidence_by_code.get(evidence_code, {})
+                evidence_status = st.selectbox(
+                    "Estatus de evidencia",
+                    ["Pendiente", "En revisión", "Documentada", "Validada", "No aplica"],
+                    index=["Pendiente", "En revisión", "Documentada", "Validada", "No aplica"].index(current_evidence.get("status", "Pendiente")),
+                )
+                evidence_note = st.text_area("Evidencia o lectura", value=current_evidence.get("evidence_note") or "")
+                evidence_source = st.text_input("Nombre de la fuente", value=current_evidence.get("source_label") or "")
+                evidence_url = st.text_input("Liga de la fuente", value=current_evidence.get("source_url") or "")
+                evidence_date = st.text_input("Fecha de corte", value=current_evidence.get("reference_date") or "")
+                if st.form_submit_button("Guardar evidencia"):
+                    execute(
+                        """INSERT INTO viability_electoral_evidence
+                           (profile_id, variable_code, status, evidence_note, source_label, source_url, reference_date, updated_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                           ON CONFLICT(profile_id, variable_code) DO UPDATE SET
+                               status=excluded.status, evidence_note=excluded.evidence_note,
+                               source_label=excluded.source_label, source_url=excluded.source_url,
+                               reference_date=excluded.reference_date, updated_at=CURRENT_TIMESTAMP""",
+                        (profile_id, evidence_code, evidence_status, evidence_note.strip() or None, evidence_source.strip() or None, evidence_url.strip() or None, evidence_date.strip() or None),
+                    )
+                    st.success("Evidencia actualizada.")
+                    st.rerun()
+
+    with route_tab:
+        st.markdown("#### Orden recomendado de incorporación")
+        st.markdown(
+            f"1. **Perfil territorial:** asignar el estado y municipios de cobertura de {profile_name}.\n"
+            "2. **Territorio y fuentes:** cargar cartografía municipal/seccional y resultados oficiales comparables.\n"
+            "3. **Perfil territorial:** descargar indicadores INEGI municipales.\n"
+            "4. **Obtención de información:** configurar medios, RSS y cuentas públicas autorizadas.\n"
+            "5. **Escenarios electorales:** documentar supuestos y generar metas agregadas.\n"
+            "6. **Estrategia, planes y CRM:** convertir hallazgos en tareas, responsables y evidencia de campo."
+        )
+        st.success("Cuando se carguen esas fuentes, el tablero mostrará evidencia actualizada para el perfil y territorio seleccionados.")
+
+
+def electoral_market_summary(
+    state: str, election_year: int, election_type: str
+) -> dict[str, object] | None:
+    """Aggregate one loaded historical election for the market comparison."""
+    section_rows = query(
+        """SELECT payload FROM territorial_section_results
+           WHERE state = ? AND election_year = ? AND election_type = ?""",
+        (state, election_year, election_type),
+    )
+    municipal_rows = query(
+        """SELECT payload FROM territorial_election_results
+           WHERE state = ? AND election_year = ? AND election_type = ?""",
+        (state, election_year, election_type),
+    )
+    records = []
+    for row in section_rows or municipal_rows:
+        try:
+            records.append(json.loads(row["payload"]))
+        except (TypeError, json.JSONDecodeError):
+            continue
+    if not records:
+        return None
+    frame = pd.DataFrame(records)
+    numeric_columns = [
+        column for column in frame.columns
+        if column.startswith("votes_") or column in {"lista_nominal", "votes_total", "numero_votos_validos"}
+    ]
+    for column in numeric_columns:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce").fillna(0)
+    valid_votes = int(frame.get("numero_votos_validos", pd.Series(dtype=float)).sum())
+    total_votes = int(frame.get("votes_total", pd.Series(dtype=float)).sum())
+    nominal = int(frame.get("lista_nominal", pd.Series(dtype=float)).sum())
+    options = {
+        ELECTORAL_VOTE_LABELS.get(column, column.replace("votes_", "").replace("_", " ").upper()): int(frame[column].sum())
+        for column in frame.columns
+        if column.startswith("votes_")
+        and column not in {"votes_total", "votes_nulos", "votes_no_reg"}
+        and frame[column].sum() > 0
+    }
+    return {
+        "year": election_year,
+        "nominal": nominal,
+        "total_votes": total_votes,
+        "valid_votes": valid_votes,
+        "participation": total_votes / nominal * 100 if nominal else 0.0,
+        "options": options,
+    }
+
+
+def render_electoral_market() -> None:
+    """Explain the aggregate electoral universe before defining a scenario or goal."""
+    st.subheader("Mercado electoral")
+    st.caption(
+        "Lectura agregada del universo electoral histórico: lista nominal, participación, votos válidos "
+        "y votación por opción política. Es una línea base para construir escenarios; no es una encuesta ni un pronóstico."
+    )
+    options = profile_options()
+    if not options:
+        st.info("Primero registra un perfil y asígnale un estado.")
+        return
+    selected_profile = st.selectbox("Perfil", list(options), key="market_profile")
+    profile_id = options[selected_profile]
+    states = profile_states(profile_id)
+    if not states:
+        st.info("Asigna un estado al perfil antes de consultar el mercado electoral.")
+        return
+    state = st.selectbox("Estado", states, key="market_state")
+    section_elections = query(
+        """SELECT DISTINCT election_year, election_type FROM territorial_section_results
+           WHERE state = ? ORDER BY election_year DESC, election_type""",
+        (state,),
+    )
+    municipal_elections = query(
+        """SELECT DISTINCT election_year, election_type FROM territorial_election_results
+           WHERE state = ? ORDER BY election_year DESC, election_type""",
+        (state,),
+    )
+    available_elections = {
+        (int(row["election_year"]), str(row["election_type"]))
+        for row in section_elections + municipal_elections
+    }
+    available_years = sorted({year for year, _ in available_elections}, reverse=True)
+    if not available_years:
+        st.info("Aún no hay resultados electorales cargados para este estado. Incorpóralos desde Territorio y fuentes.")
+        return
+    election_year = st.selectbox("Elección histórica de referencia", available_years, key=f"market_year_{state}")
+    election_types = sorted(
+        election_type for year, election_type in available_elections if year == election_year
+    )
+    election_type = st.selectbox(
+        "Tipo de elección",
+        election_types,
+        key=f"market_election_type_{state}_{election_year}",
+        help="Selecciona el mismo tipo de elección al comparar resultados. Las diputaciones, ayuntamientos y gubernatura no se deben mezclar.",
+    )
+    section_rows = query(
+        """SELECT payload FROM territorial_section_results
+           WHERE state = ? AND election_year = ? AND election_type = ?""",
+        (state, election_year, election_type),
+    )
+    municipal_rows = query(
+        """SELECT payload FROM territorial_election_results
+           WHERE state = ? AND election_year = ? AND election_type = ?""",
+        (state, election_year, election_type),
+    )
+    raw_rows = section_rows or municipal_rows
+    records = []
+    for row in raw_rows:
+        try:
+            payload = json.loads(row["payload"])
+        except (TypeError, json.JSONDecodeError):
+            continue
+        records.append(payload)
+    if not records:
+        st.warning("Los resultados cargados no contienen datos que se puedan interpretar.")
+        return
+    market = pd.DataFrame(records)
+    numeric_columns = [
+        column for column in market.columns
+        if column.startswith("votes_") or column in {"lista_nominal", "votes_total", "numero_votos_validos", "participacion_pct"}
+    ]
+    for column in numeric_columns:
+        market[column] = pd.to_numeric(market[column], errors="coerce").fillna(0)
+    valid_votes = int(market.get("numero_votos_validos", pd.Series(dtype=float)).sum())
+    total_votes = int(market.get("votes_total", pd.Series(dtype=float)).sum())
+    nominal = int(market.get("lista_nominal", pd.Series(dtype=float)).sum())
+    participation = total_votes / nominal * 100 if nominal else 0
+    option_keys = sorted(
+        column for column in market.columns
+        if column.startswith("votes_") and column not in {"votes_total", "votes_nulos", "votes_no_reg"}
+        and market[column].sum() > 0
+    )
+    if not option_keys:
+        st.warning("Esta carga no incluye votación por partido, coalición o candidatura.")
+        return
+    option_labels = {
+        ELECTORAL_VOTE_LABELS.get(key, key.replace("votes_", "").replace("_", " ").upper()): key
+        for key in option_keys
+    }
+    selected_option_label = st.selectbox(
+        "Opción política de referencia",
+        list(option_labels),
+        key=f"market_option_{state}_{election_year}_{election_type}",
+    )
+    reference_key = option_labels[selected_option_label]
+    reference_votes = int(market[reference_key].sum())
+    reference_share = reference_votes / valid_votes * 100 if valid_votes else 0
+
+    cards = st.columns(5)
+    cards[0].metric("Lista nominal", f"{nominal:,}")
+    cards[1].metric("Participación histórica", f"{participation:.1f}%")
+    cards[2].metric("Votos válidos", f"{valid_votes:,}")
+    cards[3].metric(f"Votos {selected_option_label}", f"{reference_votes:,}")
+    cards[4].metric(f"Participación {selected_option_label}", f"{reference_share:.1f}%")
+    st.markdown("### Cómo se usa esta lectura")
+    st.markdown(
+        "1. **Mercado electoral:** dimensiona el universo y la votación histórica disponible.  \n"
+        "2. **Escenario electoral:** documenta la hipótesis de participación, competencia y meta porcentual.  \n"
+        "3. **Metas territoriales:** distribuye esa hipótesis a distrito, municipio y sección.  \n"
+        "4. **Mapa de oportunidad:** permite visualizar la brecha, la meta y la cobertura operativa."
+    )
+    scenario_rows = query(
+        """SELECT name, target_percentage, participation_assumption, competition_context, coalition_context, active
+           FROM electoral_scenarios
+           WHERE profile_id = ? AND state = ? AND election_year = ?
+           ORDER BY active DESC, target_percentage""",
+        (profile_id, state, election_year),
+    )
+    active = next((row for row in scenario_rows if row["active"]), None)
+    # Se usan contenedores consecutivos: primero el escenario y, debajo, la
+    # distribución completa del mercado para aprovechar todo el ancho.
+    left = st.container()
+    right = st.container()
+    with left:
+        st.markdown("### Escenario conectado")
+        if active:
+            target_votes = round(valid_votes * float(active["target_percentage"]) / 100)
+            gap = max(target_votes - reference_votes, 0)
+            st.success(
+                f"**{active['name']}** está activo: meta de **{active['target_percentage']:.1f}%** "
+                f"({target_votes:,} votos de referencia). Brecha frente a {selected_option_label}: **{gap:,} votos**."
+            )
+            st.caption(
+                f"Competencia: {active['competition_context'] or 'Por documentar'} · "
+                f"Alianzas: {active['coalition_context'] or 'Por documentar'}"
+            )
+        else:
+            st.info("No hay un escenario activo. El siguiente paso es registrarlo y validarlo en Escenarios electorales.")
+    with right:
+        st.markdown(f"### Participación del mercado electoral · {election_year}")
+        distribution = pd.DataFrame([
+            {"Opción": label, "Votos": int(market[key].sum())}
+            for label, key in option_labels.items()
+        ]).sort_values("Votos", ascending=False).reset_index(drop=True)
+        distribution["Porcentaje"] = (
+            distribution["Votos"] / valid_votes * 100 if valid_votes else 0.0
+        )
+        # Un pastel con todas las candidaturas menores sería ilegible. Conserva
+        # las ocho fuerzas principales y agrupa el resto sin perder su peso.
+        pie_distribution = distribution.head(8).copy()
+        remaining_votes = int(distribution.iloc[8:]["Votos"].sum())
+        if remaining_votes:
+            pie_distribution = pd.concat([
+                pie_distribution,
+                pd.DataFrame([{
+                    "Opción": "Otras opciones",
+                    "Votos": remaining_votes,
+                    "Porcentaje": remaining_votes / valid_votes * 100 if valid_votes else 0.0,
+                }]),
+            ], ignore_index=True)
+        # Se renderiza como SVG/CSS en lugar del componente Vega. Así cada
+        # cambio de elección reconstruye también la geometría del pastel y no
+        # sólo su título o leyenda.
+        pie_colors = ["#0f766e", "#2563eb", "#ea580c", "#7c3aed", "#dc2626", "#0891b2", "#ca8a04", "#be123c", "#64748b"]
+        pie_total = int(pie_distribution["Votos"].sum())
+        start_pct = 0.0
+        slice_paths, legend_items = [], []
+        center, radius = 250, 225
+        for position, item in pie_distribution.reset_index(drop=True).iterrows():
+            color = pie_colors[position % len(pie_colors)]
+            share = float(item["Votos"]) / pie_total * 100 if pie_total else 0.0
+            end_pct = start_pct + share
+            start_angle = -90 + (start_pct * 3.6)
+            end_angle = -90 + (end_pct * 3.6)
+            start_x = center + radius * math.cos(math.radians(start_angle))
+            start_y = center + radius * math.sin(math.radians(start_angle))
+            end_x = center + radius * math.cos(math.radians(end_angle))
+            end_y = center + radius * math.sin(math.radians(end_angle))
+            large_arc = 1 if share > 50 else 0
+            path = (
+                f"M {center} {center} L {start_x:.2f} {start_y:.2f} "
+                f"A {radius} {radius} 0 {large_arc} 1 {end_x:.2f} {end_y:.2f} Z"
+            )
+            tooltip = f"{item['Opción']}: {int(item['Votos']):,} votos ({share:.1f}% de votos válidos)"
+            slice_paths.append(
+                f"<path class='market-pie-slice' fill='{color}' d='{path}'><title>{escape(tooltip)}</title></path>"
+            )
+            legend_items.append(
+                "<div class='market-pie-legend-item'>"
+                f"<span style='background:{color}'></span>"
+                f"<b>{escape(str(item['Opción']))}</b><br>"
+                f"{int(item['Votos']):,} votos · {share:.1f}%"
+                "</div>"
+            )
+            start_pct = end_pct
+        st.markdown(
+            "<div class='market-pie-wrap'>"
+            "<div class='market-pie'>"
+            "<svg viewBox='0 0 500 500' role='img' aria-label='Distribución de votos válidos; pasa el cursor por un segmento para ver su detalle'>"
+            f"{''.join(slice_paths)}"
+            "<circle class='market-pie-center' cx='250' cy='250' r='95'></circle>"
+            "<text class='market-pie-center-label' x='250' y='244'>Votos</text>"
+            "<text class='market-pie-center-detail' x='250' y='267'>válidos</text>"
+            "</svg></div>"
+            f"<div class='market-pie-legend'>{''.join(legend_items)}</div>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            f"Distribución de votos válidos de la elección histórica {election_year}. "
+            "Las ocho fuerzas con mayor votación se muestran por separado; las demás se agrupan como Otras opciones."
+        )
+    st.caption(
+        f"Fuente: resultados de **{election_type} {election_year}** cargados en la plataforma. "
+        "Las coaliciones se presentan conforme a las columnas oficiales disponibles en la fuente."
+    )
+    comparison_elections = sorted(
+        (year, result_type)
+        for year, result_type in available_elections
+        if (year, result_type) != (election_year, election_type)
+    )
+    if comparison_elections:
+        st.divider()
+        st.markdown("### Análisis entre elecciones")
+        st.caption(
+            "Compara la elección activa con otra elección histórica ya cargada para este perfil y estado. "
+            "Es una lectura de resultados agregados; no convierte automáticamente coaliciones de un proceso a otro."
+        )
+        base_year, base_election_type = st.selectbox(
+            "Elección base para comparar",
+            comparison_elections,
+            format_func=lambda item: f"{item[0]} · {item[1]}",
+            key=f"market_comparison_election_{state}_{election_year}_{election_type}",
+        )
+        current_summary = electoral_market_summary(state, election_year, election_type)
+        base_summary = electoral_market_summary(state, base_year, base_election_type)
+        if current_summary and base_summary:
+            participation_delta = float(current_summary["participation"]) - float(base_summary["participation"])
+            valid_delta = int(current_summary["valid_votes"]) - int(base_summary["valid_votes"])
+            nominal_delta = int(current_summary["nominal"]) - int(base_summary["nominal"])
+            comparison_cards = st.columns(4)
+            comparison_cards[0].metric(
+                "Participación", f"{current_summary['participation']:.1f}%", f"{participation_delta:+.1f} pp"
+            )
+            comparison_cards[1].metric(
+                "Votos válidos", f"{int(current_summary['valid_votes']):,}", f"{valid_delta:+,}"
+            )
+            comparison_cards[2].metric(
+                "Lista nominal", f"{int(current_summary['nominal']):,}", f"{nominal_delta:+,}"
+            )
+            current_options = current_summary["options"]
+            base_options = base_summary["options"]
+            current_leader, current_leader_votes = max(current_options.items(), key=lambda item: item[1])
+            base_leader, base_leader_votes = max(base_options.items(), key=lambda item: item[1])
+            current_leader_share = current_leader_votes / int(current_summary["valid_votes"]) * 100 if current_summary["valid_votes"] else 0
+            base_leader_share = base_leader_votes / int(base_summary["valid_votes"]) * 100 if base_summary["valid_votes"] else 0
+            comparison_cards[3].metric(
+                f"Primera fuerza {election_year}",
+                f"{current_leader_share:.1f}%",
+                current_leader,
+            )
+
+            st.markdown("#### Lectura automática")
+            participation_direction = "aumentó" if participation_delta >= 0 else "disminuyó"
+            vote_direction = "más" if valid_delta >= 0 else "menos"
+            st.write(
+                f"Entre **{base_election_type} {base_year}** y **{election_type} {election_year}**, la participación {participation_direction} "
+                f"**{abs(participation_delta):.1f} puntos porcentuales**. Hubo **{abs(valid_delta):,} votos válidos {vote_direction}**. "
+                f"La primera opción registrada pasó de **{base_leader}** ({base_leader_share:.1f}%) "
+                f"a **{current_leader}** ({current_leader_share:.1f}%)."
+            )
+
+            comparable_labels = sorted(set(current_options) | set(base_options))
+            option_comparison = pd.DataFrame([
+                {
+                    "Opción registrada": label,
+                    f"Votos {base_year}": int(base_options.get(label, 0)),
+                    f"Votos {election_year}": int(current_options.get(label, 0)),
+                    "Variación de votos": int(current_options.get(label, 0)) - int(base_options.get(label, 0)),
+                }
+                for label in comparable_labels
+            ])
+            option_comparison["Participación " + str(base_year)] = (
+                option_comparison[f"Votos {base_year}"] / int(base_summary["valid_votes"]) * 100
+                if base_summary["valid_votes"] else 0.0
+            )
+            option_comparison["Participación " + str(election_year)] = (
+                option_comparison[f"Votos {election_year}"] / int(current_summary["valid_votes"]) * 100
+                if current_summary["valid_votes"] else 0.0
+            )
+            option_comparison = option_comparison.sort_values(
+                f"Votos {election_year}", ascending=False
+            ).reset_index(drop=True)
+            st.dataframe(
+                option_comparison,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    f"Votos {base_year}": st.column_config.NumberColumn(format="%,d"),
+                    f"Votos {election_year}": st.column_config.NumberColumn(format="%,d"),
+                    "Variación de votos": st.column_config.NumberColumn(format="%+d"),
+                    "Participación " + str(base_year): st.column_config.NumberColumn(format="%.1f%%"),
+                    "Participación " + str(election_year): st.column_config.NumberColumn(format="%.1f%%"),
+                },
+            )
+            st.info(
+                "Precaución de interpretación: una coalición, candidatura común o partido puede cambiar de nombre, "
+                "integración o columna entre elecciones. Compara directamente las filas equivalentes sólo cuando la "
+                "autoridad electoral las haya publicado de manera comparable."
+            )
+            if base_election_type != election_type:
+                st.warning(
+                    "Los dos procesos son de tipo distinto. La comparación sirve para dimensionar el mercado, "
+                    "pero no para concluir un cambio directo de preferencia entre diputaciones, ayuntamientos o gubernatura."
+                )
+
+
 def render_territorial_prioritization() -> None:
     """Rank aggregate territorial units using documented electoral criteria only."""
     st.subheader("Priorización territorial")
@@ -793,21 +1839,47 @@ def render_territorial_prioritization() -> None:
         st.info("Asigna un estado al perfil para poder priorizar territorios.")
         return
     selected_state = st.selectbox("Estado", states, key="priority_state")
+    available_elections = query(
+        """
+        SELECT election_type, election_year, COUNT(*) AS municipios
+        FROM territorial_election_results
+        WHERE state = ? AND municipality IS NOT NULL AND TRIM(municipality) <> ''
+        GROUP BY election_type, election_year
+        ORDER BY
+            CASE WHEN election_type = 'Ayuntamientos' AND election_year = 2024 THEN 0 ELSE 1 END,
+            election_year DESC, election_type
+        """,
+        (selected_state,),
+    )
+    if not available_elections:
+        st.info(
+            "No hay resultados municipales cargados para este estado. "
+            "Cárgalos desde Territorio y fuentes antes de usar la priorización."
+        )
+        return
+    election_options = {
+        f"{row['election_type']} · {int(row['election_year'])} ({int(row['municipios'])} municipios)": row
+        for row in available_elections
+    }
+    selected_election_label = st.selectbox(
+        "Elección de referencia",
+        list(election_options),
+        help="La priorización usa esta elección como línea base histórica. Puedes cambiarla cuando haya más procesos cargados.",
+        key=f"priority_election_{selected_state}",
+    )
+    selected_election = election_options[selected_election_label]
+    election_type = selected_election["election_type"]
+    election_year = int(selected_election["election_year"])
+    election_label = f"{election_type} {election_year}"
     election_rows = query(
         """
         SELECT municipality, payload, election_year, source
         FROM territorial_election_results
-        WHERE state = ? AND election_type = 'Ayuntamientos' AND election_year = 2024
+        WHERE state = ? AND election_type = ? AND election_year = ?
         ORDER BY municipality
         """,
-        (selected_state,),
+        (selected_state, election_type, election_year),
     )
-    if not election_rows:
-        st.info(
-            "No hay resultados municipales de ayuntamientos 2024 para este estado. "
-            "Cárgalos desde Territorio y fuentes antes de usar la priorización."
-        )
-        return
     rows = []
     for row in election_rows:
         try:
@@ -830,9 +1902,39 @@ def render_territorial_prioritization() -> None:
         key.replace("votes_", "").replace("_", " ").upper(): key for key in vote_keys
     }
     selected_party = st.selectbox(
-        "Partido o coalición de referencia", list(party_options), key=f"priority_party_{selected_state}"
+        "Partido o coalición de referencia", list(party_options),
+        key=f"priority_party_{selected_state}_{election_type}_{election_year}"
     )
     party_key = party_options[selected_party]
+    priority_models = {
+        "Equilibrado": {
+            "weights": (45, 30, 25),
+            "third": "fuerza histórica de la opción de referencia",
+            "description": "Combina tamaño electoral, potencial de participación y antecedente de votación.",
+        },
+        "Movilización": {
+            "weights": (25, 60, 15),
+            "third": "fuerza histórica de la opción de referencia",
+            "description": "Da más peso a municipios con brecha de participación para orientar esfuerzos de movilización.",
+        },
+        "Defensa del voto": {
+            "weights": (20, 15, 65),
+            "third": "fuerza histórica de la opción de referencia",
+            "description": "Da más peso a los municipios donde la opción elegida ya cuenta con mayor respaldo histórico.",
+        },
+        "Competencia cerrada": {
+            "weights": (35, 20, 45),
+            "third": "competitividad histórica entre las dos principales opciones",
+            "description": "Da prioridad a municipios con mayor tamaño y menor diferencia entre las dos fuerzas más votadas.",
+        },
+    }
+    selected_model = st.selectbox(
+        "Enfoque de priorización",
+        list(priority_models),
+        help="Cambia los pesos del índice para comparar distintas decisiones territoriales usando la misma elección base.",
+        key=f"priority_model_{selected_state}_{election_type}_{election_year}",
+    )
+    priority_model = priority_models[selected_model]
     for column in ["lista_nominal", "votes_total", "numero_votos_validos", "participacion_pct", party_key]:
         raw_values = results[column] if column in results else pd.Series(0, index=results.index)
         results[column] = pd.to_numeric(raw_values, errors="coerce").fillna(0)
@@ -843,6 +1945,19 @@ def render_territorial_prioritization() -> None:
     results["porcentaje_opcion"] = (
         results[party_key] / results["numero_votos_validos"].replace(0, pd.NA) * 100
     ).fillna(0)
+    vote_matrix = results[vote_keys].apply(pd.to_numeric, errors="coerce").fillna(0)
+    if len(vote_keys) >= 2:
+        top_two = pd.DataFrame(
+            np.sort(vote_matrix.to_numpy(), axis=1)[:, -2:],
+            index=results.index,
+            columns=["segundo", "primero"],
+        )
+        results["margen_competencia"] = (
+            (top_two["primero"] - top_two["segundo"])
+            / results["numero_votos_validos"].replace(0, pd.NA) * 100
+        ).fillna(100)
+    else:
+        results["margen_competencia"] = 100.0
     total_nominal = results["lista_nominal"].sum()
     total_votes = results["votes_total"].sum()
     state_participation = total_votes / total_nominal * 100 if total_nominal else 0
@@ -851,10 +1966,17 @@ def render_territorial_prioritization() -> None:
     max_nominal = results["lista_nominal"].max() or 1
     max_gap = results["brecha_participacion"].max() or 1
     max_party_share = results["porcentaje_opcion"].max() or 1
+    max_margin = results["margen_competencia"].max() or 1
+    results["competitividad"] = (1 - results["margen_competencia"] / max_margin).clip(lower=0, upper=1)
+    weight_nominal, weight_gap, weight_third = priority_model["weights"]
+    third_factor = (
+        results["competitividad"] if selected_model == "Competencia cerrada"
+        else results["porcentaje_opcion"] / max_party_share
+    )
     results["indice_prioridad"] = (
-        results["lista_nominal"] / max_nominal * 45
-        + results["brecha_participacion"] / max_gap * 30
-        + results["porcentaje_opcion"] / max_party_share * 25
+        results["lista_nominal"] / max_nominal * weight_nominal
+        + results["brecha_participacion"] / max_gap * weight_gap
+        + third_factor * weight_third
     ).round(1)
     results["prioridad"] = pd.cut(
         results["indice_prioridad"], bins=[-1, 39.9, 69.9, 100], labels=["Baja", "Media", "Alta"]
@@ -864,9 +1986,12 @@ def render_territorial_prioritization() -> None:
     results["orden"] = results.index
 
     st.markdown("### Criterio de priorización")
+    st.caption(f"Elección base: **{election_label}** · {len(results)} municipios con información disponible.")
     st.write(
-        "El índice combina **45% volumen de lista nominal**, **30% brecha de participación respecto al promedio estatal** "
-        f"y **25% porcentaje histórico de {selected_party}**. Sirve para ordenar revisión y coordinación territorial; "
+        f"Enfoque seleccionado: **{selected_model}**. {priority_model['description']} "
+        f"El índice combina **{weight_nominal}% volumen de lista nominal**, "
+        f"**{weight_gap}% brecha de participación respecto al promedio estatal** y "
+        f"**{weight_third}% {priority_model['third']}**. Sirve para ordenar revisión y coordinación territorial; "
         "no predice una elección ni determina decisiones sobre personas."
     )
     metric_a, metric_b, metric_c, metric_d = st.columns(4)
@@ -889,7 +2014,10 @@ def render_territorial_prioritization() -> None:
     st.dataframe(display, use_container_width=True, hide_index=True)
     st.bar_chart(results.set_index("municipio")[["indice_prioridad"]].head(15), horizontal=True)
 
-    municipality = st.selectbox("Explicar la prioridad de un municipio", list(results["municipio"]), key=f"priority_municipality_{selected_state}")
+    municipality = st.selectbox(
+        "Explicar la prioridad de un municipio", list(results["municipio"]),
+        key=f"priority_municipality_{selected_state}_{election_type}_{election_year}"
+    )
     detail = results.loc[results["municipio"] == municipality].iloc[0]
     st.info(
         f"**{municipality}** tiene prioridad **{detail['prioridad']}** (índice {detail['indice_prioridad']:.1f}/100): "
@@ -898,7 +2026,7 @@ def render_territorial_prioritization() -> None:
         f"({detail['porcentaje_opcion']:.1f}% de los votos válidos)."
     )
     st.caption(
-        "Fuente: resultados municipales de ayuntamientos 2024 cargados en la plataforma. "
+        f"Fuente: resultados municipales de {election_label} cargados en la plataforma. "
         "El índice es reproducible y puede ajustarse cuando se integren cobertura territorial, actividades y seguimiento de campo."
     )
     st.divider()
@@ -912,17 +2040,17 @@ def render_territorial_prioritization() -> None:
         "Municipios a registrar como prioridad",
         list(results["municipio"]),
         default=default_priorities,
-        key=f"priority_selection_{selected_state}_{selected_party}",
+        key=f"priority_selection_{selected_state}_{election_type}_{election_year}_{selected_party}",
     )
     decision_status = st.selectbox(
         "Estatus de la decisión",
         ["Propuesta", "Validada por coordinación"],
-        key=f"priority_status_{selected_state}_{selected_party}",
+        key=f"priority_status_{selected_state}_{election_type}_{election_year}_{selected_party}",
     )
     decision_note = st.text_area(
         "Nota de coordinación (opcional)",
         placeholder="Ejemplo: revisar presencia territorial y preparar un plan de trabajo municipal.",
-        key=f"priority_note_{selected_state}_{selected_party}",
+        key=f"priority_note_{selected_state}_{election_type}_{election_year}_{selected_party}",
     )
     if st.button("Guardar prioridades territoriales", type="primary", disabled=not selected_municipalities):
         for municipality_name in selected_municipalities:
@@ -938,7 +2066,7 @@ def render_territorial_prioritization() -> None:
                 INSERT INTO territorial_priorities
                 (profile_id, state, municipality, election_year, party_or_coalition, priority_level,
                  priority_index, rationale, status)
-                VALUES (?, ?, ?, 2024, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(profile_id, state, municipality, election_year, party_or_coalition) DO UPDATE SET
                     priority_level = excluded.priority_level,
                     priority_index = excluded.priority_index,
@@ -947,7 +2075,7 @@ def render_territorial_prioritization() -> None:
                     updated_at = CURRENT_TIMESTAMP
                 """,
                 (
-                    profile_id, selected_state, municipality_name, selected_party,
+                    profile_id, selected_state, municipality_name, election_year, selected_party,
                     selected_row["prioridad"], float(selected_row["indice_prioridad"]), rationale, decision_status,
                 ),
             )
@@ -958,14 +2086,1621 @@ def render_territorial_prioritization() -> None:
         SELECT municipality AS municipio, priority_level AS prioridad, priority_index AS indice,
                status AS estatus, rationale AS fundamento, updated_at AS actualizado
         FROM territorial_priorities
-        WHERE profile_id = ? AND state = ? AND party_or_coalition = ?
+        WHERE profile_id = ? AND state = ? AND election_year = ? AND party_or_coalition = ?
         ORDER BY priority_index DESC, municipality
         """,
-        (profile_id, selected_state, selected_party),
+        (profile_id, selected_state, election_year, selected_party),
     )
     if saved_priorities:
         st.markdown("#### Prioridades guardadas")
         st.dataframe(pd.DataFrame(saved_priorities), use_container_width=True, hide_index=True)
+
+
+def render_electoral_scenarios() -> None:
+    """Register the assumptions that authorize a territorial vote-goal model."""
+    st.subheader("Escenarios electorales")
+    st.caption(
+        "Un escenario expresa una hipótesis de competencia, participación y meta porcentual. "
+        "No es una encuesta ni un pronóstico; es el punto de partida documentado para las metas territoriales."
+    )
+    options = profile_options()
+    if not options:
+        st.info("Primero crea un perfil y asígnale un estado.")
+        return
+    selected_profile = st.selectbox("Perfil", list(options), key="scenario_profile")
+    profile_id = options[selected_profile]
+    states = profile_states(profile_id)
+    if not states:
+        st.info("Asigna un estado al perfil antes de crear escenarios.")
+        return
+    state = st.selectbox("Estado", states, key="scenario_state")
+    years = query(
+        """SELECT DISTINCT election_year FROM territorial_section_results
+           WHERE state = ? ORDER BY election_year DESC""",
+        (state,),
+    )
+    if not years:
+        st.info("Carga primero resultados por sección desde Visor electoral.")
+        return
+    election_year = st.selectbox(
+        "Elección histórica de referencia", [int(row["election_year"]) for row in years],
+        key=f"scenario_year_{state}",
+    )
+    scenarios = query(
+        """SELECT * FROM electoral_scenarios
+           WHERE profile_id = ? AND state = ? AND election_year = ?
+           ORDER BY active DESC, target_percentage, name""",
+        (profile_id, state, election_year),
+    )
+    if not scenarios:
+        st.info("Aún no hay escenarios. Puedes crear uno o cargar los tres escenarios iniciales sugeridos.")
+    if st.button("Cargar escenarios iniciales sugeridos"):
+        suggested = [
+            ("Competir", 35.0, "Escenario de competencia abierta", "Sin coalición confirmada", "Meta inicial para competir con posibilidad de victoria."),
+            ("Contienda cerrada", 38.0, "Tres bloques competitivos", "Por confirmar", "Escenario central para una contienda competida."),
+            ("Margen robusto", 40.0, "Competencia fuerte o concentrada", "Por confirmar", "Meta con mayor margen frente a una contienda exigente."),
+        ]
+        for name, target, competition, coalition, rationale in suggested:
+            execute(
+                """INSERT INTO electoral_scenarios
+                   (profile_id, state, election_year, name, target_percentage, competition_context,
+                    coalition_context, rationale, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Borrador')
+                   ON CONFLICT(profile_id, state, election_year, name) DO NOTHING""",
+                (profile_id, state, election_year, name, target, competition, coalition, rationale),
+            )
+        st.success("Se cargaron los escenarios sugeridos. Revísalos y activa el que deseas usar.")
+        st.rerun()
+    with st.expander("Crear o ajustar un escenario", expanded=not scenarios):
+        with st.form(f"scenario_form_{profile_id}_{state}_{election_year}", clear_on_submit=True):
+            name = st.text_input("Nombre del escenario", placeholder="Ejemplo: Contienda cerrada")
+            cols = st.columns(2)
+            target_percentage = cols[0].number_input("Meta porcentual", min_value=1.0, max_value=100.0, value=38.0, step=0.5)
+            participation = cols[1].number_input("Participación esperada (opcional)", min_value=0.0, max_value=100.0, value=0.0, step=0.5)
+            competition = st.text_input("Contexto de competencia", placeholder="Ejemplo: tres bloques competitivos")
+            coalition = st.text_input("Supuesto de alianzas", placeholder="Ejemplo: sin coalición confirmada")
+            rationale = st.text_area("Fundamento del escenario", placeholder="Explica por qué se usará esta hipótesis.")
+            status = st.selectbox("Estatus", ["Borrador", "Validado por coordinación", "En uso"], index=0)
+            if st.form_submit_button("Guardar escenario", type="primary"):
+                if not name.strip() or not rationale.strip():
+                    st.error("Escribe un nombre y el fundamento del escenario.")
+                else:
+                    execute(
+                        """INSERT INTO electoral_scenarios
+                           (profile_id, state, election_year, name, target_percentage, participation_assumption,
+                            competition_context, coalition_context, rationale, status)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                           ON CONFLICT(profile_id, state, election_year, name) DO UPDATE SET
+                             target_percentage = excluded.target_percentage,
+                             participation_assumption = excluded.participation_assumption,
+                             competition_context = excluded.competition_context,
+                             coalition_context = excluded.coalition_context,
+                             rationale = excluded.rationale, status = excluded.status,
+                             updated_at = CURRENT_TIMESTAMP""",
+                        (profile_id, state, election_year, name.strip(), float(target_percentage),
+                         float(participation) if participation else None, competition.strip() or None,
+                         coalition.strip() or None, rationale.strip(), status),
+                    )
+                    st.success("Escenario guardado.")
+                    st.rerun()
+    if scenarios:
+        scenario_frame = pd.DataFrame(scenarios)[[
+            "name", "target_percentage", "participation_assumption", "competition_context",
+            "coalition_context", "status", "active", "rationale",
+        ]].rename(columns={
+            "name": "Escenario", "target_percentage": "Meta %", "participation_assumption": "Participación %",
+            "competition_context": "Competencia", "coalition_context": "Alianzas", "status": "Estatus",
+            "active": "Activo", "rationale": "Fundamento",
+        })
+        st.markdown("### Escenarios registrados")
+        st.dataframe(scenario_frame, use_container_width=True, hide_index=True)
+        selector = {f"{row['name']} · {row['target_percentage']:.1f}% · {row['status']}": row for row in scenarios}
+        selected_label = st.selectbox("Escenario que se utilizará para metas territoriales", list(selector), key="scenario_active_choice")
+        selected = selector[selected_label]
+        if st.button("Activar escenario para metas territoriales", type="primary"):
+            execute(
+                """UPDATE electoral_scenarios SET active = 0, updated_at = CURRENT_TIMESTAMP
+                   WHERE profile_id = ? AND state = ? AND election_year = ?""",
+                (profile_id, state, election_year),
+            )
+            execute(
+                """UPDATE electoral_scenarios SET active = 1, status = 'En uso', updated_at = CURRENT_TIMESTAMP
+                   WHERE id = ?""",
+                (int(selected["id"]),),
+            )
+            st.success(f"Escenario activo: {selected['name']}.")
+            st.rerun()
+
+
+def _section_target_frame(state: str, election_year: int, reference_option: str) -> pd.DataFrame:
+    """Build a reproducible planning frame from aggregate, official section results."""
+    rows = query(
+        """
+        SELECT district_code, section_code, municipality, payload
+        FROM territorial_section_results
+        WHERE state = ? AND election_year = ?
+        ORDER BY district_code, section_code
+        """,
+        (state, election_year),
+    )
+    records = []
+    for row in rows:
+        try:
+            payload = json.loads(row["payload"])
+        except (TypeError, json.JSONDecodeError):
+            continue
+        valid_votes = pd.to_numeric(payload.get("numero_votos_validos", 0), errors="coerce")
+        reference_votes = pd.to_numeric(payload.get(reference_option, 0), errors="coerce")
+        nominal_list = pd.to_numeric(payload.get("lista_nominal", 0), errors="coerce")
+        participation = pd.to_numeric(payload.get("participacion_pct", 0), errors="coerce")
+        records.append({
+            "Distrito": str(row["district_code"] or "").zfill(2),
+            "Municipio": row["municipality"] or "Sin municipio",
+            "Sección": str(row["section_code"] or "").zfill(4),
+            "Votos válidos": int(valid_votes) if pd.notna(valid_votes) else 0,
+            "Votos referencia": int(reference_votes) if pd.notna(reference_votes) else 0,
+            "Lista nominal": int(nominal_list) if pd.notna(nominal_list) else 0,
+            "Participación": float(participation) if pd.notna(participation) else 0.0,
+        })
+    return pd.DataFrame(records)
+
+
+def _municipal_target_frame(state: str, election_year: int, reference_option: str) -> pd.DataFrame:
+    """Use the official municipal aggregate when sections lack municipal assignment."""
+    rows = query(
+        """
+        SELECT municipality, payload
+        FROM territorial_election_results
+        WHERE state = ? AND election_year = ? AND TRIM(COALESCE(municipality, '')) <> ''
+        ORDER BY municipality
+        """,
+        (state, election_year),
+    )
+    records = []
+    for row in rows:
+        try:
+            payload = json.loads(row["payload"])
+        except (TypeError, json.JSONDecodeError):
+            continue
+        valid_votes = pd.to_numeric(payload.get("numero_votos_validos", 0), errors="coerce")
+        reference_votes = pd.to_numeric(payload.get(reference_option, 0), errors="coerce")
+        nominal_list = pd.to_numeric(payload.get("lista_nominal", 0), errors="coerce")
+        participation = pd.to_numeric(payload.get("participacion_pct", 0), errors="coerce")
+        records.append({
+            "Municipio": str(row["municipality"]).strip(),
+            "Votos válidos": int(valid_votes) if pd.notna(valid_votes) else 0,
+            "Votos referencia": int(reference_votes) if pd.notna(reference_votes) else 0,
+            "Lista nominal": int(nominal_list) if pd.notna(nominal_list) else 0,
+            "Participación": float(participation) if pd.notna(participation) else 0.0,
+        })
+    return pd.DataFrame(records)
+
+
+def _contextual_target_allocation(
+    units: pd.DataFrame, total_target: int, max_growth_share: float = 0.10,
+    minimum_floor: int = 25,
+) -> pd.DataFrame:
+    """Distribute a target with transparent territorial opportunity factors.
+
+    The total target is fixed by the parent territory. Targets are
+    not a uniform percentage: each receives a small minimum growth assignment,
+    then the remaining gap is distributed by electoral size, recoverable
+    participation, and historical competitiveness.
+    """
+    frame = units.copy()
+    if frame.empty:
+        return frame
+    reference_total = int(frame["Votos referencia"].sum())
+    statewide_gap = max(int(total_target) - reference_total, 0)
+    if statewide_gap == 0:
+        frame["Meta propuesta"] = frame["Votos referencia"].astype(int)
+        frame["Brecha propuesta"] = 0
+        return frame
+
+    valid_total = float(frame["Votos válidos"].sum()) or 1.0
+    state_participation = (
+        float(frame["Votos válidos"].sum()) / float(frame["Lista nominal"].sum()) * 100
+        if float(frame["Lista nominal"].sum()) else 0.0
+    )
+    current_share = frame["Votos referencia"] / frame["Votos válidos"].replace(0, pd.NA) * 100
+    volume = frame["Votos válidos"] / valid_total
+    participation_opportunity = (state_participation - frame["Participación"]).clip(lower=0)
+    competitiveness = 1 - (current_share - (total_target / valid_total * 100)).abs() / 100
+
+    def normalize(values: pd.Series) -> pd.Series:
+        values = pd.to_numeric(values, errors="coerce").fillna(0.0)
+        span = values.max() - values.min()
+        return (values - values.min()) / span if span else pd.Series(1.0, index=values.index)
+
+    # Each component is converted into a statewide share. This prevents a
+    # small municipality from receiving an outsized allocation merely because
+    # it ranks first on one isolated factor.
+    def share(values: pd.Series) -> pd.Series:
+        values = pd.to_numeric(values, errors="coerce").fillna(0.0).clip(lower=0)
+        return values / float(values.sum() or 1.0)
+
+    score = (
+        share(volume) * 0.60
+        + share(normalize(participation_opportunity)) * 0.25
+        + share(normalize(competitiveness)) * 0.15
+    )
+    # Cada municipio participa en el plan. En la cascada hacia secciones no se
+    # aplica este mínimo: de otro modo varios mínimos se sumarían y excederían
+    # la meta municipal que deben repartir.
+    minimum = (
+        pd.concat([
+            (frame["Votos referencia"] * 0.01).round(),
+            pd.Series(minimum_floor, index=frame.index),
+        ], axis=1).max(axis=1).astype(int)
+        if minimum_floor > 0 else pd.Series(0, index=frame.index, dtype=int)
+    )
+    # At municipal level, no unit is asked to grow more than ten percentage
+    # points of its valid vote universe above its historic base.
+    # This prevents an apparently mathematical but operationally implausible
+    # target in small municipalities.
+    ceiling = pd.concat([
+        frame["Votos referencia"] + pd.concat([
+            (frame["Votos válidos"] * max_growth_share).round(), minimum,
+        ], axis=1).max(axis=1),
+        frame["Votos válidos"],
+    ], axis=1).min(axis=1).astype(int)
+    capacity = (ceiling - frame["Votos referencia"]).clip(lower=0).astype(int)
+    allocation = pd.concat([minimum, capacity], axis=1).min(axis=1).astype(int)
+    remaining = statewide_gap - int(allocation.sum())
+    while remaining > 0:
+        available = (capacity - allocation).clip(lower=0)
+        eligible = available > 0
+        if not eligible.any():
+            break
+        weighted = score.where(eligible, 0.0)
+        proposed = (weighted / float(weighted.sum() or 1.0) * remaining).map(math.floor).astype(int)
+        proposed = pd.concat([proposed, available], axis=1).min(axis=1).astype(int)
+        if int(proposed.sum()) == 0:
+            top = weighted.sort_values(ascending=False).index[0]
+            proposed.loc[top] = 1
+        allocation += proposed
+        remaining = statewide_gap - int(allocation.sum())
+
+    frame["Brecha propuesta"] = allocation
+    frame["Meta propuesta"] = frame["Votos referencia"].astype(int) + frame["Brecha propuesta"].astype(int)
+    frame["Peso de oportunidad"] = score
+    return frame
+
+
+def _cascade_section_targets(sections: pd.DataFrame, municipal_targets: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Allocate each municipal goal to linked sections; retain unmapped sections for control."""
+    all_sections = sections.copy()
+    all_sections["Meta propuesta"] = all_sections["Votos referencia"].astype(int)
+    linked = all_sections[all_sections["Municipio"] != "Pendiente de vincular"].copy()
+    target_by_municipality = municipal_targets.set_index("Municipio")["Meta propuesta"].to_dict()
+    for municipality, target in target_by_municipality.items():
+        indexes = linked.index[linked["Municipio"] == municipality]
+        if len(indexes) == 0:
+            continue
+        # Sections inherit their municipality target. Their only hard ceiling
+        # is the valid-vote universe, so the municipal total can be reconciled.
+        allocated = _contextual_target_allocation(
+            linked.loc[indexes], int(target), max_growth_share=1.0, minimum_floor=0,
+        )
+        linked.loc[indexes, "Meta propuesta"] = allocated["Meta propuesta"].astype(int)
+    all_sections.loc[linked.index, "Meta propuesta"] = linked["Meta propuesta"].astype(int)
+    return all_sections, linked
+
+
+def _target_classification(reference_votes: int, valid_votes: int, target_pct: float) -> str:
+    """Classify aggregate territorial units; it does not classify individual voters."""
+    current_pct = (reference_votes / valid_votes * 100) if valid_votes else 0
+    if current_pct >= target_pct * 0.75:
+        return "Consolidación"
+    if current_pct >= target_pct * 0.25:
+        return "Crecimiento"
+    return "Recuperación"
+
+
+def _save_vote_targets(
+    profile_id: int, state: str, election_year: int, reference_option: str,
+    target_pct: float, sections: pd.DataFrame, scenario_id: int | None = None,
+    municipalities: pd.DataFrame | None = None,
+    district_sections: pd.DataFrame | None = None,
+) -> int:
+    """Store the same goal model at state, district, municipal, and section levels."""
+    if sections.empty:
+        return 0
+
+    official_state_source = municipalities if municipalities is not None and not municipalities.empty else sections
+    district_source = district_sections if district_sections is not None and not district_sections.empty else sections
+    levels: list[tuple[str, pd.DataFrame, list[str]]] = [
+        # State and municipal goals must reconcile with the official municipal
+        # concentrate. Section files can have a smaller coverage universe.
+        ("Estado", official_state_source.assign(**{"_state": state}), ["_state"]),
+        ("Distrito", district_source, ["Distrito"]),
+        ("Sección", sections, ["Distrito", "Municipio", "Sección"]),
+    ]
+    # The section file for some states has no municipality column.  In that case
+    # the municipal official aggregate is the reliable source for this level.
+    municipal_source = official_state_source
+    levels.insert(2, ("Municipio", municipal_source, ["Municipio"]))
+    execute(
+        """DELETE FROM territorial_vote_targets
+           WHERE profile_id = ? AND state = ? AND election_year = ?
+             AND territorial_level IN ('Estado', 'Municipio') AND reference_option = ?""",
+        (profile_id, state, election_year, reference_option),
+    )
+    # Las secciones sin municipio confirmado no deben conservar una meta
+    # operativa anterior: se informan como pendientes hasta contar con la
+    # clave territorial correcta, sin inventar una distribución.
+    if district_sections is not None:
+        execute(
+            """DELETE FROM territorial_vote_targets
+               WHERE profile_id = ? AND state = ? AND election_year = ?
+                 AND territorial_level = 'Sección' AND reference_option = ?
+                 AND municipality IN ('Sin municipio', 'Pendiente de vincular')""",
+            (profile_id, state, election_year, reference_option),
+        )
+    saved = 0
+    for level, source, group_columns in levels:
+        value_columns = ["Votos válidos", "Votos referencia"]
+        if "Meta propuesta" in source.columns:
+            value_columns.append("Meta propuesta")
+        grouped = source.groupby(group_columns, dropna=False, as_index=False)[value_columns].sum()
+        for _, row in grouped.iterrows():
+            district = str(row.get("Distrito", "") or "")
+            municipality = str(row.get("Municipio", "") or "")
+            section = str(row.get("Sección", "") or "")
+            valid_votes = int(row["Votos válidos"])
+            reference_votes = int(row["Votos referencia"])
+            contextual_goal = "Meta propuesta" in grouped.columns
+            target_votes = int(row["Meta propuesta"]) if contextual_goal else round(valid_votes * target_pct / 100)
+            vote_gap = max(target_votes - reference_votes, 0)
+            effective_target_pct = (target_votes / valid_votes * 100) if valid_votes else target_pct
+            execute(
+                """
+                INSERT INTO territorial_vote_targets
+                (profile_id, state, election_year, territorial_level, district, municipality,
+                 electoral_section, scenario_id, reference_option, historical_valid_votes,
+                 historical_reference_votes, target_percentage, target_votes, vote_gap, classification)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(profile_id, state, election_year, territorial_level, district, municipality,
+                            electoral_section, reference_option) DO UPDATE SET
+                    historical_valid_votes = excluded.historical_valid_votes,
+                    historical_reference_votes = excluded.historical_reference_votes,
+                    scenario_id = excluded.scenario_id,
+                    target_percentage = excluded.target_percentage,
+                    target_votes = excluded.target_votes,
+                    vote_gap = excluded.vote_gap,
+                    classification = excluded.classification,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    profile_id, state, election_year, level, district, municipality, section, scenario_id,
+                    reference_option, valid_votes, reference_votes, effective_target_pct, target_votes,
+                    vote_gap, _target_classification(reference_votes, valid_votes, effective_target_pct),
+                ),
+            )
+            saved += 1
+    return saved
+
+
+def render_territorial_goals() -> None:
+    """Configure an aggregate goal cascade and control the work needed to support it."""
+    st.subheader("Metas y control territorial")
+    st.caption(
+        "Distribuye una meta estatal de referencia a distritos, municipios y secciones con resultados públicos. "
+        "Sirve para planeación y seguimiento territorial; no predice ni determina el voto de personas."
+    )
+    options = profile_options()
+    if not options:
+        st.info("Primero crea un perfil y asígnale un estado.")
+        return
+    selected_profile = st.selectbox("Perfil", list(options), key="goal_profile")
+    profile_id = options[selected_profile]
+    states = profile_states(profile_id)
+    if not states:
+        st.info("Asigna un estado al perfil antes de configurar metas.")
+        return
+    # Scope the selector to the profile so a previous profile's state cannot
+    # remain selected after the analyst changes candidate.
+    state = st.selectbox("Estado", states, key=f"goal_state_{profile_id}")
+    years = query(
+        """SELECT DISTINCT election_year FROM territorial_section_results
+           WHERE state = ? ORDER BY election_year DESC""",
+        (state,),
+    )
+    if not years:
+        st.info("Aún no hay resultados por sección para este estado. Cárgalos desde Visor electoral.")
+        return
+    year_options = [int(row["election_year"]) for row in years]
+    election_year = st.selectbox("Elección de referencia", year_options, key=f"goal_year_{profile_id}_{state}")
+    sample = query(
+        """SELECT payload FROM territorial_section_results
+           WHERE state = ? AND election_year = ? LIMIT 1""",
+        (state, election_year),
+    )
+    try:
+        sample_payload = json.loads(sample[0]["payload"]) if sample else {}
+    except (TypeError, json.JSONDecodeError):
+        sample_payload = {}
+    option_keys = [
+        key for key in sample_payload
+        if key.startswith("votes_") and key not in {"votes_total", "votes_nulos", "votes_no_reg"}
+    ]
+    if not option_keys:
+        st.warning("Los resultados cargados no contienen votación por opción política.")
+        return
+    option_labels = {key.replace("votes_", "").replace("_", " ").upper(): key for key in option_keys}
+    active_scenarios = query(
+        """SELECT id, name, target_percentage, participation_assumption, competition_context, coalition_context
+           FROM electoral_scenarios
+           WHERE profile_id = ? AND state = ? AND election_year = ? AND active = 1
+           LIMIT 1""",
+        (profile_id, state, election_year),
+    )
+    if not active_scenarios:
+        st.info("Primero define y activa un escenario en “Escenarios electorales”. La meta territorial debe provenir de una hipótesis documentada.")
+        return
+    active_scenario = active_scenarios[0]
+    config_a, config_b = st.columns(2)
+    option_names = sorted(option_labels)
+    # Marco Bonilla's Chihuahua scenario is based on the Juntos Defendamos
+    # Chihuahua coalition; keep that reference visible by default.
+    preferred_reference = "votes_jdch" if profile_id == 4 and state == "Chihuahua" else None
+    preferred_label = next(
+        (label for label, value in option_labels.items() if value == preferred_reference),
+        option_names[0],
+    )
+    selected_option_label = config_a.selectbox(
+        "Opción de referencia", option_names,
+        index=option_names.index(preferred_label), key=f"goal_option_{profile_id}_{state}_v3",
+    )
+    reference_option = option_labels[selected_option_label]
+    config_b.metric("Escenario activo", f"{active_scenario['name']} · {active_scenario['target_percentage']:.1f}%")
+    target_pct = float(active_scenario["target_percentage"])
+    st.caption(
+        f"Hipótesis: {active_scenario['competition_context'] or 'Sin contexto registrado'} · "
+        f"Alianzas: {active_scenario['coalition_context'] or 'Sin supuesto registrado'}"
+    )
+    sections = _section_target_frame(state, election_year, reference_option)
+    if sections.empty:
+        st.warning("No fue posible interpretar los resultados por sección.")
+        return
+    municipalities = _municipal_target_frame(state, election_year, reference_option)
+    goal_basis = municipalities if not municipalities.empty else sections
+    projected_target = round(goal_basis["Votos válidos"].sum() * target_pct / 100)
+    historical_reference = int(goal_basis["Votos referencia"].sum())
+    gap = max(projected_target - historical_reference, 0)
+    contextual_municipalities = (
+        _contextual_target_allocation(municipalities, projected_target)
+        if not municipalities.empty else municipalities
+    )
+    _cascaded_sections, linked_sections = _cascade_section_targets(sections, contextual_municipalities)
+    cards = st.columns(4)
+    cards[0].metric("Secciones disponibles", f"{len(sections):,}")
+    cards[1].metric("Voto histórico", f"{historical_reference:,}")
+    cards[2].metric("Meta estatal", f"{projected_target:,}", f"{target_pct:.1f}% de votos válidos")
+    cards[3].metric("Brecha de referencia", f"{gap:,}")
+    st.caption(
+        "La meta estatal se calcula sobre votos válidos del concentrado municipal oficial. "
+        "Las metas municipales distribuyen la brecha estatal sin imponer el mismo porcentaje a cada municipio."
+    )
+    if not municipalities.empty:
+        st.caption(
+            "Fórmula municipal: 60% tamaño electoral, 25% participación recuperable y 15% competitividad histórica; "
+            "cada municipio recibe además una asignación mínima de crecimiento."
+        )
+    linked_target_total = int(linked_sections["Meta propuesta"].sum()) if not linked_sections.empty else 0
+    if not municipalities.empty and linked_target_total != projected_target:
+        st.warning(
+            "Validación de cobertura: la base municipal oficial y el archivo por sección no cubren exactamente el mismo "
+            "universo electoral. Las metas de municipios se conservan como referencia estatal; las metas de distrito y "
+            "sección son operativas para la cobertura disponible. No se fuerza una suma artificial entre ambos niveles."
+        )
+    if st.button("Generar o actualizar metas territoriales", type="primary"):
+        saved = _save_vote_targets(
+            profile_id, state, election_year, reference_option, target_pct, linked_sections,
+            scenario_id=int(active_scenario["id"]),
+            municipalities=contextual_municipalities,
+            district_sections=linked_sections,
+        )
+        st.success(f"Se actualizaron {saved:,} metas: estado, distritos, municipios y secciones.")
+        st.rerun()
+
+    stored = query(
+        """SELECT * FROM territorial_vote_targets
+           WHERE profile_id = ? AND state = ? AND election_year = ? AND reference_option = ?""",
+        (profile_id, state, election_year, reference_option),
+    )
+    # Repair older goal sets created from section files that did not contain a
+    # municipality.  This keeps the municipal control tab useful immediately.
+    existing_municipal_goals = sum(row["territorial_level"] == "Municipio" for row in stored)
+    if len(municipalities) > 1 and existing_municipal_goals < len(municipalities):
+        _save_vote_targets(
+            profile_id, state, election_year, reference_option, target_pct, linked_sections,
+            scenario_id=int(active_scenario["id"]), municipalities=contextual_municipalities,
+            district_sections=linked_sections,
+        )
+        stored = query(
+            """SELECT * FROM territorial_vote_targets
+               WHERE profile_id = ? AND state = ? AND election_year = ? AND reference_option = ?""",
+            (profile_id, state, election_year, reference_option),
+        )
+        st.info("Se reconstruyeron las metas municipales a partir de los resultados municipales oficiales.")
+    if not stored:
+        st.info("Configura la meta y presiona “Generar o actualizar” para habilitar el control operativo.")
+        return
+    target_frame = pd.DataFrame(stored)
+    tabs = st.tabs(["Distritos", "Municipios", "Secciones", "Control semanal"])
+    display_columns = [
+        "district", "municipality", "electoral_section", "historical_valid_votes",
+        "historical_reference_votes", "target_votes", "vote_gap", "classification",
+        "responsible", "coverage_status", "status",
+    ]
+    labels = {
+        "district": "Distrito", "municipality": "Municipio", "electoral_section": "Sección",
+        "historical_valid_votes": "Votos válidos", "historical_reference_votes": "Voto histórico",
+        "target_votes": "Meta", "vote_gap": "Brecha", "classification": "Tipo",
+        "responsible": "Responsable", "coverage_status": "Cobertura", "status": "Estatus",
+    }
+    with tabs[0]:
+        frame = target_frame[target_frame["territorial_level"] == "Distrito"].copy()
+        district_columns = [
+            "district", "historical_valid_votes", "historical_reference_votes", "target_votes",
+            "vote_gap", "classification", "responsible", "coverage_status", "status",
+        ]
+        st.caption("Cada fila es un distrito local. Municipio y sección se consultan en sus propias pestañas.")
+        st.dataframe(frame[district_columns].rename(columns=labels), use_container_width=True, hide_index=True)
+    with tabs[1]:
+        frame = target_frame[target_frame["territorial_level"] == "Municipio"].copy()
+        municipal_columns = [
+            "municipality", "historical_valid_votes", "historical_reference_votes", "target_votes",
+            "target_percentage", "vote_gap", "classification", "responsible", "coverage_status", "status",
+        ]
+        municipal_labels = {**labels, "target_percentage": "Meta municipal %", "vote_gap": "Aporte requerido"}
+        st.caption("Cada fila es un municipio. La meta estatal se distribuye por oportunidad local, no como porcentaje uniforme.")
+        st.dataframe(frame[municipal_columns].rename(columns=municipal_labels), use_container_width=True, hide_index=True)
+    with tabs[2]:
+        frame = target_frame[target_frame["territorial_level"] == "Sección"].copy()
+        mapped_sections = len(frame)
+        pending_sections = max(len(sections) - mapped_sections, 0)
+        st.caption(
+            f"{mapped_sections:,} secciones tienen meta y están vinculadas a municipio mediante la referencia electoral 2021. "
+            f"{pending_sections:,} quedan pendientes de validación y no reciben una meta hasta contar con su municipio correcto."
+        )
+        district_filter = st.selectbox("Distrito", ["Todos"] + sorted(frame["district"].unique().tolist()), key="goal_section_district")
+        visible = frame if district_filter == "Todos" else frame[frame["district"] == district_filter]
+        st.dataframe(visible[display_columns].rename(columns=labels), use_container_width=True, hide_index=True, height=380)
+        section_options = {
+            f"D{row['district']} · {row['municipality']} · sección {row['electoral_section']}": row
+            for _, row in visible.iterrows()
+        }
+        chosen_label = st.selectbox("Asignar o actualizar una sección", list(section_options), key="goal_section_assignment")
+        chosen = section_options[chosen_label]
+        assign_a, assign_b, assign_c = st.columns(3)
+        responsible = assign_a.text_input("Responsable o equipo", value=chosen["responsible"] or "")
+        coverage = assign_b.selectbox(
+            "Cobertura", ["Sin asignar", "Planeada", "Activa", "Verificada", "Incompleta"],
+            index=["Sin asignar", "Planeada", "Activa", "Verificada", "Incompleta"].index(
+                chosen["coverage_status"] if chosen["coverage_status"] in ["Sin asignar", "Planeada", "Activa", "Verificada", "Incompleta"] else "Sin asignar"
+            ),
+        )
+        target_status = assign_c.selectbox(
+            "Estatus", ["Propuesta", "Validada", "En ejecución", "Completada"],
+            index=["Propuesta", "Validada", "En ejecución", "Completada"].index(
+                chosen["status"] if chosen["status"] in ["Propuesta", "Validada", "En ejecución", "Completada"] else "Propuesta"
+            ),
+        )
+        evidence = st.text_input("Nota o evidencia de cobertura", value=chosen["evidence_note"] or "")
+        if st.button("Guardar control de sección"):
+            execute(
+                """UPDATE territorial_vote_targets
+                   SET responsible = ?, coverage_status = ?, status = ?, evidence_note = ?, updated_at = CURRENT_TIMESTAMP
+                   WHERE id = ?""",
+                (responsible.strip() or None, coverage, target_status, evidence.strip() or None, int(chosen["id"])),
+            )
+            st.success("Control de sección actualizado.")
+            st.rerun()
+    with tabs[3]:
+        section_targets = target_frame[target_frame["territorial_level"] == "Sección"]
+        active = section_targets[section_targets["coverage_status"].isin(["Activa", "Verificada"])]
+        assigned = section_targets[section_targets["responsible"].fillna("").str.strip().ne("")]
+        actions = query(
+            """SELECT status, COUNT(*) AS total FROM territorial_action_plans
+               WHERE profile_id = ? AND state = ? GROUP BY status""",
+            (profile_id, state),
+        )
+        action_counts = {row["status"]: row["total"] for row in actions}
+        control_cards = st.columns(4)
+        control_cards[0].metric("Secciones con responsable", f"{len(assigned):,}", f"de {len(section_targets):,}")
+        control_cards[1].metric("Cobertura activa/verificada", f"{len(active):,}")
+        control_cards[2].metric("Actividades en curso", action_counts.get("En curso", 0))
+        control_cards[3].metric("Actividades concluidas", action_counts.get("Concluida", 0))
+        st.markdown("#### Secciones que requieren prioridad operativa")
+        needs_attention = section_targets[
+            section_targets["coverage_status"].isin(["Sin asignar", "Incompleta"])
+        ].sort_values(["vote_gap", "historical_valid_votes"], ascending=False).head(25)
+        st.dataframe(needs_attention[display_columns].rename(columns=labels), use_container_width=True, hide_index=True)
+
+
+def render_strategy_operation_map() -> None:
+    """Visualize the saved operating plan, not only historic electoral results."""
+    st.subheader("Mapa de estrategia y operación")
+    st.caption(
+        "Consulta metas, brecha, cobertura, responsables y actividades sobre el territorio. "
+        "Los datos representan unidades territoriales agregadas; no se muestran perfiles individuales de electores."
+    )
+    options = profile_options()
+    if not options:
+        st.info("Primero crea un perfil y genera metas territoriales.")
+        return
+    selected_profile = st.selectbox("Perfil", list(options), key="strategy_map_profile")
+    profile_id = options[selected_profile]
+    states = profile_states(profile_id)
+    if not states:
+        st.info("Asigna un estado al perfil antes de abrir el mapa operativo.")
+        return
+    state = st.selectbox("Estado", states, key="strategy_map_state")
+    scenario_rows = query(
+        """SELECT DISTINCT vt.scenario_id, vt.election_year, vt.reference_option,
+                  COALESCE(es.name, 'Escenario sin nombre') AS scenario_name,
+                  vt.target_percentage
+           FROM territorial_vote_targets vt
+           LEFT JOIN electoral_scenarios es ON es.id = vt.scenario_id
+           WHERE vt.profile_id = ? AND vt.state = ?
+           ORDER BY vt.election_year DESC, scenario_name""",
+        (profile_id, state),
+    )
+    if not scenario_rows:
+        st.info("Aún no hay metas generadas. Activa un escenario y genera las metas en “Metas y control territorial”.")
+        return
+    scenario_options = {
+        f"{row['scenario_name']} · {row['target_percentage']:.1f}% · {row['election_year']}": row
+        for row in scenario_rows
+    }
+    selected_scenario = scenario_options[st.selectbox("Escenario operativo", list(scenario_options), key="strategy_map_scenario")]
+    targets = query(
+        """SELECT * FROM territorial_vote_targets
+           WHERE profile_id = ? AND state = ? AND election_year = ?
+             AND reference_option = ? AND COALESCE(scenario_id, -1) = COALESCE(?, -1)""",
+        (profile_id, state, int(selected_scenario["election_year"]), selected_scenario["reference_option"], selected_scenario["scenario_id"]),
+    )
+    if not targets:
+        st.info("No hay registros territoriales para el escenario seleccionado.")
+        return
+    target_frame = pd.DataFrame(targets)
+    level_label = st.radio("Nivel territorial", ["Distrito", "Municipio", "Sección"], horizontal=True, key="strategy_map_level")
+    metric_label = st.selectbox("Color del mapa", ["Brecha de votos", "Meta de votos", "Cobertura"], key="strategy_map_metric")
+    level_frame = target_frame[target_frame["territorial_level"] == level_label].copy()
+    if level_frame.empty:
+        st.info("No hay metas para este nivel territorial.")
+        return
+    coverage_value = {"Sin asignar": 0, "Planeada": 1, "Incompleta": 1, "Activa": 2, "Verificada": 3}
+    metric_column = {"Brecha de votos": "vote_gap", "Meta de votos": "target_votes", "Cobertura": "coverage_status"}[metric_label]
+    level_frame["valor_mapa"] = (
+        level_frame[metric_column].map(coverage_value).fillna(0)
+        if metric_label == "Cobertura" else pd.to_numeric(level_frame[metric_column], errors="coerce").fillna(0)
+    )
+    cards = st.columns(4)
+    cards[0].metric("Unidades en mapa", f"{len(level_frame):,}")
+    cards[1].metric("Meta agregada", f"{int(level_frame['target_votes'].sum()):,}")
+    cards[2].metric("Brecha agregada", f"{int(level_frame['vote_gap'].sum()):,}")
+    cards[3].metric("Cobertura activa/verificada", int(level_frame["coverage_status"].isin(["Activa", "Verificada"]).sum()))
+
+    if level_label == "Municipio":
+        geojson, geometry_source = load_municipal_context(state=state)
+        lookup = {municipality_match_key(row["municipality"]): row for _, row in level_frame.iterrows()}
+        def target_for(properties: dict):
+            return lookup.get(municipality_match_key(properties.get("municipio", properties.get("nom_agem", ""))))
+        def label_for(properties: dict):
+            return properties.get("municipio", properties.get("nom_agem", "Municipio"))
+    elif level_label == "Distrito":
+        geojson, geometry_source = load_local_district_context(state)
+        lookup = {str(row["district"]).zfill(2): row for _, row in level_frame.iterrows()}
+        def target_for(properties: dict):
+            return lookup.get(str(properties.get("distrito_local", properties.get("distrito", ""))).zfill(2))
+        def label_for(properties: dict):
+            return f"Distrito {str(properties.get('distrito_local', properties.get('distrito', ''))).zfill(2)}"
+    else:
+        geojson, geometry_source = load_electoral_sections_context(state)
+        lookup = {
+            (str(row["district"]).zfill(2), str(row["electoral_section"]).zfill(4)): row
+            for _, row in level_frame.iterrows()
+        }
+        def target_for(properties: dict):
+            return lookup.get((str(properties.get("distrito_local", "")).zfill(2), str(properties.get("seccion", "")).zfill(4)))
+        def label_for(properties: dict):
+            return f"Sección {str(properties.get('seccion', '')).zfill(4)} · Distrito {str(properties.get('distrito_local', '')).zfill(2)}"
+    if not geojson:
+        st.warning("No se encontró una capa GIS para el estado y nivel territorial seleccionados.")
+        return
+    enriched = json.loads(json.dumps(geojson))
+    for feature in enriched.get("features", []):
+        properties = feature.setdefault("properties", {})
+        target = target_for(properties)
+        properties["territorio_operativo"] = label_for(properties)
+        properties["valor_mapa"] = float(target["valor_mapa"]) if target is not None else None
+        properties["target_id"] = int(target["id"]) if target is not None else None
+        properties["meta"] = int(target["target_votes"]) if target is not None else None
+        properties["brecha"] = int(target["vote_gap"]) if target is not None else None
+        properties["tipo"] = target["classification"] if target is not None else "Sin meta"
+        properties["cobertura"] = target["coverage_status"] if target is not None else "Sin meta"
+        properties["responsable"] = target["responsible"] if target is not None and target["responsible"] else "Sin asignar"
+    mapped_geojson = colorize_geojson(enriched, "valor_mapa", low_color=(254, 226, 226), high_color=(153, 27, 27))
+    map_event = st.pydeck_chart(
+        pdk.Deck(
+            map_style="light",
+            initial_view_state=pdk.ViewState(**contextual_view(mapped_geojson)),
+            layers=[pdk.Layer(
+                "GeoJsonLayer", id="strategy-operation-map", data=mapped_geojson, opacity=0.78,
+                stroked=True, filled=True, get_fill_color="properties.pulso_color", get_line_color=[71, 85, 105, 150],
+                line_width_min_pixels=1, pickable=True,
+            )],
+            tooltip={"html": "<b>{territorio_operativo}</b><br/>Meta: {meta}<br/>Brecha: {brecha}<br/>Cobertura: {cobertura}<br/>Responsable: {responsable}", "style": {"backgroundColor": "#0f172a", "color": "white"}},
+        ),
+        use_container_width=True, height=560, on_select="rerun", selection_mode="single-object",
+        key=f"strategy_operation_{state}_{selected_scenario['scenario_id']}_{level_label}_{metric_label}",
+    )
+    selected_objects = map_event.selection.objects.get("strategy-operation-map", [])
+    if not selected_objects:
+        selected_objects = [item for values in map_event.selection.objects.values() for item in values]
+    target_id = None
+    if selected_objects:
+        selected = selected_objects[-1]
+        properties = selected.get("properties", {}) or selected.get("object", {}).get("properties", {})
+        target_id = properties.get("target_id") or selected.get("target_id")
+    st.caption(f"Capa GIS: {geometry_source}. El color representa {metric_label.lower()} del escenario seleccionado.")
+    if not target_id:
+        st.info("Haz clic en una unidad coloreada para abrir su ficha estratégica y operativa.")
+        return
+    selected_target = next((row for row in targets if int(row["id"]) == int(target_id)), None)
+    if not selected_target:
+        st.warning("La unidad elegida no tiene una meta registrada.")
+        return
+    st.markdown("### Ficha de estrategia territorial")
+    title = selected_target["electoral_section"] or selected_target["municipality"] or selected_target["district"] or state
+    st.markdown(f"#### {title} · {level_label}")
+    detail = st.columns(5)
+    detail[0].metric("Voto histórico", f"{int(selected_target['historical_reference_votes']):,}")
+    detail[1].metric("Meta", f"{int(selected_target['target_votes']):,}")
+    detail[2].metric("Brecha", f"{int(selected_target['vote_gap']):,}")
+    detail[3].metric("Tipo", selected_target["classification"])
+    detail[4].metric("Cobertura", selected_target["coverage_status"])
+    st.write(f"**Responsable:** {selected_target['responsible'] or 'Sin asignar'}")
+    actions = query(
+        """SELECT activity_name, district, municipality, electoral_section, responsible, due_date, priority_level, status, evidence_note
+           FROM territorial_action_plans
+           WHERE profile_id = ? AND state = ?
+             AND (COALESCE(district, '') = ? OR COALESCE(municipality, '') = ? OR COALESCE(electoral_section, '') = ?)
+           ORDER BY due_date, id""",
+        (profile_id, state, selected_target["district"], selected_target["municipality"], selected_target["electoral_section"]),
+    )
+    if actions:
+        st.markdown("#### Actividades vinculadas")
+        st.dataframe(pd.DataFrame(actions), use_container_width=True, hide_index=True)
+    else:
+        st.caption("No hay actividades vinculadas a esta unidad. Puedes agregarlas desde Planes de acción.")
+
+
+def render_inegi_ine_cross_analysis() -> None:
+    """Compare public INEGI context with official electoral aggregates.
+
+    Municipal observations are the appropriate common geography currently
+    loaded in the local database. Electoral sections are also available for
+    Hermosillo, but census data must not be assigned to a section unless an
+    official AGEB/manzana-to-section geographic intersection is loaded.
+    """
+    st.subheader("Cruce INEGI + INE")
+    st.caption(
+        "Explora relaciones entre población, vivienda y escolaridad de INEGI, y los resultados "
+        "electorales oficiales de 2024. Cambia los ejes para formular y revisar hipótesis territoriales."
+    )
+    with st.expander("Cómo leer y usar este tablero", expanded=True):
+        st.markdown(
+            """
+            **Qué compara.** Cada punto representa un municipio del estado seleccionado. Elige una variable en el eje **X** y otra en el eje **Y**: por ejemplo, viviendas y votación total, escolaridad y participación, o jóvenes y abstencionismo.
+
+            **Cómo interpretar.** Una concentración ascendente sugiere que, en este conjunto de municipios, los dos valores tienden a crecer juntos; una concentración dispersa indica que conviene revisar municipio por municipio. La gráfica **no prueba causalidad ni describe preferencias individuales**: sirve para segmentar el territorio y definir preguntas de campo, comunicación o movilización.
+
+            **Nivel de detalle.** La vista municipal permite cruzar INEGI e INE porque ambos datos están disponibles por municipio. La vista de secciones está disponible cuando existe un cruce geográfico verificable entre resultados electorales y datos censales.
+            """
+        )
+
+    available_states = query(
+        """SELECT DISTINCT state FROM territorial_election_results
+           WHERE state IN (SELECT DISTINCT state FROM territorial_indicators)
+           ORDER BY state"""
+    )
+    states = [row["state"] for row in available_states]
+    if not states:
+        st.info("Se requieren resultados electorales e indicadores INEGI para construir este cruce.")
+        return
+    # The section view is only available for Sonora.  Resetting the level when
+    # the state changes prevents a previously selected Sonora-only view from
+    # leaving the user with an empty panel for Chihuahua (or another state).
+    def _reset_cross_geography_level() -> None:
+        st.session_state["cross_inegi_ine_level"] = "Municipios · comparativo estatal"
+
+    default_state = states.index("Sonora") if "Sonora" in states else 0
+    state = st.selectbox(
+        "Estado",
+        states,
+        index=default_state,
+        key="cross_inegi_ine_state",
+        on_change=_reset_cross_geography_level,
+    )
+    level_options = ["Municipios · comparativo estatal"]
+    if state == "Sonora":
+        level_options.append("Secciones electorales · Hermosillo")
+    level = st.radio(
+        "Nivel de análisis",
+        level_options,
+        horizontal=True,
+        key="cross_inegi_ine_level",
+    )
+
+    if level == "Municipios · comparativo estatal":
+        election_rows = query(
+            """SELECT municipality, municipality_code, payload, election_type, election_year, source
+               FROM territorial_election_results
+               WHERE state = ? AND election_year = 2024
+               ORDER BY municipality""",
+            (state,),
+        )
+        if not election_rows:
+            st.info("No hay resultados municipales de 2024 cargados para este estado.")
+            return
+        records = []
+        election_types = set()
+        sources = set()
+        for row in election_rows:
+            try:
+                payload = json.loads(row["payload"])
+            except (TypeError, json.JSONDecodeError):
+                continue
+            election_types.add(str(row["election_type"]))
+            if row["source"]:
+                sources.add(str(row["source"]))
+            records.append({
+                "Municipio": row["municipality"],
+                "Clave municipio": str(row["municipality_code"] or "").zfill(3),
+                **payload,
+            })
+        frame = pd.DataFrame(records)
+        if frame.empty:
+            st.warning("Los resultados electorales municipales no contienen valores utilizables.")
+            return
+
+        indicator_rows = query(
+            """SELECT municipality, municipality_code, indicator_id, indicator_name, value, period
+               FROM territorial_indicators WHERE state = ?""",
+            (state,),
+        )
+        indicator_frame = pd.DataFrame(indicator_rows)
+        indicator_labels: dict[str, str] = {}
+        if not indicator_frame.empty:
+            indicator_frame["_municipality"] = indicator_frame["municipality"].map(municipality_match_key)
+            for indicator_id, group in indicator_frame.groupby("indicator_id"):
+                name = str(group["indicator_name"].iloc[0]).replace("�", "í")
+                label = f"INEGI · {name}"
+                column = f"inegi_{indicator_id}"
+                indicator_labels[column] = label
+                by_name = group.set_index("_municipality")["value"].to_dict()
+                frame[column] = frame["Municipio"].map(municipality_match_key).map(by_name)
+
+        numeric_election = [
+            column for column in frame.columns
+            if column.startswith("votes_") or column in {"lista_nominal", "numero_votos_validos", "participacion_pct"}
+        ]
+        for column in numeric_election:
+            frame[column] = pd.to_numeric(frame[column], errors="coerce").fillna(0)
+        if "participacion_pct" not in frame:
+            frame["participacion_pct"] = 0.0
+        frame["participacion_pct"] = frame["participacion_pct"].where(
+            frame["participacion_pct"] > 0,
+            frame.get("votes_total", pd.Series(0, index=frame.index))
+            / frame.get("lista_nominal", pd.Series(0, index=frame.index)).replace(0, pd.NA) * 100,
+        ).fillna(0)
+        frame["abstencionismo"] = (
+            frame.get("lista_nominal", pd.Series(0, index=frame.index))
+            - frame.get("votes_total", pd.Series(0, index=frame.index))
+        ).clip(lower=0)
+        frame["abstencionismo_pct"] = (100 - frame["participacion_pct"]).clip(lower=0)
+
+        aggregate_vote_keys = {"votes_total", "votes_nulos", "votes_no_reg", "votes_validos"}
+        vote_keys = [
+            column for column in frame.columns
+            if column.startswith("votes_") and column not in aggregate_vote_keys
+            and pd.to_numeric(frame[column], errors="coerce").fillna(0).sum() > 0
+        ]
+        for column in vote_keys:
+            label = ELECTORAL_VOTE_LABELS.get(column, column.replace("votes_", "").replace("_", " ").title())
+            percentage_column = f"share_{column}"
+            frame[percentage_column] = (
+                frame[column] / frame.get("numero_votos_validos", pd.Series(0, index=frame.index)).replace(0, pd.NA) * 100
+            ).fillna(0)
+            indicator_labels[column] = f"INE · Votos {label}"
+            indicator_labels[percentage_column] = f"INE · % votos válidos {label}"
+
+        indicator_labels.update({
+            "lista_nominal": "INE · Lista nominal",
+            "votes_total": "INE · Votación total",
+            "numero_votos_validos": "INE · Votos válidos",
+            "participacion_pct": "INE · Participación (%)",
+            "abstencionismo": "INE · Abstencionismo (personas)",
+            "abstencionismo_pct": "INE · Abstencionismo (%)",
+        })
+        available_metrics = [
+            column for column in indicator_labels
+            if column in frame.columns and pd.to_numeric(frame[column], errors="coerce").notna().sum() >= 2
+        ]
+        labels_to_columns = {indicator_labels[column]: column for column in available_metrics}
+        default_x = next((label for label in labels_to_columns if "Población total" in label), list(labels_to_columns)[0])
+        default_y = next((label for label in labels_to_columns if label == "INE · Votación total"), list(labels_to_columns)[0])
+        controls = st.columns([1, 1, .75])
+        with controls[0]:
+            x_label = st.selectbox("Eje X", list(labels_to_columns), index=list(labels_to_columns).index(default_x), key="cross_municipal_x")
+        with controls[1]:
+            y_label = st.selectbox("Eje Y", list(labels_to_columns), index=list(labels_to_columns).index(default_y), key="cross_municipal_y")
+        with controls[2]:
+            size_by = st.selectbox(
+                "Tamaño del punto", ["Uniforme", "Lista nominal", "Votación total"], key="cross_municipal_size"
+            )
+        x_column, y_column = labels_to_columns[x_label], labels_to_columns[y_label]
+        frame["Es Hermosillo"] = frame["Municipio"].map(municipality_match_key).eq("hermosillo")
+        size_column = {"Lista nominal": "lista_nominal", "Votación total": "votes_total"}.get(size_by)
+        tooltip_columns = ["Municipio", x_column, y_column, "lista_nominal", "votes_total", "participacion_pct", "abstencionismo_pct"]
+        tooltip = [alt.Tooltip("Municipio:N", title="Municipio")]
+        for column in tooltip_columns[1:]:
+            if column in frame.columns:
+                title = indicator_labels.get(column, column)
+                tooltip.append(alt.Tooltip(f"{column}:Q", title=title, format=",.2f"))
+        encoding = {
+            "x": alt.X(f"{x_column}:Q", title=x_label, scale=alt.Scale(zero=False)),
+            "y": alt.Y(f"{y_column}:Q", title=y_label, scale=alt.Scale(zero=False)),
+            "color": alt.Color("Es Hermosillo:N", title="Referencia", scale=alt.Scale(domain=[False, True], range=["#94a3b8", "#d97706"])),
+            "tooltip": tooltip,
+        }
+        if size_column:
+            encoding["size"] = alt.Size(f"{size_column}:Q", title=size_by, scale=alt.Scale(range=[70, 850]))
+        chart = alt.Chart(frame).mark_circle(opacity=.82, stroke="#ffffff", strokeWidth=1).encode(**encoding).properties(height=510).interactive()
+        st.altair_chart(chart, use_container_width=True)
+
+        hermosillo = frame[frame["Es Hermosillo"]]
+        if not hermosillo.empty:
+            row = hermosillo.iloc[0]
+            cards = st.columns(5)
+            cards[0].metric("Población total", f"{int(row.get('inegi_1002000001') or 0):,}")
+            cards[1].metric("Viviendas", f"{int(row.get('inegi_1003000001') or 0):,}")
+            cards[2].metric("Jóvenes 15–29", f"{float(row.get('inegi_1002000004') or 0):.1f}%")
+            cards[3].metric("Personas 65+", f"{int(row.get('inegi_6207140357') or 0):,}")
+            cards[4].metric("Participación 2024", f"{float(row.get('participacion_pct') or 0):.1f}%")
+            st.caption(
+                "Ficha de Hermosillo: población, sexo y escolaridad corresponden a INEGI; "
+                "viviendas y población 65+ usan el último periodo publicado en el Banco de Indicadores. "
+                "La elección se muestra según la carga oficial disponible."
+            )
+        st.markdown("#### Datos detrás de la gráfica")
+        table_columns = ["Municipio", x_column, y_column, "lista_nominal", "votes_total", "participacion_pct", "abstencionismo_pct"]
+        table_columns = list(dict.fromkeys(column for column in table_columns if column in frame.columns))
+        st.dataframe(
+            frame[table_columns].sort_values(y_column, ascending=False).rename(columns=indicator_labels),
+            use_container_width=True, hide_index=True,
+        )
+        st.caption(
+            f"Cobertura: {len(frame):,} municipios · elección 2024: {', '.join(sorted(election_types))}. "
+            "Fuentes: INEGI Banco de Indicadores e instituto electoral estatal/INE conforme a la carga local."
+        )
+        return
+
+    if state != "Sonora":
+        st.info("La vista seccional de esta primera versión está preparada con la carga 2024 de Hermosillo, Sonora.")
+        return
+    section_rows = query(
+        """SELECT district_code, section_code, payload
+           FROM territorial_section_results
+           WHERE state = ? AND municipality = ? AND election_year = 2024
+           ORDER BY district_code, section_code""",
+        (state, "Hermosillo"),
+    )
+    records = []
+    for row in section_rows:
+        try:
+            payload = json.loads(row["payload"])
+        except (TypeError, json.JSONDecodeError):
+            continue
+        records.append({"Distrito": str(row["district_code"]), "Sección": str(row["section_code"]), **payload})
+    section_frame = pd.DataFrame(records)
+    if section_frame.empty:
+        st.info("No hay secciones electorales 2024 cargadas para Hermosillo.")
+        return
+    for column in [column for column in section_frame if column.startswith("votes_") or column in {"lista_nominal", "participacion_pct"}]:
+        section_frame[column] = pd.to_numeric(section_frame[column], errors="coerce").fillna(0)
+    section_frame["abstencionismo"] = (section_frame["lista_nominal"] - section_frame["votes_total"]).clip(lower=0)
+    section_frame["abstencionismo_pct"] = (100 - section_frame["participacion_pct"]).clip(lower=0)
+    section_labels = {
+        "lista_nominal": "INE · Lista nominal", "votes_total": "INE · Votación total",
+        "numero_votos_validos": "INE · Votos válidos", "participacion_pct": "INE · Participación (%)",
+        "abstencionismo": "INE · Abstencionismo (personas)", "abstencionismo_pct": "INE · Abstencionismo (%)",
+    }
+    for column in section_frame.columns:
+        if column.startswith("votes_") and column not in {"votes_total", "votes_nulos", "votes_no_reg"}:
+            section_labels[column] = "INE · Votos " + ELECTORAL_VOTE_LABELS.get(column, column.replace("votes_", "").replace("_", " ").title())
+    options = {label: key for key, label in section_labels.items() if key in section_frame.columns}
+    axes = st.columns(2)
+    with axes[0]:
+        x_label = st.selectbox("Eje X", list(options), index=list(options).index("INE · Lista nominal"), key="cross_sections_x")
+    with axes[1]:
+        y_label = st.selectbox("Eje Y", list(options), index=list(options).index("INE · Votación total"), key="cross_sections_y")
+    x_column, y_column = options[x_label], options[y_label]
+    section_chart = alt.Chart(section_frame).mark_circle(opacity=.7, color="#0f766e").encode(
+        x=alt.X(f"{x_column}:Q", title=x_label, scale=alt.Scale(zero=False)),
+        y=alt.Y(f"{y_column}:Q", title=y_label, scale=alt.Scale(zero=False)),
+        tooltip=[
+            alt.Tooltip("Distrito:N", title="Distrito"), alt.Tooltip("Sección:N", title="Sección"),
+            alt.Tooltip(f"{x_column}:Q", title=x_label, format=",.2f"),
+            alt.Tooltip(f"{y_column}:Q", title=y_label, format=",.2f"),
+            alt.Tooltip("participacion_pct:Q", title="Participación (%)", format=".2f"),
+        ],
+    ).properties(height=510).interactive()
+    st.altair_chart(section_chart, use_container_width=True)
+    st.warning(
+        "Datos demográficos por sección aún no cargados. INEGI publica población, edad, escolaridad y viviendas por "
+        "AGEB o manzana; antes de asignarlos a una sección INE debe realizarse un cruce geográfico oficial. "
+        "Por ello esta vista muestra únicamente resultados electorales verificables por sección."
+    )
+    section_table_columns = list(dict.fromkeys([
+        "Distrito", "Sección", x_column, y_column, "lista_nominal", "votes_total",
+        "participacion_pct", "abstencionismo_pct",
+    ]))
+    section_table = section_frame[section_table_columns].drop_duplicates().sort_values(y_column, ascending=False)
+    st.dataframe(
+        section_table.rename(columns=section_labels),
+        use_container_width=True, hide_index=True,
+    )
+    st.caption("Cobertura: 433 secciones electorales de Hermosillo · Diputaciones locales 2024 · fuente oficial cargada del IEE Sonora.")
+
+
+def render_electoral_opportunity_map() -> None:
+    """Turn the municipal electoral and INEGI data already loaded into a clear opportunity map.
+
+    This is an aggregate territorial view.  It supports planning and review of
+    municipalities; it does not infer, score, or target individual voters.
+    """
+    st.subheader("Mapa de oportunidad electoral")
+    st.caption(
+        "Cruza resultados electorales municipales e indicadores INEGI para ordenar dónde conviene "
+        "revisar participación, volumen electoral, presencia histórica y contexto territorial."
+    )
+    with st.expander("¿Cómo leer esta pantalla?", expanded=False):
+        st.markdown(
+            """
+            Esta pantalla ayuda a identificar, comparar y revisar municipios a partir de resultados electorales históricos e información territorial pública. No es un pronóstico: es una herramienta para ordenar la conversación estratégica.
+
+            **1. Configuración del análisis**
+
+            - **Perfil:** persona, candidatura o institución para la cual se consulta el territorio.
+            - **Estado:** delimita los municipios, resultados y cartografía disponibles.
+            - **Elección de referencia:** define el año y tipo de elección usados como base histórica.
+            - **Opción de referencia:** partido, coalición o candidatura cuya votación histórica se quiere revisar.
+            - **Contexto INEGI:** agrega una variable social —población, conectividad, salud, agua, escolaridad, discapacidad u otra disponible— para interpretar cada municipio.
+            - **Color del mapa:** permite cambiar la variable que se representa geográficamente.
+
+            **2. Resumen estatal**
+
+            Las tarjetas muestran cuántos municipios tienen información, la lista nominal agregada, la participación estatal de la elección elegida y el número de municipios en prioridad alta. Sirven para entender el tamaño total del escenario antes de entrar al detalle.
+
+            **3. Cómo interpretar el mapa**
+
+            El mapa muestra municipios con tonos de azul: el tono más intenso representa un valor relativamente mayor para el criterio seleccionado. Puedes analizar:
+
+            - **Índice de oportunidad:** combina volumen electoral, participación pendiente de recuperar y presencia histórica de la opción.
+            - **Peso electoral:** resalta municipios con mayor lista nominal.
+            - **Participación baja:** identifica territorios por debajo del promedio estatal de participación.
+            - **Porcentaje de la opción:** muestra la fuerza histórica de la opción de referencia.
+            - **Indicador INEGI:** distribuye territorialmente la condición social elegida.
+
+            Selecciona un municipio con el control **Municipio activo** o haciendo clic en el mapa. El borde ámbar indica el municipio que está abierto en la ficha.
+
+            **4. Ficha de oportunidad**
+
+            La ficha lateral explica el municipio seleccionado: prioridad, índice, lista nominal, participación, brecha frente al promedio estatal, porcentaje histórico de la opción y su cambio frente a la elección anterior, cuando existe una comparación. También presenta el indicador INEGI elegido y una lectura de trabajo: movilizar participación, consolidar presencia o revisar competitividad.
+
+            **5. Ranking de municipios**
+
+            El ranking permite comparar los principales municipios sin depender del mapa. Úsalo para revisar qué territorios concentran mayor tamaño electoral, dónde hay brecha de participación o dónde existe mayor presencia histórica de la opción.
+
+            **Cómo se calcula la prioridad**
+
+            El índice de oportunidad combina **45% peso electoral**, **30% brecha de participación** y **25% presencia histórica de la opción elegida**. La prioridad alta corresponde al grupo superior de municipios comparados dentro del estado; no significa que un resultado electoral esté asegurado.
+
+            **Alcance de la información**
+
+            Los datos son agregados por municipio. INEGI aporta contexto territorial, no una relación causal con el voto. La pantalla orienta la revisión y planeación; no predice ni determina decisiones o preferencias de personas.
+            """
+        )
+    profiles = profile_options()
+    if not profiles:
+        st.info("Primero crea un perfil y asigna su estado desde Perfil territorial.")
+        return
+    profile_label = st.selectbox("Perfil", list(profiles), key="opportunity_profile")
+    profile_id = profiles[profile_label]
+    states = profile_states(profile_id)
+    if not states:
+        st.info("El perfil aún no tiene un estado asociado.")
+        return
+    state = st.selectbox("Estado", states, key="opportunity_state")
+    election_options_rows = query(
+        """SELECT DISTINCT election_type, election_year
+           FROM territorial_election_results WHERE state = ?
+           ORDER BY election_year DESC, election_type""",
+        (state,),
+    )
+    if not election_options_rows:
+        st.info("No hay resultados electorales municipales cargados para este estado.")
+        return
+    election_options = {
+        f"{row['election_type']} · {row['election_year']}": row
+        for row in election_options_rows
+    }
+    selected_election = election_options[st.selectbox(
+        "Elección de referencia", list(election_options), key="opportunity_election"
+    )]
+    election_type = selected_election["election_type"]
+    election_year = int(selected_election["election_year"])
+    rows = query(
+        """SELECT municipality, municipality_code, payload
+           FROM territorial_election_results
+           WHERE state = ? AND election_type = ? AND election_year = ?
+           ORDER BY municipality""",
+        (state, election_type, election_year),
+    )
+    decoded = decode_election_rows(rows)
+    records = [{"municipio": row["municipality"], "clave_municipio": row["municipality_code"], **row["payload"]} for row in decoded]
+    if not records:
+        st.warning("Los resultados cargados no contienen valores que puedan analizarse.")
+        return
+    frame = pd.DataFrame(records)
+    aggregate_vote_fields = {"votes_total", "votes_nulos", "votes_no_reg", "votes_validos"}
+    vote_keys = sorted(
+        key for key in frame.columns
+        if key.startswith("votes_")
+        and key not in aggregate_vote_fields
+        and pd.to_numeric(frame[key], errors="coerce").fillna(0).sum() > 0
+    )
+    if not vote_keys:
+        st.warning("La elección elegida no contiene votos por partido o coalición.")
+        return
+    party_options = {ELECTORAL_VOTE_LABELS.get(key, key.replace("votes_", "").replace("_", " ").title()): key for key in vote_keys}
+    controls = st.columns([1.15, 1.15, 1])
+    with controls[0]:
+        party_label = st.selectbox("Opción de referencia", list(party_options), key="opportunity_party")
+    party_key = party_options[party_label]
+    indicator_rows = query(
+        """SELECT indicator_id, indicator_name, unit
+           FROM territorial_indicators WHERE state = ?
+           GROUP BY indicator_id, indicator_name, unit ORDER BY indicator_name""",
+        (state,),
+    )
+    indicator_options = {"Sin indicador INEGI": None}
+    indicator_options.update({f"{row['indicator_name']} ({row['unit']})": row for row in indicator_rows})
+    with controls[1]:
+        indicator_label = st.selectbox("Contexto INEGI", list(indicator_options), key="opportunity_indicator")
+    with controls[2]:
+        map_metric = st.selectbox(
+            "Color del mapa",
+            ["Índice de oportunidad", "Peso electoral", "Participación baja", f"% {party_label}", "Indicador INEGI"],
+            key="opportunity_metric",
+        )
+
+    for column in ["lista_nominal", "votes_total", "numero_votos_validos", "participacion_pct", party_key]:
+        frame[column] = pd.to_numeric(frame.get(column, pd.Series(0, index=frame.index)), errors="coerce").fillna(0)
+    frame["participacion_pct"] = frame["participacion_pct"].where(
+        frame["participacion_pct"] > 0,
+        (frame["votes_total"] / frame["lista_nominal"].replace(0, pd.NA) * 100),
+    ).fillna(0)
+    # Some imported electoral files carry nullable values.  Force the derived
+    # percentage to a numeric dtype before ranking it; otherwise pandas cannot
+    # order it with ``nlargest`` (as occurred for the Yucatán profile).
+    frame["porcentaje_referencia"] = pd.to_numeric(
+        frame[party_key] / frame["numero_votos_validos"].replace(0, pd.NA) * 100,
+        errors="coerce",
+    ).fillna(0.0).astype(float)
+    frame["votos_referencia"] = frame[party_key].round().astype(int)
+    total_nominal = float(frame["lista_nominal"].sum())
+    state_turnout = float(frame["votes_total"].sum() / total_nominal * 100) if total_nominal else 0.0
+    frame["peso_electoral_pct"] = frame["lista_nominal"] / total_nominal * 100 if total_nominal else 0.0
+    frame["brecha_participacion_pp"] = (state_turnout - frame["participacion_pct"]).clip(lower=0)
+
+    previous_years = query(
+        """SELECT DISTINCT election_year FROM territorial_election_results
+           WHERE state = ? AND election_type = ? AND election_year < ? ORDER BY election_year DESC""",
+        (state, election_type, election_year),
+    )
+    prior_year = int(previous_years[0]["election_year"]) if previous_years else None
+    frame["cambio_pp"] = pd.NA
+    if prior_year:
+        prior_rows = decode_election_rows(query(
+            """SELECT municipality, municipality_code, payload FROM territorial_election_results
+               WHERE state = ? AND election_type = ? AND election_year = ?""",
+            (state, election_type, prior_year),
+        ))
+        prior = {}
+        for row in prior_rows:
+            payload = row["payload"]
+            valid = float(payload.get("numero_votos_validos") or 0)
+            prior[municipality_match_key(row["municipality"])] = (float(payload.get(party_key) or 0) / valid * 100) if valid else None
+        frame["cambio_pp"] = frame.apply(
+            lambda item: item["porcentaje_referencia"] - prior.get(municipality_match_key(item["municipio"]), item["porcentaje_referencia"])
+            if prior.get(municipality_match_key(item["municipio"])) is not None else pd.NA,
+            axis=1,
+        )
+
+    frame["indicador_inegi"] = pd.NA
+    indicator_definition = indicator_options[indicator_label]
+    population_indicator_ids = {"1002000001", "1002000002", "1002000003"}
+    indicator_unit = (
+        "personas" if indicator_definition and str(indicator_definition["indicator_id"]) in population_indicator_ids
+        else (indicator_definition["unit"] if indicator_definition else "")
+    )
+    is_population_indicator = bool(
+        indicator_definition and str(indicator_definition["indicator_id"]) in population_indicator_ids
+    )
+    if indicator_definition:
+        values = query(
+            """SELECT municipality, municipality_code, value FROM territorial_indicators
+               WHERE state = ? AND indicator_id = ?""",
+            (state, indicator_definition["indicator_id"]),
+        )
+        by_code = {str(row["municipality_code"]).zfill(3): float(row["value"]) for row in values if row["value"] is not None}
+        # Some electoral source files use an internal municipality identifier
+        # rather than INEGI's Cvegeo.  Join by municipality name first (the
+        # published label is stable here) and retain the code only as fallback.
+        by_name = {municipality_match_key(row["municipality"]): float(row["value"]) for row in values if row["value"] is not None}
+        frame["indicador_inegi"] = frame.apply(
+            lambda item: by_name.get(
+                municipality_match_key(item["municipio"]),
+                by_code.get(str(item["clave_municipio"]).zfill(3)),
+            ),
+            axis=1,
+        )
+
+    def normalized(series: pd.Series) -> pd.Series:
+        numeric = pd.to_numeric(series, errors="coerce").fillna(0)
+        maximum = float(numeric.max())
+        return numeric / maximum * 100 if maximum else numeric
+
+    # Reproducible aggregate index: volume, recoverable participation and
+    # historical reference support.  It is a planning aid, not a forecast.
+    frame["indice_oportunidad"] = (
+        normalized(frame["lista_nominal"]) * 0.45
+        + normalized(frame["brecha_participacion_pp"]) * 0.30
+        + normalized(frame["porcentaje_referencia"]) * 0.25
+    ).round(1)
+    # The score remains 0–100, while the traffic-light is relative to the
+    # territory being compared.  This guarantees that "Alta" means the
+    # upper opportunity group in the selected state, rather than requiring
+    # an arbitrary universal threshold that may leave the map without highs.
+    high_cut = float(frame["indice_oportunidad"].quantile(0.75))
+    medium_cut = float(frame["indice_oportunidad"].quantile(0.45))
+    frame["prioridad"] = pd.Series("Baja", index=frame.index)
+    frame.loc[frame["indice_oportunidad"] >= medium_cut, "prioridad"] = "Media"
+    frame.loc[frame["indice_oportunidad"] >= high_cut, "prioridad"] = "Alta"
+    frame["lectura"] = frame.apply(
+        lambda item: "Movilizar participación" if item["brecha_participacion_pp"] >= 5 and item["porcentaje_referencia"] >= frame["porcentaje_referencia"].median()
+        else "Consolidar presencia" if item["porcentaje_referencia"] >= frame["porcentaje_referencia"].median()
+        else "Revisar competitividad", axis=1,
+    )
+    frame = frame.sort_values(["indice_oportunidad", "lista_nominal"], ascending=False).reset_index(drop=True)
+
+    stats = st.columns(4)
+    stats[0].metric("Municipios analizados", len(frame))
+    stats[1].metric("Lista nominal agregada", f"{int(total_nominal):,}")
+    stats[2].metric("Participación estatal", f"{state_turnout:.1f}%")
+    stats[3].metric("Prioridad alta", int((frame["prioridad"] == "Alta").sum()))
+    st.caption(
+        "Índice de oportunidad: 45% peso electoral, 30% brecha de participación y 25% presencia histórica de la opción seleccionada. "
+        "La prioridad Alta corresponde al grupo superior de municipios comparados. No estima ni determina el voto individual."
+    )
+
+    metric_column = {
+        "Índice de oportunidad": "indice_oportunidad",
+        "Peso electoral": "peso_electoral_pct",
+        "Participación baja": "brecha_participacion_pp",
+        f"% {party_label}": "porcentaje_referencia",
+        "Indicador INEGI": "indicador_inegi",
+    }[map_metric]
+    metric_presentation = {
+        "Índice de oportunidad": ("Índice de oportunidad", "/100"),
+        "Peso electoral": ("Peso electoral", "% de la lista nominal estatal"),
+        "Participación baja": ("Brecha de participación", "puntos porcentuales bajo el promedio estatal"),
+        f"% {party_label}": (f"Votación histórica · {party_label}", "% de votos válidos"),
+        "Indicador INEGI": (
+            indicator_definition["indicator_name"] if indicator_definition else "Indicador INEGI",
+            indicator_unit,
+        ),
+    }
+    tooltip_metric_label, tooltip_metric_unit = metric_presentation[map_metric]
+    geojson, geometry_source = load_municipal_context(state=state)
+    if not geojson:
+        st.warning("No se encontró cartografía municipal para el estado seleccionado.")
+        return
+    by_municipality = {municipality_match_key(row["municipio"]): row for _, row in frame.iterrows()}
+    enriched = json.loads(json.dumps(geojson))
+    for feature in enriched.get("features", []):
+        props = feature.setdefault("properties", {})
+        municipality = props.get("municipio", props.get("nom_agem", props.get("NOMGEO", "")))
+        row = by_municipality.get(municipality_match_key(municipality))
+        props["municipio"] = municipality
+        props["valor_mapa"] = float(row[metric_column]) if row is not None and pd.notna(row[metric_column]) else None
+        props["indice"] = float(row["indice_oportunidad"]) if row is not None else None
+        props["prioridad"] = str(row["prioridad"]) if row is not None else "Sin información"
+        props["participacion"] = round(float(row["participacion_pct"]), 1) if row is not None else None
+        props["opcion_pct"] = round(float(row["porcentaje_referencia"]), 1) if row is not None else None
+        tooltip_value = props["valor_mapa"]
+        props["metrica_titulo"] = tooltip_metric_label
+        props["metrica_valor"] = (
+            f"{tooltip_value:,.0f} {tooltip_metric_unit}" if tooltip_value is not None and is_population_indicator
+            else f"{tooltip_value:,.1f} {tooltip_metric_unit}" if tooltip_value is not None
+            else "Sin dato disponible"
+        )
+    # GeoJSON properties live below ``feature.properties`` in deck.gl.  To
+    # avoid a browser-dependent property accessor (which produced black
+    # polygons in some Streamlit/pydeck versions), render four explicit
+    # color bands with constant RGBA values.  Every polygon remains pickable.
+    values = pd.to_numeric(
+        pd.Series([feature.get("properties", {}).get("valor_mapa") for feature in enriched.get("features", [])]),
+        errors="coerce",
+    )
+    valid_values = values.dropna()
+    breaks = list(valid_values.quantile([0.25, 0.50, 0.75])) if not valid_values.empty else [0, 0, 0]
+    palette = [(219, 234, 254, 210), (147, 197, 253, 210), (59, 130, 246, 215), (12, 74, 110, 220)]
+    color_groups = [[] for _ in palette]
+    missing_group = []
+    for feature in enriched.get("features", []):
+        value = pd.to_numeric(pd.Series([feature.get("properties", {}).get("valor_mapa")]), errors="coerce").iloc[0]
+        if pd.isna(value):
+            missing_group.append(feature)
+        elif value <= breaks[0]:
+            color_groups[0].append(feature)
+        elif value <= breaks[1]:
+            color_groups[1].append(feature)
+        elif value <= breaks[2]:
+            color_groups[2].append(feature)
+        else:
+            color_groups[3].append(feature)
+    map_layers = [
+        pdk.Layer(
+            "GeoJsonLayer", id=f"opportunity-map-{index}",
+            data={"type": "FeatureCollection", "features": group}, opacity=0.80,
+            stroked=True, filled=True, get_fill_color=list(palette[index]), get_line_color=[15, 23, 42, 140],
+            line_width_min_pixels=1, pickable=True,
+        )
+        for index, group in enumerate(color_groups) if group
+    ]
+    if missing_group:
+        map_layers.append(pdk.Layer(
+            "GeoJsonLayer", id="opportunity-map-sin-dato",
+            data={"type": "FeatureCollection", "features": missing_group}, opacity=0.40,
+            stroked=True, filled=True, get_fill_color=[203, 213, 225, 150], get_line_color=[100, 116, 139, 130],
+            line_width_min_pixels=1, pickable=True,
+        ))
+    municipality_options = list(frame["municipio"])
+    municipality_set = set(municipality_options)
+    pending_municipality = st.session_state.pop("opportunity_municipality_pending", None)
+    if pending_municipality in municipality_set:
+        st.session_state["opportunity_selected_municipality"] = pending_municipality
+        st.session_state["opportunity_municipality_control"] = pending_municipality
+    if st.session_state.get("opportunity_selected_municipality") not in municipality_set:
+        st.session_state["opportunity_selected_municipality"] = municipality_options[0]
+    if st.session_state.get("opportunity_municipality_control") not in municipality_set:
+        st.session_state["opportunity_municipality_control"] = st.session_state["opportunity_selected_municipality"]
+
+    def sync_opportunity_municipality() -> None:
+        st.session_state["opportunity_selected_municipality"] = st.session_state["opportunity_municipality_control"]
+
+    st.selectbox(
+        "Municipio activo", municipality_options, key="opportunity_municipality_control",
+        on_change=sync_opportunity_municipality,
+        help="Este selector y el mapa siempre muestran el mismo municipio.",
+    )
+    selected_municipality = st.session_state["opportunity_selected_municipality"]
+    selected = frame.loc[frame["municipio"] == selected_municipality].iloc[0]
+    selected_features = [
+        feature for feature in enriched.get("features", [])
+        if municipality_match_key(feature.get("properties", {}).get("municipio")) == municipality_match_key(selected_municipality)
+    ]
+    if selected_features:
+        map_layers.append(pdk.Layer(
+            "GeoJsonLayer", id="opportunity-map-selected",
+            data={"type": "FeatureCollection", "features": selected_features},
+            stroked=True, filled=False, get_line_color=[245, 158, 11, 255],
+            line_width_min_pixels=4, pickable=False,
+        ))
+    map_column, ficha_column = st.columns([1.55, 1], gap="large")
+    with map_column:
+        st.markdown("### Mapa y ficha de oportunidad")
+        st.caption("Mapa municipal")
+        map_event = st.pydeck_chart(
+            pdk.Deck(
+                map_style="light", initial_view_state=pdk.ViewState(**contextual_view(enriched)),
+                layers=map_layers,
+                tooltip={"html": "<b>{municipio}</b><hr style='margin:5px 0;border-color:#475569'/><b>{metrica_titulo}</b>: {metrica_valor}<br/>Prioridad relativa: {prioridad}<br/>Participación histórica: {participacion}%<br/>Votación de la opción: {opcion_pct}%<br/><span style='color:#bae6fd'>Haz clic para abrir la ficha lateral.</span>", "style": {"backgroundColor": "#0f172a", "color": "white", "fontSize": "12px"}},
+            ), use_container_width=True, height=520, on_select="rerun", selection_mode="single-object",
+            key=f"opportunity_map_{state}_{election_type}_{election_year}_{party_key}_{metric_column}",
+        )
+        st.caption("Haz clic en un municipio para actualizar la ficha lateral.")
+    selected_objects = [
+        item for values in map_event.selection.objects.values() for item in values
+    ]
+    if selected_objects:
+        selected_properties = selected_objects[-1].get("properties", {}) or selected_objects[-1].get("object", {}).get("properties", {})
+        clicked = selected_properties.get("municipio")
+        if clicked and municipality_match_key(clicked) in by_municipality:
+            clicked_municipality = by_municipality[municipality_match_key(clicked)]["municipio"]
+            if clicked_municipality != selected_municipality:
+                st.session_state["opportunity_municipality_pending"] = clicked_municipality
+                st.rerun()
+    action = {
+        "Movilizar participación": "Priorizar organización, contacto territorial y seguimiento de participación; existe presencia histórica y una brecha de asistencia por recuperar.",
+        "Consolidar presencia": "Mantener presencia territorial y documentar necesidades locales para conservar la base histórica y su capacidad de movilización.",
+        "Revisar competitividad": "Revisar la competencia, los temas ciudadanos y la cobertura operativa antes de asignar recursos adicionales.",
+    }[selected["lectura"]]
+    with ficha_column:
+        st.markdown("### Ficha de oportunidad")
+        st.markdown("#### " + str(selected["municipio"]))
+        st.success(f"**Acción sugerida · {selected['lectura']}:** {action}")
+        ficha_top, ficha_bottom = st.columns(2)
+        ficha_top.metric("Prioridad", selected["prioridad"])
+        ficha_bottom.metric("Índice", f"{selected['indice_oportunidad']:.1f}/100")
+        ficha_top.metric("Lista nominal", f"{int(selected['lista_nominal']):,}")
+        ficha_bottom.metric("Participación", f"{selected['participacion_pct']:.1f}%", f"{selected['brecha_participacion_pp']:.1f} pp bajo el promedio")
+        ficha_top.metric(f"% {party_label}", f"{selected['porcentaje_referencia']:.1f}%", f"{selected['cambio_pp']:+.1f} pp" if pd.notna(selected["cambio_pp"]) else None)
+        ficha_bottom.metric(f"Votos {party_label}", f"{int(selected['votos_referencia']):,}")
+        if indicator_definition and pd.notna(selected["indicador_inegi"]):
+            indicator_average = pd.to_numeric(frame["indicador_inegi"], errors="coerce").dropna().mean()
+            indicator_delta = float(selected["indicador_inegi"]) - float(indicator_average) if pd.notna(indicator_average) else None
+            indicator_value = (
+                f"{selected['indicador_inegi']:,.0f} {indicator_unit}"
+                if is_population_indicator else f"{selected['indicador_inegi']:,.1f} {indicator_unit}"
+            )
+            indicator_delta_label = (
+                f"{indicator_delta:+,.0f} vs. promedio municipal" if is_population_indicator
+                else f"{indicator_delta:+,.1f} vs. promedio municipal"
+            ) if indicator_delta is not None else None
+            st.markdown("##### Contexto INEGI seleccionado")
+            st.metric(
+                indicator_definition["indicator_name"],
+                indicator_value,
+                indicator_delta_label,
+            )
+            st.caption(
+                "Fuente: INEGI, Censo de Población y Vivienda 2020. Este indicador aporta contexto territorial; no explica por sí mismo el comportamiento electoral."
+            )
+        st.caption("El mapa muestra valores agregados; la ficha explica el municipio seleccionado.")
+
+    st.divider()
+    st.markdown("### Cruce electoral + INEGI")
+    st.caption(
+        "Esta es la consulta directa del cruce: cada fila une el resultado electoral municipal con el indicador INEGI seleccionado "
+        "mediante estado y clave/nombre oficial de municipio. Sirve para comparar territorios, no para perfilar personas."
+    )
+    if not indicator_definition:
+        st.info(
+            "Selecciona un valor en **Contexto INEGI** para activar el cruce. Por ejemplo: población, acceso a internet, "
+            "agua entubada, drenaje, escolaridad o salud."
+        )
+    else:
+        cross_left, cross_right = st.columns([1, 1.45], gap="large")
+        with cross_left:
+            st.markdown(f"#### Lectura integrada · {selected['municipio']}")
+            st.metric("Peso electoral", f"{selected['peso_electoral_pct']:.1f}% de la lista nominal estatal")
+            st.metric(
+                indicator_definition["indicator_name"],
+                (
+                    f"{selected['indicador_inegi']:,.0f} {indicator_unit}"
+                    if is_population_indicator else f"{selected['indicador_inegi']:,.1f} {indicator_unit}"
+                ) if pd.notna(selected["indicador_inegi"]) else "Sin dato",
+            )
+            if pd.notna(selected["indicador_inegi"]):
+                indicator_median = pd.to_numeric(frame["indicador_inegi"], errors="coerce").dropna().median()
+                context_position = "por encima" if selected["indicador_inegi"] >= indicator_median else "por debajo"
+                st.write(
+                    f"El municipio reúne **{selected['peso_electoral_pct']:.1f}%** de la lista nominal estatal; "
+                    f"su valor de {indicator_definition['indicator_name'].lower()} está **{context_position}** de la mediana municipal. "
+                    f"La participación histórica fue **{selected['participacion_pct']:.1f}%** y {party_label} obtuvo "
+                    f"**{selected['porcentaje_referencia']:.1f}%** de los votos válidos."
+                )
+        with cross_right:
+            st.markdown("#### Comparativo municipal")
+            cross_frame = frame[[
+                "municipio", "lista_nominal", "participacion_pct", "votos_referencia",
+                "porcentaje_referencia", "indicador_inegi", "indice_oportunidad", "prioridad",
+            ]].rename(columns={
+                "municipio": "Municipio",
+                "lista_nominal": "Lista nominal",
+                "participacion_pct": "Participación (%)",
+                "votos_referencia": f"Votos {party_label}",
+                "porcentaje_referencia": f"% {party_label}",
+                "indicador_inegi": indicator_definition["indicator_name"],
+                "indice_oportunidad": "Índice de oportunidad",
+                "prioridad": "Prioridad",
+            }).sort_values("Índice de oportunidad", ascending=False)
+            st.dataframe(
+                cross_frame,
+                use_container_width=True,
+                hide_index=True,
+                height=340,
+                column_config={
+                    "Lista nominal": st.column_config.NumberColumn(format="%,d"),
+                    "Participación (%)": st.column_config.NumberColumn(format="%.1f%%"),
+                    f"Votos {party_label}": st.column_config.NumberColumn(format="%,d"),
+                    f"% {party_label}": st.column_config.NumberColumn(format="%.1f%%"),
+                    indicator_definition["indicator_name"]: st.column_config.NumberColumn(
+                        format="%,d" if is_population_indicator else "%.1f"
+                    ),
+                    "Índice de oportunidad": st.column_config.NumberColumn(format="%.1f"),
+                },
+            )
+        st.caption(
+            "Lectura sugerida: primero compara peso electoral y participación; después interpreta el indicador INEGI como "
+            "contexto del territorio. El indicador no prueba una causa del resultado ni identifica preferencias individuales."
+        )
+    st.markdown("### Resultados del análisis")
+    st.caption(
+        f"Lecturas automáticas para revisar la posición territorial de {party_label}. "
+        "Son evidencia agregada para análisis; no son una proyección electoral."
+    )
+    total_reference_votes = int(frame["votos_referencia"].sum())
+    top_ten_votes = int(frame.nlargest(10, "votos_referencia")["votos_referencia"].sum())
+    top_ten_concentration = top_ten_votes / total_reference_votes * 100 if total_reference_votes else 0.0
+    analysis_metrics = st.columns(4)
+    analysis_metrics[0].metric(f"Votos {party_label}", f"{total_reference_votes:,}")
+    analysis_metrics[1].metric("Participación estatal", f"{state_turnout:.1f}%")
+    analysis_metrics[2].metric("Concentración en 10 municipios", f"{top_ten_concentration:.1f}%")
+    analysis_metrics[3].metric("Municipios de prioridad alta", int((frame["prioridad"] == "Alta").sum()))
+
+    volume, strength, opportunity = st.columns(3, gap="large")
+    with volume:
+        st.markdown("#### Mayor volumen de votos")
+        st.caption("Municipios que más votos absolutos aportan a la opción seleccionada.")
+        st.dataframe(
+            frame.nlargest(5, "votos_referencia")[["municipio", "votos_referencia", "porcentaje_referencia"]].rename(columns={
+                "municipio": "Municipio", "votos_referencia": "Votos", "porcentaje_referencia": "% votos válidos",
+            }),
+            use_container_width=True, hide_index=True,
+        )
+    with strength:
+        st.markdown("#### Mayor fortaleza porcentual")
+        st.caption("Municipios con mayor proporción de votos válidos para la opción.")
+        st.dataframe(
+            frame.nlargest(5, "porcentaje_referencia")[["municipio", "porcentaje_referencia", "votos_referencia"]].rename(columns={
+                "municipio": "Municipio", "porcentaje_referencia": "% votos válidos", "votos_referencia": "Votos",
+            }),
+            use_container_width=True, hide_index=True,
+        )
+    with opportunity:
+        st.markdown("#### Prioridad de revisión")
+        st.caption("Territorios que combinan peso electoral, brecha de participación y presencia histórica.")
+        st.dataframe(
+            frame.nlargest(5, "indice_oportunidad")[["municipio", "prioridad", "indice_oportunidad", "lectura"]].rename(columns={
+                "municipio": "Municipio", "prioridad": "Prioridad", "indice_oportunidad": "Índice", "lectura": "Lectura",
+            }),
+            use_container_width=True, hide_index=True,
+        )
+    st.info(
+        f"**Lectura para el analista:** los 10 municipios con mayor volumen concentran {top_ten_concentration:.1f}% "
+        f"de los votos de {party_label}. Compare esta concentración con la fortaleza porcentual y la prioridad de oportunidad "
+        "antes de definir dónde profundizar la revisión territorial."
+    )
+
+    ranking_columns = ["municipio", "prioridad", "indice_oportunidad", "lista_nominal", "participacion_pct", "brecha_participacion_pp", "votos_referencia", "porcentaje_referencia", "cambio_pp", "lectura"]
+    st.markdown("### Ranking de municipios")
+    st.dataframe(
+        frame[ranking_columns].head(15).rename(columns={
+            "municipio": "Municipio", "prioridad": "Prioridad", "indice_oportunidad": "Índice", "lista_nominal": "Lista nominal",
+            "participacion_pct": "Participación %", "brecha_participacion_pp": "Brecha participación (pp)", "votos_referencia": f"Votos {party_label}",
+            "porcentaje_referencia": f"% {party_label}", "cambio_pp": f"Cambio vs. {prior_year} (pp)" if prior_year else "Cambio histórico", "lectura": "Lectura sugerida",
+        }), use_container_width=True, hide_index=True,
+    )
+    st.caption(f"Fuente electoral: {election_type} {election_year}. Cartografía: {geometry_source}. Los valores INEGI se muestran como contexto municipal, no como causalidad electoral.")
 
 
 def render_territorial_strategy() -> None:
@@ -1032,6 +3767,68 @@ def render_territorial_strategy() -> None:
         f"Fortalecer la coordinación territorial en {priority['municipality']} mediante presencia, "
         "escucha documentada y seguimiento de prioridades públicas."
     )
+    target_rows = query(
+        """
+        SELECT municipality, historical_reference_votes, target_votes, vote_gap, target_percentage
+        FROM territorial_vote_targets
+        WHERE profile_id = ? AND state = ? AND territorial_level = 'Municipio'
+        ORDER BY updated_at DESC, id DESC
+        """,
+        (profile_id, selected_state),
+    )
+    # Los catálogos pueden conservar o quitar acentos (Juárez/Juarez). La
+    # ficha debe encontrar la misma meta territorial en ambos casos.
+    target = next(
+        (
+            row for row in target_rows
+            if municipality_match_key(row["municipality"]) == municipality_match_key(priority["municipality"])
+        ),
+        None,
+    )
+    proposed_focus = current["strategic_focus"] if current else "Presencia y coordinación territorial"
+    proposed_tactics = current["tactics"] if current else (
+        "Definir responsables de cobertura municipal; realizar escucha documentada; "
+        "organizar actividades informativas y revisar resultados con evidencia de campo."
+    )
+    proposed_measure = current["success_measure"] if current and current["success_measure"] else (
+        "Cobertura de actividades, responsables asignados y evidencias registradas."
+    )
+    st.markdown("### Ficha de estrategia territorial")
+    with st.container(border=True):
+        head, status_card = st.columns([3, 1])
+        head.markdown(f"#### {priority['municipality']}")
+        head.caption("Siete elementos para pasar de la prioridad a la ejecución territorial.")
+        status_card.metric("Prioridad", priority["priority_level"], f"Índice {priority['priority_index']:.1f}/100")
+        st.markdown("**1. Meta territorial**")
+        if target:
+            target_cards = st.columns(3)
+            target_cards[0].metric("Voto histórico", f"{int(target['historical_reference_votes']):,}")
+            target_cards[1].metric("Meta territorial", f"{int(target['target_votes']):,}")
+            target_cards[2].metric("Aporte requerido", f"{int(target['vote_gap']):,}")
+        else:
+            st.caption("No hay una meta municipal cargada todavía; la estrategia puede registrarse y completarse después.")
+        ficha_left, ficha_right = st.columns(2)
+        with ficha_left:
+            st.markdown("**2. Diagnóstico**")
+            st.write(priority["rationale"])
+            st.markdown("**3. Línea estratégica**")
+            st.write(proposed_focus)
+            st.markdown("**4. Objetivo territorial**")
+            st.write(current["objective"] if current else default_objective)
+        with ficha_right:
+            st.markdown("**5. Tácticas de trabajo**")
+            st.write(proposed_tactics)
+            st.markdown("**6. Indicadores de seguimiento**")
+            st.write(proposed_measure)
+            st.markdown("**7. Regla de ajuste**")
+            st.write(
+                "La coordinación revisa cobertura, evidencias y mediciones agregadas; "
+                "si hay rezago, ajusta responsables, actividades o prioridad territorial."
+            )
+        st.caption(
+            "La ficha usa datos agregados del territorio. No estima ni atribuye preferencias individuales. "
+            "Guarda la estrategia para validarla y crear después su plan de acción."
+        )
     with st.form(f"strategy_form_{priority['id']}"):
         strategic_focus = st.selectbox(
             "Línea estratégica", focus_options,
@@ -1048,8 +3845,9 @@ def render_territorial_strategy() -> None:
             ),
             height=150,
         )
-        success_measure = st.text_input(
-            "Cómo se medirá el avance", value=current["success_measure"] if current and current["success_measure"] else "Cobertura de actividades, responsables asignados y evidencias registradas."
+        success_measure = st.text_area(
+            "Cómo se medirá el avance", value=current["success_measure"] if current and current["success_measure"] else proposed_measure,
+            height=130,
         )
         period = st.columns(2)
         start_value = current["starts_at"] if current and current["starts_at"] else str(date.today())
@@ -1146,6 +3944,9 @@ def render_action_plans() -> None:
         responsible = action_columns[0].text_input("Responsable", placeholder="Nombre o equipo")
         due_date = action_columns[1].date_input("Fecha compromiso", value=date.today())
         priority_level = action_columns[2].selectbox("Prioridad", ["Alta", "Media", "Baja"], index=1)
+        territory_columns = st.columns(2)
+        district = territory_columns[0].text_input("Distrito (opcional)", placeholder="Ejemplo: 09")
+        electoral_section = territory_columns[1].text_input("Sección electoral (opcional)", placeholder="Ejemplo: 0474")
         submitted = st.form_submit_button("Agregar actividad", type="primary")
     if submitted:
         if not activity_name.strip():
@@ -1154,19 +3955,20 @@ def render_action_plans() -> None:
             execute(
                 """
                 INSERT INTO territorial_action_plans
-                (strategy_id, profile_id, state, municipality, activity_name, activity_description,
-                 responsible, due_date, priority_level)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (strategy_id, profile_id, state, municipality, district, electoral_section, activity_name,
+                 activity_description, responsible, due_date, priority_level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (strategy["id"], profile_id, selected_state, strategy["municipality"], activity_name.strip(),
-                 activity_description.strip() or None, responsible.strip() or None, str(due_date), priority_level),
+                (strategy["id"], profile_id, selected_state, strategy["municipality"], district.strip() or None,
+                 electoral_section.strip() or None, activity_name.strip(), activity_description.strip() or None,
+                 responsible.strip() or None, str(due_date), priority_level),
             )
             st.success("Actividad agregada al plan de acción.")
             st.rerun()
 
     actions = query(
         """
-        SELECT id, activity_name, activity_description, responsible, due_date, priority_level,
+        SELECT id, activity_name, activity_description, district, electoral_section, responsible, due_date, priority_level,
                status, evidence_note, completed_at
         FROM territorial_action_plans
         WHERE strategy_id = ?
@@ -1212,6 +4014,519 @@ def render_action_plans() -> None:
         )
         st.success("Avance actualizado.")
         st.rerun()
+
+
+def render_pmd_tracking() -> None:
+    """Turn a municipal development plan into traceable territorial follow-up."""
+    st.title("Seguimiento del PMD")
+    st.caption(
+        "Convierte el Plan Municipal de Desarrollo en un tablero de ejes, metas, avances, evidencia y percepción territorial. "
+        "Los datos se distinguen como oficiales, reportados o pendientes de validación."
+    )
+    options = profile_options()
+    if not options:
+        st.info("Primero crea o selecciona un perfil para vincular un PMD.")
+        return
+    chosen_profile = st.selectbox("Perfil", list(options), key="pmd_profile")
+    profile_id = options[chosen_profile]
+    states = profile_states(profile_id)
+    if not states:
+        st.info("Asigna un territorio al perfil antes de configurar el PMD.")
+        return
+    selected_state = st.selectbox("Estado", states, key="pmd_state")
+    municipal_rows = query(
+        """SELECT DISTINCT municipality FROM territories
+           WHERE state = ? AND territory_type = 'Municipio' AND TRIM(COALESCE(municipality, '')) <> ''
+           ORDER BY municipality""",
+        (selected_state,),
+    )
+    municipalities = [row["municipality"] for row in municipal_rows]
+    if not municipalities:
+        st.info("Aún no existe un catálogo municipal para este estado.")
+        return
+    default_municipality = "Mérida" if selected_state == "Yucatán" and "Mérida" in municipalities else municipalities[0]
+    selected_municipality = st.selectbox(
+        "Municipio", municipalities, index=municipalities.index(default_municipality), key="pmd_municipality"
+    )
+    plans = query(
+        """SELECT * FROM development_plans
+           WHERE profile_id=? AND state=? AND municipality=? ORDER BY updated_at DESC, id DESC""",
+        (profile_id, selected_state, selected_municipality),
+    )
+    if not plans:
+        st.info(
+            "Aún no hay un PMD configurado para este perfil y municipio. Crea la ficha inicial; "
+            "después incorpora los ejes y metas exactamente como aparezcan en el documento oficial."
+        )
+        with st.form("create_pmd_plan"):
+            title = st.text_input("Nombre del plan", value=f"Plan Municipal de Desarrollo de {selected_municipality}")
+            period = st.text_input("Periodo", value="2024-2027")
+            source_url = st.text_input("Liga oficial del PMD (opcional)")
+            notes = st.text_area("Nota de configuración", value="Pendiente de homologar ejes, metas e indicadores con el documento oficial.")
+            if st.form_submit_button("Crear ficha del PMD", type="primary"):
+                if not title.strip():
+                    st.error("Escribe el nombre del plan.")
+                else:
+                    execute(
+                        """INSERT INTO development_plans
+                           (profile_id, state, municipality, title, period, source_url, notes)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        (profile_id, selected_state, selected_municipality, title.strip(), period.strip() or None,
+                         source_url.strip() or None, notes.strip() or None),
+                    )
+                    st.success("Ficha del PMD creada. Ahora puedes cargar sus ejes y metas.")
+                    st.rerun()
+        return
+
+    plan_options = {f"{row['title']} · {row['period'] or 'sin periodo'}": row for row in plans}
+    selected_plan = plan_options[st.selectbox("Plan configurado", list(plan_options), key="pmd_plan")]
+    axes = query("SELECT * FROM development_plan_axes WHERE plan_id=? ORDER BY sort_order, name", (selected_plan["id"],))
+    targets = query(
+        """SELECT t.*, a.name AS axis_name FROM development_plan_targets t
+           JOIN development_plan_axes a ON a.id=t.axis_id WHERE a.plan_id=? ORDER BY a.sort_order, t.name""",
+        (selected_plan["id"],),
+    )
+    progress = query(
+        """SELECT p.*, t.name AS target_name, a.name AS axis_name FROM development_plan_progress p
+           JOIN development_plan_targets t ON t.id=p.target_id
+           JOIN development_plan_axes a ON a.id=t.axis_id
+           WHERE a.plan_id=? ORDER BY p.period DESC, a.sort_order, t.name""",
+        (selected_plan["id"],),
+    )
+    reported_results = query(
+        """SELECT r.*, a.name AS axis_name FROM development_plan_reported_results r
+           LEFT JOIN development_plan_axes a ON a.id=r.axis_id
+           WHERE r.plan_id=? ORDER BY r.period DESC, a.sort_order, r.title""",
+        (selected_plan["id"],),
+    )
+    poa_plans = query(
+        """SELECT * FROM operational_annual_plans
+           WHERE profile_id=? AND state=? AND municipality=? ORDER BY year DESC, id DESC""",
+        (profile_id, selected_state, selected_municipality),
+    )
+    funding_snapshots = query(
+        """SELECT * FROM municipal_funding_snapshots
+           WHERE profile_id=? AND state=? AND municipality=?
+           ORDER BY fiscal_year DESC, cutoff_period DESC, source_name""",
+        (profile_id, selected_state, selected_municipality),
+    )
+    financial_closures = query(
+        """SELECT * FROM municipal_financial_closures
+           WHERE profile_id=? AND state=? AND municipality=?
+           ORDER BY fiscal_year DESC""",
+        (profile_id, selected_state, selected_municipality),
+    )
+    cards = st.columns(6)
+    cards[0].metric("Ejes", len(axes))
+    cards[1].metric("Metas e indicadores", len(targets))
+    cards[2].metric("POA anuales", len(poa_plans))
+    cards[3].metric("Resultados oficiales publicados", len(reported_results))
+    cards[4].metric("Avances numéricos registrados", len(progress))
+    cards[5].metric("Avances con evidencia", sum(1 for row in progress if row["evidence_url"] or row["evidence_note"]))
+    st.info(
+        f"**Estatus:** {selected_plan['official_status']}. "
+        "No se considera una meta como oficial hasta registrar su fuente o documento de respaldo."
+    )
+    if financial_closures:
+        closure = financial_closures[0]
+        income_progress = (
+            (closure["collected_income"] / closure["approved_income_budget"] * 100)
+            if closure["collected_income"] and closure["approved_income_budget"] else None
+        )
+        st.markdown(f"#### Cierre financiero {closure['fiscal_year']} · Mérida")
+        st.caption(
+            "Información anual publicada. El avance mostrado es recaudación frente a la Ley de Ingresos aprobada; "
+            "el gasto se presenta como registro contable, no como devengado o pagado."
+        )
+        closure_cards = st.columns(5)
+        closure_cards[0].metric("Ingreso aprobado", f"${closure['approved_income_budget']:,.0f}")
+        closure_cards[1].metric("Ingreso recaudado", f"${closure['collected_income']:,.0f}")
+        closure_cards[2].metric("Avance de recaudación", f"{income_progress:,.1f}%" if income_progress else "No disponible")
+        closure_cards[3].metric("Gasto contable anual", f"${closure['accounting_expenses']:,.0f}")
+        closure_cards[4].metric("Gasto de funcionamiento", f"${closure['operating_expenses']:,.0f}")
+        with st.expander("Ver composición del cierre financiero", expanded=False):
+            closure_breakdown = pd.DataFrame([{
+                "Ingresos de gestión": closure["income_management"],
+                "Impuestos": closure["taxes"],
+                "Participaciones, aportaciones y convenios": closure["transfers_and_contributions"],
+                "Servicios personales": closure["personnel_expenses"],
+                "Gasto contable anual": closure["accounting_expenses"],
+            }])
+            st.dataframe(
+                closure_breakdown.style.format("${:,.2f}"),
+                use_container_width=True,
+                hide_index=True,
+            )
+            st.link_button("Consultar fuente oficial de ingresos", closure["source_url"])
+            if closure["notes"]:
+                st.caption(closure["notes"])
+    tabs = st.tabs([
+        "1. Ejes", "2. Metas e indicadores", "3. POA anual", "4. Resultados publicados",
+        "5. Avances y evidencia", "6. Lectura territorial"
+    ])
+    with tabs[0]:
+        if axes:
+            st.dataframe(pd.DataFrame([{
+                "Orden": row["sort_order"], "Eje": row["name"], "Descripción": row["description"], "Estatus": row["status"]
+            } for row in axes]), use_container_width=True, hide_index=True)
+        else:
+            st.caption("No hay ejes registrados. Cárgalos desde la estructura oficial del PMD.")
+        with st.expander("Agregar eje de seguimiento"):
+            with st.form(f"pmd_axis_{selected_plan['id']}", clear_on_submit=True):
+                axis_name = st.text_input("Nombre del eje")
+                axis_description = st.text_area("Descripción")
+                axis_order = st.number_input("Orden", min_value=1, value=len(axes) + 1, step=1)
+                axis_status = st.selectbox("Estatus", ["Por homologar a documento oficial", "Oficial documentado", "En seguimiento"])
+                if st.form_submit_button("Guardar eje"):
+                    if not axis_name.strip():
+                        st.error("Escribe el nombre del eje.")
+                    else:
+                        execute(
+                            """INSERT INTO development_plan_axes (plan_id, name, description, sort_order, status)
+                               VALUES (?, ?, ?, ?, ?) ON CONFLICT(plan_id, name) DO UPDATE SET
+                               description=excluded.description, sort_order=excluded.sort_order, status=excluded.status,
+                               updated_at=CURRENT_TIMESTAMP""",
+                            (selected_plan["id"], axis_name.strip(), axis_description.strip() or None, int(axis_order), axis_status),
+                        )
+                        st.success("Eje guardado.")
+                        st.rerun()
+    with tabs[1]:
+        if targets:
+            st.dataframe(pd.DataFrame([{
+                "Eje": row["axis_name"], "Meta o indicador": row["name"], "Línea base": row["baseline_value"],
+                "Meta": row["target_value"], "Actual": row["current_value"], "Unidad": row["unit"],
+                "Frecuencia": row["frequency"], "Estatus": row["status"]
+            } for row in targets]), use_container_width=True, hide_index=True)
+        else:
+            st.caption("Todavía no hay metas. Registra únicamente las que tengan fuente oficial identificable.")
+        if axes:
+            axis_options = {row["name"]: row for row in axes}
+            with st.expander("Agregar meta o indicador"):
+                with st.form(f"pmd_target_{selected_plan['id']}", clear_on_submit=True):
+                    axis_label = st.selectbox("Eje", list(axis_options))
+                    target_name = st.text_input("Meta o indicador")
+                    target_columns = st.columns(3)
+                    baseline = target_columns[0].text_input("Línea base (opcional)")
+                    target_value = target_columns[1].text_input("Meta (opcional)")
+                    unit = target_columns[2].text_input("Unidad", placeholder="personas, %, obras, días")
+                    frequency = st.selectbox("Frecuencia de seguimiento", ["Mensual", "Trimestral", "Semestral", "Anual", "Por proyecto"])
+                    territory_scope = st.text_input("Cobertura territorial", value=selected_municipality)
+                    source_url = st.text_input("Liga de la fuente oficial")
+                    target_notes = st.text_area("Nota metodológica")
+                    if st.form_submit_button("Guardar meta o indicador"):
+                        def optional_number(value: str):
+                            try:
+                                return float(value.replace(",", "")) if value.strip() else None
+                            except ValueError:
+                                return None
+                        if not target_name.strip():
+                            st.error("Escribe el nombre de la meta o indicador.")
+                        elif (baseline.strip() and optional_number(baseline) is None) or (target_value.strip() and optional_number(target_value) is None):
+                            st.error("La línea base y la meta deben ser números cuando se capturen.")
+                        else:
+                            execute(
+                                """INSERT INTO development_plan_targets
+                                   (axis_id, name, baseline_value, target_value, unit, frequency, territory_scope, status, source_url, notes)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(axis_id, name) DO UPDATE SET
+                                   baseline_value=excluded.baseline_value, target_value=excluded.target_value, unit=excluded.unit,
+                                   frequency=excluded.frequency, territory_scope=excluded.territory_scope, status=excluded.status,
+                                   source_url=excluded.source_url, notes=excluded.notes, updated_at=CURRENT_TIMESTAMP""",
+                                (axis_options[axis_label]["id"], target_name.strip(), optional_number(baseline), optional_number(target_value),
+                                 unit.strip() or None, frequency, territory_scope.strip() or None,
+                                 "Oficial documentado" if source_url.strip() else "Pendiente de fuente oficial",
+                                 source_url.strip() or None, target_notes.strip() or None),
+                            )
+                            st.success("Meta guardada.")
+                            st.rerun()
+    with tabs[2]:
+        st.markdown("#### Programa Operativo Anual")
+        st.caption(
+            "El POA convierte el PMD en ejecución anual: programa, dependencia responsable, meta anual, presupuesto y avance. "
+            "No se infieren partidas o porcentajes cuando la fuente oficial no los publica."
+        )
+        if poa_plans:
+            poa_options = {f"{row['title']} · {row['year']}": row for row in poa_plans}
+            selected_poa = poa_options[st.selectbox("POA cargado", list(poa_options), key="pmd_poa")]
+            poa_programs = query(
+                """SELECT op.*, a.name AS axis_name FROM operational_annual_programs op
+                   LEFT JOIN development_plan_axes a ON a.id=op.axis_id
+                   WHERE op.poa_id=? ORDER BY a.sort_order, op.name""",
+                (selected_poa["id"],),
+            )
+            programmed_detail_total = sum(row["allocated_budget"] or 0 for row in poa_programs)
+            poa_cards = st.columns(4)
+            poa_cards[0].metric(
+                "Total anual del POA",
+                f"${selected_poa['total_budget']:,.0f}" if selected_poa["total_budget"] else "Pendiente de publicación",
+            )
+            poa_cards[1].metric(
+                "Programado en componentes cargados",
+                f"${programmed_detail_total:,.0f}" if programmed_detail_total else "Sin componentes con monto",
+            )
+            poa_cards[2].metric("Programas cargados", len(poa_programs))
+            poa_cards[3].metric("Estatus", selected_poa["status"])
+            if not selected_poa["total_budget"] and programmed_detail_total:
+                st.caption(
+                    "El monto de componentes cargados corresponde a fuentes identificadas (por ahora, FORTAMUN); "
+                    "no equivale al presupuesto total anual del POA municipal."
+                )
+            if selected_poa["source_url"]:
+                st.link_button("Consultar fuente oficial del POA", selected_poa["source_url"])
+            if selected_poa["notes"]:
+                st.info(selected_poa["notes"])
+            if poa_programs:
+                funding_summary = pd.DataFrame([{
+                    "Fuente": row["funding_source"] or "Sin identificar",
+                    "Presupuesto programado": row["allocated_budget"] or 0,
+                    "Programas": 1,
+                } for row in poa_programs]).groupby("Fuente", as_index=False).agg(
+                    {"Presupuesto programado": "sum", "Programas": "sum"}
+                )
+                st.markdown("##### Recursos programados por fuente")
+                st.dataframe(funding_summary, use_container_width=True, hide_index=True)
+                st.dataframe(pd.DataFrame([{
+                    "Eje PMD": row["axis_name"] or "Por vincular", "Programa o componente": row["name"],
+                    "Responsable": row["responsible_unit"], "Meta anual": row["annual_goal"], "Unidad": row["goal_unit"],
+                    "Fuente": row["funding_source"], "Presupuesto asignado": row["allocated_budget"], "Ejercido": row["exercised_budget"],
+                    "Avance %": row["execution_pct"], "Estatus": row["status"],
+                } for row in poa_programs]), use_container_width=True, hide_index=True)
+            else:
+                if selected_poa["year"] == 2025 and selected_municipality == "Mérida":
+                    st.markdown("##### Avance que se podrá consultar del cierre 2025")
+                    st.caption(
+                        "El ejercicio 2025 está identificado como cierre anual. Esta vista evita presentar porcentajes "
+                        "sin respaldo: muestra exactamente qué está disponible y qué falta integrar."
+                    )
+                    coverage = pd.DataFrame([
+                        {
+                            "Información": "Estado Analítico de Ingresos",
+                            "Permite ver": "Ingresos propios, participaciones, aportaciones y convenios recaudados",
+                            "Estatus": "Fuente anual localizada",
+                            "Para mostrar cifras": "Importar Excel oficial al 31 de diciembre de 2025",
+                        },
+                        {
+                            "Información": "Estado Analítico de Egresos",
+                            "Permite ver": "Presupuesto aprobado, modificado, devengado y pagado",
+                            "Estatus": "Fuente anual localizada",
+                            "Para mostrar cifras": "Importar Excel oficial al 31 de diciembre de 2025",
+                        },
+                        {
+                            "Información": "Resultados físicos por programa",
+                            "Permite ver": "Metas cumplidas, avance físico y rezagos por eje del PMD",
+                            "Estatus": "Pendiente de localizar e importar reporte por programa",
+                            "Para mostrar cifras": "Incorporar informe anual o fichas de resultados",
+                        },
+                    ])
+                    st.dataframe(coverage, use_container_width=True, hide_index=True)
+                    st.info(
+                        "Cuando se importen los dos estados anuales, aquí aparecerán las cifras de recaudación y ejecución; "
+                        "el avance físico se añadirá en cuanto exista una fuente oficial por programa."
+                    )
+                else:
+                    st.caption("La fuente consultada confirma el POA y su alineación al PMD; falta importar su matriz detallada por programa.")
+            st.markdown("##### Recursos recibidos o ministrados")
+            st.caption("Importe efectivamente transferido al municipio al cierre del periodo indicado; no equivale al presupuesto ejercido.")
+            if funding_snapshots:
+                st.dataframe(pd.DataFrame([{
+                    "Año": row["fiscal_year"], "Corte": row["cutoff_period"], "Fuente": row["source_name"],
+                    "Tipo": row["source_class"], "Recibido / ministrado": row["amount_received"],
+                    "Fuente oficial": row["source_url"], "Nota": row["notes"],
+                } for row in funding_snapshots]), use_container_width=True, hide_index=True)
+            else:
+                st.caption("Aún no hay cortes de recursos ministrados cargados.")
+            if axes:
+                axis_options = {row["name"]: row for row in axes}
+                with st.expander("Registrar programa y corte físico-financiero"):
+                    with st.form(f"poa_program_{selected_poa['id']}", clear_on_submit=True):
+                        program_axis = st.selectbox("Eje PMD relacionado", list(axis_options))
+                        program_name = st.text_input("Programa o componente operativo")
+                        program_unit = st.text_input("Dependencia responsable")
+                        program_columns = st.columns(3)
+                        annual_goal = program_columns[0].text_input("Meta anual")
+                        goal_unit = program_columns[1].text_input("Unidad de la meta", placeholder="acciones, personas, obras")
+                        funding_source = program_columns[2].text_input("Ramo o fuente", placeholder="Ramo 33 · FORTAMUN")
+                        allocated_budget = st.text_input("Presupuesto aprobado")
+                        cut_columns = st.columns(3)
+                        exercised_budget = cut_columns[0].text_input("Presupuesto devengado o pagado")
+                        execution_pct = cut_columns[1].text_input("Avance financiero %")
+                        program_status = cut_columns[2].selectbox(
+                            "Estatus del corte", ["Pendiente de avance", "Reportado", "Validado"]
+                        )
+                        program_source = st.text_input("Liga oficial del POA o informe financiero")
+                        program_notes = st.text_area("Periodo de corte y nota metodológica")
+                        if st.form_submit_button("Guardar programa y corte"):
+                            def optional_number(value: str):
+                                try:
+                                    return float(value.replace(",", "")) if value.strip() else None
+                                except ValueError:
+                                    return None
+                            numeric_inputs = [optional_number(v) for v in (annual_goal, allocated_budget, exercised_budget, execution_pct)]
+                            if not program_name.strip() or not program_source.strip():
+                                st.error("Indica el programa y su fuente oficial.")
+                            elif any(raw.strip() and value is None for raw, value in zip(
+                                (annual_goal, allocated_budget, exercised_budget, execution_pct), numeric_inputs
+                            )):
+                                st.error("Las metas, presupuestos y porcentajes deben ser números cuando se capturen.")
+                            else:
+                                execute(
+                                    """INSERT INTO operational_annual_programs
+                                       (poa_id, axis_id, name, responsible_unit, annual_goal, goal_unit, funding_source,
+                                        allocated_budget, exercised_budget, execution_pct, status, source_url, notes)
+                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                       ON CONFLICT(poa_id, name) DO UPDATE SET
+                                         axis_id=excluded.axis_id, responsible_unit=excluded.responsible_unit,
+                                         annual_goal=excluded.annual_goal, goal_unit=excluded.goal_unit,
+                                         funding_source=excluded.funding_source, allocated_budget=excluded.allocated_budget, exercised_budget=excluded.exercised_budget,
+                                         execution_pct=excluded.execution_pct, status=excluded.status,
+                                         source_url=excluded.source_url, notes=excluded.notes, updated_at=CURRENT_TIMESTAMP""",
+                                    (selected_poa["id"], axis_options[program_axis]["id"], program_name.strip(), program_unit.strip() or None,
+                                     *numeric_inputs[:1], goal_unit.strip() or None, funding_source.strip() or None, *numeric_inputs[1:], program_status,
+                                     program_source.strip(), program_notes.strip() or None),
+                                )
+                                st.success("Programa y corte guardados.")
+                                st.rerun()
+        else:
+            st.caption("No hay POA anual cargado para este municipio.")
+        with st.expander("Registrar POA anual"):
+            with st.form(f"poa_plan_{selected_plan['id']}", clear_on_submit=True):
+                poa_title = st.text_input("Nombre del POA", value=f"Programa Operativo Anual de {selected_municipality}")
+                poa_year = st.number_input("Año", min_value=2020, max_value=2035, value=2026, step=1)
+                poa_budget = st.text_input("Presupuesto total (opcional)")
+                poa_source = st.text_input("Liga oficial del POA")
+                poa_notes = st.text_area("Nota de fuente o alcance")
+                if st.form_submit_button("Guardar POA"):
+                    try:
+                        budget_value = float(poa_budget.replace(",", "")) if poa_budget.strip() else None
+                    except ValueError:
+                        budget_value = None
+                    if not poa_title.strip() or not poa_source.strip():
+                        st.error("Indica el nombre y la liga oficial del POA.")
+                    elif poa_budget.strip() and budget_value is None:
+                        st.error("El presupuesto debe ser numérico cuando se capture.")
+                    else:
+                        execute(
+                            """INSERT INTO operational_annual_plans
+                               (profile_id, state, municipality, title, year, total_budget, status, source_url, notes)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               ON CONFLICT(profile_id, state, municipality, year, title) DO UPDATE SET
+                                 total_budget=excluded.total_budget, status=excluded.status, source_url=excluded.source_url,
+                                 notes=excluded.notes, updated_at=CURRENT_TIMESTAMP""",
+                            (profile_id, selected_state, selected_municipality, poa_title.strip(), int(poa_year), budget_value,
+                             "Oficial documentado" if poa_source.strip() else "Pendiente de fuente oficial", poa_source.strip(), poa_notes.strip() or None),
+                        )
+                        st.success("POA anual guardado.")
+                        st.rerun()
+    with tabs[3]:
+        st.markdown("#### Resultados publicados por el Ayuntamiento")
+        st.caption(
+            "Son hechos o cifras reportados oficialmente. No equivalen por sí solos al porcentaje de cumplimiento de una meta del PMD; "
+            "ese porcentaje solo se muestra cuando la fuente publica la medición comparable."
+        )
+        if reported_results:
+            result_frame = pd.DataFrame([{
+                "Periodo": row["period"], "Eje": row["axis_name"] or "Transversal",
+                "Resultado publicado": row["title"], "Valor": row["reported_value"],
+                "Unidad": row["unit"], "Cobertura": row["territory_scope"],
+                "Estatus": row["status"], "Fuente": row["evidence_url"], "Nota": row["evidence_note"],
+            } for row in reported_results])
+            st.dataframe(result_frame, use_container_width=True, hide_index=True)
+        else:
+            st.caption("Aún no hay resultados públicos cargados para este plan.")
+        if axes:
+            axis_options = {row["name"]: row for row in axes}
+            with st.expander("Registrar resultado publicado"):
+                with st.form(f"pmd_result_{selected_plan['id']}", clear_on_submit=True):
+                    result_axis = st.selectbox("Eje relacionado", ["Transversal"] + list(axis_options))
+                    result_period = st.text_input("Periodo", placeholder="Segundo Informe 2026")
+                    result_title = st.text_input("Resultado publicado")
+                    result_columns = st.columns(3)
+                    result_value = result_columns[0].text_input("Valor (opcional)")
+                    result_unit = result_columns[1].text_input("Unidad", placeholder="comisarías, espacios, familias")
+                    result_scope = result_columns[2].text_input("Cobertura", value=selected_municipality)
+                    result_url = st.text_input("Liga de la publicación oficial")
+                    result_note = st.text_area("Qué informa la fuente y cómo debe interpretarse")
+                    if st.form_submit_button("Guardar resultado publicado"):
+                        try:
+                            numeric_result = float(result_value.replace(",", "")) if result_value.strip() else None
+                        except ValueError:
+                            numeric_result = None
+                        if not result_period.strip() or not result_title.strip() or not result_url.strip():
+                            st.error("Indica periodo, resultado y liga oficial.")
+                        elif result_value.strip() and numeric_result is None:
+                            st.error("El valor debe ser numérico cuando se capture.")
+                        else:
+                            execute(
+                                """INSERT INTO development_plan_reported_results
+                                   (plan_id, axis_id, period, title, reported_value, unit, territory_scope, evidence_url, evidence_note)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   ON CONFLICT(plan_id, period, title) DO UPDATE SET
+                                     axis_id=excluded.axis_id, reported_value=excluded.reported_value, unit=excluded.unit,
+                                     territory_scope=excluded.territory_scope, evidence_url=excluded.evidence_url,
+                                     evidence_note=excluded.evidence_note, updated_at=CURRENT_TIMESTAMP""",
+                                (selected_plan["id"], axis_options[result_axis]["id"] if result_axis != "Transversal" else None,
+                                 result_period.strip(), result_title.strip(), numeric_result, result_unit.strip() or None,
+                                 result_scope.strip() or None, result_url.strip(), result_note.strip() or None),
+                            )
+                            st.success("Resultado oficial publicado guardado.")
+                            st.rerun()
+    with tabs[4]:
+        if progress:
+            st.dataframe(pd.DataFrame([{
+                "Periodo": row["period"], "Eje": row["axis_name"], "Meta": row["target_name"], "Territorio": row["territory_name"],
+                "Avance físico": row["physical_value"], "Avance financiero": row["financial_amount"], "Avance %": row["progress_pct"],
+                "Estatus": row["status"], "Evidencia": row["evidence_note"]
+            } for row in progress]), use_container_width=True, hide_index=True)
+        else:
+            st.caption("No hay avances registrados. El primer avance debe incluir periodo, territorio y evidencia.")
+        if targets:
+            target_options = {f"{row['axis_name']} · {row['name']}": row for row in targets}
+            with st.expander("Registrar avance"):
+                with st.form(f"pmd_progress_{selected_plan['id']}", clear_on_submit=True):
+                    target_label = st.selectbox("Meta o indicador", list(target_options))
+                    progress_columns = st.columns(3)
+                    report_period = progress_columns[0].text_input("Periodo", placeholder="2026-T3")
+                    territory_name = progress_columns[1].text_input("Zona, colonia o comisaría", value=selected_municipality)
+                    report_status = progress_columns[2].selectbox("Estatus", ["Reportado", "Validado", "Con observaciones"])
+                    physical_value = st.text_input("Avance físico (opcional)")
+                    financial_amount = st.text_input("Avance financiero (opcional)")
+                    progress_pct = st.text_input("Porcentaje de avance (opcional)")
+                    evidence_url = st.text_input("Liga de evidencia")
+                    evidence_note = st.text_area("Evidencia o nota de avance")
+                    perception_note = st.text_area("Percepción ciudadana o hallazgo territorial")
+                    if st.form_submit_button("Guardar avance"):
+                        def optional_number(value: str):
+                            try:
+                                return float(value.replace(",", "")) if value.strip() else None
+                            except ValueError:
+                                return None
+                        numeric_values = [optional_number(value) for value in (physical_value, financial_amount, progress_pct)]
+                        if not report_period.strip():
+                            st.error("Escribe el periodo del avance.")
+                        elif any(raw.strip() and parsed is None for raw, parsed in zip((physical_value, financial_amount, progress_pct), numeric_values)):
+                            st.error("Los campos de avance deben ser numéricos cuando se capturen.")
+                        else:
+                            execute(
+                                """INSERT INTO development_plan_progress
+                                   (target_id, period, territory_name, physical_value, financial_amount, progress_pct, status, evidence_url, evidence_note, perception_note)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(target_id, period, territory_name) DO UPDATE SET
+                                   physical_value=excluded.physical_value, financial_amount=excluded.financial_amount,
+                                   progress_pct=excluded.progress_pct, status=excluded.status, evidence_url=excluded.evidence_url,
+                                   evidence_note=excluded.evidence_note, perception_note=excluded.perception_note, updated_at=CURRENT_TIMESTAMP""",
+                                (target_options[target_label]["id"], report_period.strip(), territory_name.strip() or None, *numeric_values,
+                                 report_status, evidence_url.strip() or None, evidence_note.strip() or None, perception_note.strip() or None),
+                            )
+                            st.success("Avance guardado.")
+                            st.rerun()
+    with tabs[5]:
+        st.markdown("#### Cómo se usa territorialmente")
+        st.write(
+            "Selecciona una meta, registra el avance por colonia, zona o comisaría y añade la evidencia. "
+            "Después compara ese avance con los mensajes ciudadanos, la escucha digital y las recorridas de campo."
+        )
+        st.markdown(
+            "**Lectura recomendada:** una meta con avance reportado pero sin evidencia o con quejas recurrentes "
+            "debe pasar a revisión; una meta validada y bien percibida puede respaldar la narrativa de gestión."
+        )
 
 
 def profile_states(profile_id: int) -> list[str]:
@@ -1547,12 +4862,661 @@ def manage_inegi_indicators(context_state: str, geojson: dict | None) -> None:
         st.rerun()
 
 
+@st.cache_data(show_spinner=False)
+def extract_dictamen_sections(file_path: str) -> list[dict]:
+    """Obtiene los capítulos numerados de un PDF de dictamen para lectura interna."""
+    reader = PdfReader(file_path)
+    pages = [page.extract_text() or "" for page in reader.pages]
+    document_text = "\f".join(pages)
+    pattern = re.compile(r"(?m)^(\d{1,2})\.\s+([^\n]+)$")
+    matches = []
+    seen_numbers = set()
+    for match in pattern.finditer(document_text):
+        number = int(match.group(1))
+        title = match.group(2).strip()
+        # Los dictámenes usan capítulos numerados. Evitamos duplicar líneas de
+        # tablas que eventualmente puedan iniciar igual que un capítulo.
+        if number < 1 or number > 20 or number in seen_numbers or len(title) < 5:
+            continue
+        seen_numbers.add(number)
+        matches.append((match, number, title))
+
+    sections = []
+    for index, (match, number, title) in enumerate(matches):
+        end = matches[index + 1][0].start() if index + 1 < len(matches) else len(document_text)
+        content = document_text[match.end():end].replace("\f", "\n").strip()
+        sections.append({
+            "number": number,
+            "title": title,
+            "page": document_text[:match.start()].count("\f") + 1,
+            "content": content,
+        })
+    return sections
+
+
+@st.cache_data(show_spinner=False)
+def render_dictamen_pages(file_path: str, first_page: int, last_page: int) -> list[bytes]:
+    """Renderiza las páginas originales para conservar el diseño del dictamen."""
+    document = pymupdf.open(file_path)
+    try:
+        pages = []
+        for page_number in range(first_page - 1, min(last_page, len(document))):
+            page = document.load_page(page_number)
+            pixmap = page.get_pixmap(matrix=pymupdf.Matrix(1.65, 1.65), alpha=False)
+            pages.append(pixmap.tobytes("png"))
+        return pages
+    finally:
+        document.close()
+
+
+def render_dictamen_reader() -> None:
+    """Navegación de lectura por capítulos de los dictámenes PDF cargados."""
+    st.markdown(
+        """
+        <section class="dictamen-reader-hero">
+          <small>EXPEDIENTE DE CANDIDATURA · LECTURA DOCUMENTAL</small>
+          <h2>Recorrido del dictamen</h2>
+          <p>Selecciona un capítulo y consulta la página original, sin perder su formato, tablas ni diseño.</p>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+    documents = query(
+        """
+        SELECT d.id, d.title, d.file_path, d.imported_at, p.name AS profile_name
+        FROM reference_documents d
+        JOIN profiles p ON p.id = d.profile_id
+        WHERE d.document_type = 'Dictamen de viabilidad'
+        ORDER BY p.name, d.imported_at DESC
+        """
+    )
+    pdf_documents = [
+        row for row in documents
+        if row["file_path"] and Path(row["file_path"]).suffix.lower() == ".pdf" and Path(row["file_path"]).exists()
+    ]
+    if not pdf_documents:
+        st.info("Aún no hay dictámenes PDF cargados para recorrer por secciones.")
+        return
+
+    labels = {
+        f"{row['profile_name']} · {row['title']}": row
+        for row in pdf_documents
+    }
+    selected_label = st.selectbox("Dictamen", list(labels), key="dictamen_reader_document")
+    document = labels[selected_label]
+    with st.spinner("Organizando capítulos del dictamen..."):
+        sections = extract_dictamen_sections(document["file_path"])
+    if not sections:
+        st.warning("No fue posible identificar capítulos numerados en este PDF.")
+        return
+
+    left, right = st.columns([0.9, 2.55], gap="large")
+    with left:
+        st.metric("Secciones disponibles", len(sections))
+        st.caption(f"Perfil: {document['profile_name']}")
+        st.markdown("##### Índice del dictamen")
+        section_options = {
+            f"{item['number']:02}. {item['title']} · p. {item['page']}": item
+            for item in sections
+        }
+        selected_section_label = st.radio(
+            "Capítulos",
+            list(section_options),
+            key=f"dictamen_reader_section_{document['id']}",
+            label_visibility="collapsed",
+        )
+        with open(document["file_path"], "rb") as source_file:
+            st.download_button(
+                "Descargar dictamen PDF",
+                data=source_file.read(),
+                file_name=Path(document["file_path"]).name,
+                mime="application/pdf",
+                key=f"download_dictamen_{document['id']}",
+            )
+
+    selected_section = section_options[selected_section_label]
+    section_index = sections.index(selected_section)
+    next_page = sections[section_index + 1]["page"] - 1 if section_index + 1 < len(sections) else 0
+    if next_page < selected_section["page"]:
+        next_page = selected_section["page"]
+    if not next_page:
+        with pymupdf.open(document["file_path"]) as pdf_document:
+            next_page = len(pdf_document)
+    page_images = render_dictamen_pages(document["file_path"], selected_section["page"], next_page)
+    with right:
+        st.markdown(f"### {selected_section['number']}. {selected_section['title']}")
+        page_caption = f"página {selected_section['page']}" if next_page == selected_section["page"] else f"páginas {selected_section['page']} a {next_page}"
+        st.markdown(
+            f'<div class="dictamen-reading-note">Vista del documento original · {page_caption}. Usa el índice para avanzar por los capítulos.</div>',
+            unsafe_allow_html=True,
+        )
+        for page_position, image in enumerate(page_images, start=selected_section["page"]):
+            st.image(image, caption=f"{document['profile_name']} · Dictamen · página {page_position}", use_container_width=True)
+
+
+def render_viability_opinion() -> None:
+    """Build a traceable viability brief from locally stored evidence."""
+    st.subheader("Dictamen de viabilidad")
+    st.caption(
+        "Expediente de lectura integral. Resume la evidencia disponible; no predice resultados electorales "
+        "ni sustituye las decisiones políticas o jurídicas."
+    )
+    profile_rows = query(
+        """
+        SELECT p.id, p.name, p.actor_type, COUNT(pub.id) AS publicaciones
+        FROM profiles p
+        LEFT JOIN publications pub ON pub.profile_id = p.id
+        WHERE p.active = 1
+        GROUP BY p.id, p.name, p.actor_type
+        ORDER BY publicaciones DESC, p.name
+        """
+    )
+    if not profile_rows:
+        st.info("Primero registra un perfil para abrir su expediente de viabilidad.")
+        return
+    profile_labels = {
+        f"{row['name']} · {row['actor_type']}": row for row in profile_rows
+    }
+    selected_label = st.selectbox("Perfil del dictamen", list(profile_labels), key="viability_profile")
+    profile = profile_labels[selected_label]
+    profile_id = profile["id"]
+    states = profile_states(profile_id)
+    state_options = ["Todos los estados", *states] if states else ["Todos los estados"]
+    selected_state = st.selectbox("Territorio de lectura", state_options, key="viability_state")
+
+    positions = query(
+        """
+        SELECT office, condition, party_or_coalition, starts_at, ends_at, is_current
+        FROM profile_positions WHERE profile_id = ?
+        ORDER BY is_current DESC, starts_at DESC
+        """,
+        (profile_id,),
+    )
+    sources = query("SELECT COUNT(*) AS total FROM sources WHERE profile_id = ? AND active = 1", (profile_id,))[0]["total"]
+    publications = query("SELECT COUNT(*) AS total FROM publications WHERE profile_id = ?", (profile_id,))[0]["total"]
+    analysed = query(
+        "SELECT COUNT(*) AS total FROM analyses a JOIN publications p ON p.id = a.publication_id WHERE p.profile_id = ?",
+        (profile_id,),
+    )[0]["total"]
+    territories = query("SELECT COUNT(*) AS total FROM profile_territories WHERE profile_id = ?", (profile_id,))[0]["total"]
+    state_filter = "" if selected_state == "Todos los estados" else " AND pt.state = ?"
+    territory_params = (profile_id,) if selected_state == "Todos los estados" else (profile_id, selected_state)
+    linked = query(
+        f"""
+        SELECT COUNT(DISTINCT p.id) AS total, COUNT(DISTINCT pt.municipality) AS municipios
+        FROM publications p JOIN publication_territories pt ON pt.publication_id = p.id
+        WHERE p.profile_id = ? {state_filter}
+        """,
+        territory_params,
+    )[0]
+    election_filter = "" if selected_state == "Todos los estados" else " WHERE state = ?"
+    election_params = () if selected_state == "Todos los estados" else (selected_state,)
+    election_rows = query(f"SELECT COUNT(*) AS total, COUNT(DISTINCT municipality) AS municipios FROM territorial_election_results{election_filter}", election_params)[0]
+    election_payload_rows = query(
+        f"SELECT election_year, payload FROM territorial_election_results{election_filter}", election_params
+    )
+    mc_by_year: dict[int, float] = {}
+    total_votes_by_year: dict[int, float] = {}
+    valid_votes_by_year: dict[int, float] = {}
+    for result_row in election_payload_rows:
+        try:
+            result_payload = json.loads(result_row["payload"])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            result_payload = {}
+        year = int(result_row["election_year"])
+        mc_by_year[year] = mc_by_year.get(year, 0.0) + float(result_payload.get("votes_mc") or 0)
+        total_votes_by_year[year] = total_votes_by_year.get(year, 0.0) + float(result_payload.get("votes_total") or 0)
+        valid_votes_by_year[year] = valid_votes_by_year.get(year, 0.0) + float(result_payload.get("numero_votos_validos") or 0)
+    latest_election_year = max(mc_by_year) if mc_by_year else None
+    mc_vote_floor = mc_by_year.get(latest_election_year, 0.0) if latest_election_year else 0.0
+    mc_vote_share = (mc_vote_floor / total_votes_by_year[latest_election_year] * 100) if latest_election_year and total_votes_by_year.get(latest_election_year) else 0.0
+    valid_vote_reference = valid_votes_by_year.get(latest_election_year, 0.0) if latest_election_year else 0.0
+    competitive_vote_goal = round(valid_vote_reference * 0.35)
+    close_win_vote_goal = round(valid_vote_reference * 0.38)
+    robust_win_vote_goal = round(valid_vote_reference * 0.40)
+    indicator_filter = "" if selected_state == "Todos los estados" else " WHERE state = ?"
+    indicator_rows = query(f"SELECT COUNT(*) AS total, COUNT(DISTINCT municipality) AS municipios FROM territorial_indicators{indicator_filter}", election_params)[0]
+    sentiment = query(
+        """
+        SELECT
+          SUM(CASE WHEN a.sentiment = 'Positivo' THEN 1 ELSE 0 END) AS positivas,
+          SUM(CASE WHEN a.sentiment = 'Negativo' THEN 1 ELSE 0 END) AS negativas,
+          SUM(CASE WHEN a.urgency IN ('Alta', 'Crítica') THEN 1 ELSE 0 END) AS urgentes
+        FROM analyses a JOIN publications p ON p.id = a.publication_id
+        WHERE p.profile_id = ?
+        """,
+        (profile_id,),
+    )[0]
+    action_summary = query(
+        """
+        SELECT COUNT(*) AS total,
+               SUM(CASE WHEN tap.status IN ('Pendiente', 'En curso') THEN 1 ELSE 0 END) AS activas
+        FROM territorial_action_plans tap
+        JOIN territorial_strategies ts ON ts.id = tap.strategy_id
+        WHERE ts.profile_id = ?
+        """,
+        (profile_id,),
+    )[0]
+    strategy_total = query(
+        "SELECT COUNT(*) AS total FROM territorial_strategies WHERE profile_id = ?",
+        (profile_id,),
+    )[0]["total"]
+    completed_actions = query(
+        """
+        SELECT COUNT(*) AS total FROM territorial_action_plans tap
+        JOIN territorial_strategies ts ON ts.id = tap.strategy_id
+        WHERE ts.profile_id = ? AND tap.status = 'Completada'
+        """,
+        (profile_id,),
+    )[0]["total"]
+    competitors = query(
+        "SELECT name, party_or_coalition, condition, territory, positioning_note, source_url, updated_at FROM viability_competitors WHERE profile_id = ? ORDER BY updated_at DESC",
+        (profile_id,),
+    )
+    surveys = query(
+        "SELECT name, pollster, territory, fieldwork_date, sample_size, profile_result_pct, source_url, notes FROM viability_surveys WHERE profile_id = ? ORDER BY fieldwork_date DESC, id DESC",
+        (profile_id,),
+    )
+    structure_records = query(
+        "SELECT state, municipality, district, electoral_section, locality, responsible, coverage_status, evidence_note FROM viability_structure_records WHERE profile_id = ? ORDER BY state, municipality, district, electoral_section",
+        (profile_id,),
+    )
+    verified_structure = any(
+        row["coverage_status"] in {"Registrada", "Activa"} for row in structure_records
+    )
+    coalition_scenarios = query(
+        "SELECT scenario_name, parties, scope, status, notes, source_url FROM viability_coalition_scenarios WHERE profile_id = ? ORDER BY updated_at DESC",
+        (profile_id,),
+    )
+    resources = query(
+        "SELECT category, availability_status, amount_note, source_url, notes FROM viability_resource_records WHERE profile_id = ? ORDER BY updated_at DESC",
+        (profile_id,),
+    )
+    formal_conclusion = query(
+        "SELECT assessment_status, strengths, risks, conditions, next_step FROM viability_conclusions WHERE profile_id = ?",
+        (profile_id,),
+    )
+    formal_conclusion = formal_conclusion[0] if formal_conclusion else None
+    dictamen_documents = query(
+        """
+        SELECT id, title, file_path, imported_at
+        FROM reference_documents
+        WHERE profile_id = ? AND document_type = 'Dictamen de viabilidad'
+        ORDER BY imported_at DESC
+        """,
+        (profile_id,),
+    )
+    stored_variable_assessments = query(
+        "SELECT variable_code, status, evidence_note, source_url, metric_label, target_value, actual_value, metric_unit, updated_at FROM viability_variable_assessments WHERE profile_id = ?",
+        (profile_id,),
+    )
+    assessment_by_code = {row["variable_code"]: row for row in stored_variable_assessments}
+
+    # Las 20 variables hacen visible qué parte del dictamen está respaldada y
+    # qué información sigue pendiente. Una variable puede nutrirse de los
+    # módulos existentes, sin duplicar datos ni inferir información ausente.
+    viability_variables = [
+        ("perfil", "1. Perfil del aspirante", bool(positions), "Cargo, condición, partido o coalición y periodo."),
+        ("eleccion", "2. Elección objetivo", bool(positions), "Proceso y cargo para el que se evalúa la viabilidad."),
+        ("territorio", "3. Territorio de cobertura", bool(territories), "Estado, distrito, municipio, sección o localidad asociados."),
+        ("electoral", "4. Antecedente electoral", bool(election_rows["total"]), "Resultados electorales cargados para el territorio."),
+        ("sociodemografico", "5. Contexto sociodemográfico", bool(indicator_rows["total"]), "Indicadores territoriales disponibles de INEGI."),
+        ("fuentes", "6. Fuentes verificables", bool(sources), "Fuentes activas con trazabilidad."),
+        ("comunicacion", "7. Evidencia de comunicación", bool(publications), "Noticias, publicaciones y documentos vinculados al perfil."),
+        ("sentimiento", "8. Sentimiento y conversación", bool(analysed), "Análisis disponible sobre menciones y conversación pública."),
+        ("temas", "9. Temas ciudadanos", bool(analysed), "Temas, necesidades y urgencias identificados en la evidencia."),
+        ("posicionamiento", "10. Posicionamiento e imagen", bool(analysed or surveys), "Señales de percepción pública o estudios registrados."),
+        ("competencia", "11. Competencia", bool(competitors), "Competidores o referentes comparables documentados."),
+        ("encuestas", "12. Encuestas y mediciones", bool(surveys), "Estudios con fecha, metodología, muestra y fuente."),
+        ("estructura", "13. Estructura territorial", verified_structure, "Cobertura, responsables y evidencia por territorio."),
+        ("organizacion", "14. Organización operativa", bool(verified_structure or action_summary["total"]), "Capacidad de coordinación y operación comprobable."),
+        ("coaliciones", "15. Escenarios de coalición", bool(coalition_scenarios), "Hipótesis o definiciones formales de alianzas."),
+        ("recursos", "16. Recursos y capacidad", bool(resources), "Equipo, logística, comunicación o recursos documentados."),
+        ("estrategia", "17. Estrategia territorial", bool(action_summary["total"]), "Líneas de acción vinculadas al perfil y territorio."),
+        ("plan_accion", "18. Plan de acción", bool(action_summary["total"]), "Actividades y responsables registrados."),
+        ("seguimiento", "19. Seguimiento y alertas", bool(action_summary["activas"] or sentiment["urgentes"]), "Acciones activas o alertas que requieren seguimiento."),
+        ("conclusion", "20. Conclusión de viabilidad", bool(formal_conclusion), "Dictamen formal con fortalezas, riesgos y condiciones."),
+    ]
+    viability_variables = [
+        (code, name, complete or assessment_by_code.get(code, {}).get("status") in {"Documentada", "Validada"}, description)
+        for code, name, complete, description in viability_variables
+    ]
+    coverage_points = sum(1 for _, _, complete, _ in viability_variables if complete)
+    coverage_pct = round(coverage_points / len(viability_variables) * 100)
+    election_years = query(
+        f"SELECT COUNT(DISTINCT election_year) AS total FROM territorial_election_results{election_filter}", election_params
+    )[0]["total"]
+    distinct_topics = query(
+        """
+        SELECT COUNT(DISTINCT NULLIF(TRIM(a.topic), '')) AS total
+        FROM analyses a JOIN publications p ON p.id = a.publication_id
+        WHERE p.profile_id = ?
+        """,
+        (profile_id,),
+    )[0]["total"]
+    responsible_count = sum(1 for row in structure_records if (row["responsible"] or "").strip())
+    goal_defaults = {
+        "perfil": ("Expediente de perfil completo", 1, 1, "expediente"),
+        "eleccion": ("Elección objetivo definida", 1 if positions else 0, 1, "elección"),
+        "territorio": ("Municipios de cobertura definidos", len(structure_records), max(len(structure_records), 1), "municipios"),
+        "electoral": ("Procesos electorales comparables", election_years, 2, "elecciones"),
+        "sociodemografico": ("Municipios con indicadores", int(indicator_rows["municipios"] or 0), max(int(election_rows["municipios"] or 0), 1), "municipios"),
+        "fuentes": ("Fuentes activas", int(sources or 0), 10, "fuentes"),
+        "comunicacion": ("Registros de comunicación analizados", int(publications or 0), 100, "registros"),
+        "sentimiento": ("Registros con sentimiento analizado", int(analysed or 0), max(int(publications or 0), 1), "registros"),
+        "temas": ("Temas ciudadanos identificados", int(distinct_topics or 0), 8, "temas"),
+        "posicionamiento": ("Mediciones de posicionamiento", len(surveys), 3, "mediciones"),
+        "competencia": ("Competidores documentados", len(competitors), 4, "perfiles"),
+        "encuestas": ("Encuestas con ficha técnica", len(surveys), 3, "estudios"),
+        "estructura": ("Municipios con responsable confirmado", responsible_count, max(len(structure_records), 1), "municipios"),
+        "organizacion": ("Niveles operativos habilitados", 1 if responsible_count else 0, 5, "niveles"),
+        "coaliciones": ("Escenarios de coalición evaluados", len(coalition_scenarios), 3, "escenarios"),
+        "recursos": ("Categorías de capacidad documentadas", len(resources), 5, "categorías"),
+        "estrategia": ("Estrategias territoriales registradas", int(strategy_total or 0), max(len(structure_records), 1), "estrategias"),
+        "plan_accion": ("Actividades completadas", int(completed_actions or 0), 100, "actividades"),
+        "seguimiento": ("Actividades activas con seguimiento", int(action_summary["activas"] or 0), 100, "actividades"),
+        "conclusion": ("Dictamen formal aprobado", 1 if formal_conclusion else 0, 1, "dictamen"),
+    }
+    goal_rows = []
+    for code, name, _, description in viability_variables:
+        stored = assessment_by_code.get(code, {})
+        default_label, automatic_actual, default_target, default_unit = goal_defaults[code]
+        actual = stored.get("actual_value")
+        target = stored.get("target_value")
+        actual = float(automatic_actual if actual is None else actual)
+        target = float(default_target if target is None else target)
+        progress = min(actual / target * 100, 100) if target > 0 else 0
+        goal_rows.append({
+            "code": code, "Variable": name, "Indicador": stored.get("metric_label") or default_label,
+            "Actual": actual, "Meta": target, "Unidad": stored.get("metric_unit") or default_unit,
+            "Avance": progress, "Alcance": description,
+        })
+    goal_progress_pct = round(sum(row["Avance"] for row in goal_rows) / len(goal_rows))
+    coverage_label = "Sólida" if coverage_pct >= 75 else "En desarrollo" if coverage_pct >= 45 else "Inicial"
+    metric_a, metric_b, metric_c, metric_d, metric_e = st.columns(5)
+    metric_a.metric("Avance de metas", f"{goal_progress_pct}%", "Promedio de 20 medidores")
+    metric_b.metric("Registros y análisis", f"{int(publications or 0):,} / {int(analysed or 0):,}")
+    metric_c.metric("Municipios con evidencia", int(linked["municipios"] or 0))
+    metric_d.metric("Alertas de atención", int(sentiment["urgentes"] or 0))
+    metric_e.metric("Evidencia disponible", f"{coverage_points}/20", coverage_label)
+
+    st.markdown("### Resumen del perfil")
+    if positions:
+        position = positions[0]
+        position_parts = [position["office"], position["condition"], position["party_or_coalition"]]
+        st.info(" · ".join(part for part in position_parts if part) or "Sin cargo o condición registrados.")
+    else:
+        st.warning("Registra cargo, condición y partido o coalición en el perfil para completar el expediente.")
+
+    tabs = st.tabs([
+        "Conclusión", "20 variables", "Electoral y territorial", "Posicionamiento", "Competencia", "Encuestas",
+        "Estructura territorial", "Escenarios y coaliciones", "Recursos", "Organización", "Riesgos y pendientes"
+    ])
+    with tabs[0]:
+        st.markdown("#### Conclusión de viabilidad basada en evidencia")
+        st.write(
+            f"El expediente de **{profile['name']}** tiene una cobertura **{coverage_label.lower()}**: "
+            f"{int(sources or 0)} fuentes activas, {int(publications or 0):,} registros, "
+            f"{int(election_rows['municipios'] or 0)} municipios con resultado electoral cargado y "
+            f"{int(indicator_rows['municipios'] or 0)} municipios con indicadores disponibles."
+        )
+        st.caption("La conclusión cambia conforme se agregan fuentes, resultados, indicadores, encuestas y evidencias de campo.")
+        if dictamen_documents:
+            st.markdown("#### Dictámenes incorporados")
+            for document in dictamen_documents:
+                document_path = Path(document["file_path"])
+                if document_path.exists():
+                    st.download_button(
+                        f"Descargar: {document['title']}",
+                        data=document_path.read_bytes(),
+                        file_name=document_path.name,
+                        mime="application/pdf" if document_path.suffix.casefold() == ".pdf" else "text/html",
+                        key=f"viability_document_{document['id']}",
+                    )
+                else:
+                    st.warning(f"No se encuentra el documento integrado: {document_path.name}")
+        st.markdown("#### Conclusión formal del dictamen")
+        with st.form(f"conclusion_form_{profile_id}"):
+            conclusion_statuses = ["En elaboración", "Viable con evidencia actual", "Viable con condiciones", "Requiere fortalecimiento", "Información insuficiente"]
+            current_status = formal_conclusion["assessment_status"] if formal_conclusion else "En elaboración"
+            conclusion_status = st.selectbox(
+                "Estatus del dictamen", conclusion_statuses,
+                index=conclusion_statuses.index(current_status) if current_status in conclusion_statuses else 0,
+            )
+            conclusion_strengths = st.text_area("Fortalezas verificables", value=(formal_conclusion["strengths"] or "") if formal_conclusion else "")
+            conclusion_risks = st.text_area("Riesgos y condiciones", value=(formal_conclusion["risks"] or "") if formal_conclusion else "")
+            conclusion_conditions = st.text_area("Condiciones para avanzar", value=(formal_conclusion["conditions"] or "") if formal_conclusion else "")
+            conclusion_next = st.text_area("Siguiente paso de validación", value=(formal_conclusion["next_step"] or "") if formal_conclusion else "")
+            if st.form_submit_button("Guardar conclusión formal"):
+                execute(
+                    """
+                    INSERT INTO viability_conclusions (profile_id, assessment_status, strengths, risks, conditions, next_step, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(profile_id) DO UPDATE SET
+                      assessment_status = excluded.assessment_status, strengths = excluded.strengths,
+                      risks = excluded.risks, conditions = excluded.conditions,
+                      next_step = excluded.next_step, updated_at = CURRENT_TIMESTAMP
+                    """,
+                    (profile_id, conclusion_status, conclusion_strengths.strip(), conclusion_risks.strip(), conclusion_conditions.strip(), conclusion_next.strip()),
+                )
+                st.rerun()
+    with tabs[1]:
+        st.markdown("#### Metas y medidores del dictamen")
+        st.caption("El avance compara el valor actual contra la meta definida para cada perfil. Las metas son editables; la evidencia sigue disponible como respaldo, pero no sustituye una meta operativa.")
+        metric_table = pd.DataFrame(goal_rows).drop(columns=["code", "Alcance"])
+        metric_table["Avance"] = metric_table["Avance"].map(lambda value: f"{value:.0f}%")
+        st.dataframe(metric_table, use_container_width=True, hide_index=True)
+        st.markdown("#### Configurar meta o medidor")
+        st.caption("Ajusta la meta de acuerdo con el tamaño del territorio, etapa de campaña y objetivo del perfil.")
+        variable_options = {name: code for code, name, _, _ in viability_variables}
+        with st.form(f"variable_assessment_form_{profile_id}"):
+            selected_variable_name = st.selectbox("Variable", list(variable_options))
+            selected_variable_code = variable_options[selected_variable_name]
+            current_assessment = assessment_by_code.get(selected_variable_code, {})
+            selected_goal = next(row for row in goal_rows if row["code"] == selected_variable_code)
+            variable_statuses = ["Pendiente", "En revisión", "Documentada", "Validada", "No aplica"]
+            current_variable_status = current_assessment.get("status", "Pendiente")
+            variable_status = st.selectbox(
+                "Estatus de validación", variable_statuses,
+                index=variable_statuses.index(current_variable_status) if current_variable_status in variable_statuses else 0,
+            )
+            variable_evidence = st.text_area("Nota de evidencia", value=current_assessment.get("evidence_note", ""))
+            variable_source = st.text_input("Liga de fuente o documento", value=current_assessment.get("source_url", ""))
+            metric_left, metric_center, metric_right = st.columns(3)
+            metric_label = metric_left.text_input("Nombre del medidor", value=selected_goal["Indicador"])
+            metric_actual = metric_center.number_input("Valor actual", min_value=0.0, value=float(selected_goal["Actual"]), step=1.0)
+            metric_target = metric_right.number_input("Meta", min_value=0.0, value=float(selected_goal["Meta"]), step=1.0)
+            metric_unit = st.text_input("Unidad", value=selected_goal["Unidad"])
+            if st.form_submit_button("Guardar validación de variable"):
+                execute(
+                    """
+                    INSERT INTO viability_variable_assessments (profile_id, variable_code, status, evidence_note, source_url, metric_label, actual_value, target_value, metric_unit, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(profile_id, variable_code) DO UPDATE SET
+                      status = excluded.status, evidence_note = excluded.evidence_note,
+                      source_url = excluded.source_url, metric_label = excluded.metric_label,
+                      actual_value = excluded.actual_value, target_value = excluded.target_value,
+                      metric_unit = excluded.metric_unit, updated_at = CURRENT_TIMESTAMP
+                    """,
+                    (profile_id, selected_variable_code, variable_status, variable_evidence.strip(), variable_source.strip(), metric_label.strip(), float(metric_actual), float(metric_target), metric_unit.strip()),
+                )
+                st.rerun()
+    with tabs[2]:
+        first, second, third, fourth = st.columns(4)
+        first.metric("Municipios electorales", int(election_rows["municipios"] or 0))
+        second.metric("Registros electorales", int(election_rows["total"] or 0))
+        third.metric("Municipios con INEGI", int(indicator_rows["municipios"] or 0))
+        fourth.metric("Piso partidista MC", f"{int(mc_vote_floor):,}", f"{mc_vote_share:.1f}% del voto emitido ({latest_election_year})" if latest_election_year else "Sin dato")
+        if latest_election_year:
+            st.caption(
+                "El piso partidista es la votación municipal histórica de Movimiento Ciudadano. "
+                "Es una referencia de base, no una estimación ni un piso personal del perfil."
+            )
+            st.markdown("#### Modelo de meta de votos")
+            goal_a, goal_b, goal_c = st.columns(3)
+            goal_a.metric("Competir con posibilidad de ganar", f"{competitive_vote_goal:,}", "35% de votos válidos")
+            goal_b.metric("Meta para contienda cerrada", f"{close_win_vote_goal:,}", "38% de votos válidos")
+            goal_c.metric("Meta robusta", f"{robust_win_vote_goal:,}", "40% de votos válidos")
+            st.caption(
+                f"Escenario de tres bloques competitivos, usando {int(valid_vote_reference):,} votos válidos municipales de {latest_election_year} como referencia. "
+                "Son metas de planeación, no pronósticos electorales."
+            )
+        st.write("Consulta el detalle comparativo en **Dominio territorial**, **Visor territorial** y **Visor electoral**.")
+    with tabs[3]:
+        first, second, third = st.columns(3)
+        first.metric("Positivas", int(sentiment["positivas"] or 0))
+        second.metric("Negativas", int(sentiment["negativas"] or 0))
+        third.metric("Atención alta o crítica", int(sentiment["urgentes"] or 0))
+        st.write("La bandeja de evidencia permite abrir la fuente original; los enfoques de análisis ayudan a separar noticia, opinión, necesidad y relación con el perfil.")
+    with tabs[4]:
+        st.markdown("#### Competidores y referentes comparables")
+        st.caption("Registra solo información pública o autorizada, junto con su fuente de respaldo.")
+        if competitors:
+            st.dataframe(pd.DataFrame(competitors), use_container_width=True, hide_index=True)
+        else:
+            st.info("No hay competidores o referentes cargados para este dictamen.")
+        with st.form(f"competitor_form_{profile_id}", clear_on_submit=True):
+            first, second, third = st.columns(3)
+            competitor_name = first.text_input("Nombre")
+            competitor_party = second.text_input("Partido o coalición")
+            competitor_condition = third.text_input("Condición o cargo")
+            competitor_territory = st.text_input("Territorio de referencia")
+            competitor_note = st.text_area("Lectura comparativa y evidencia")
+            competitor_url = st.text_input("Liga de fuente pública")
+            if st.form_submit_button("Agregar competidor o referente"):
+                if not competitor_name.strip():
+                    st.error("Escribe el nombre del competidor o referente.")
+                else:
+                    execute(
+                        "INSERT INTO viability_competitors (profile_id, name, party_or_coalition, condition, territory, positioning_note, source_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (profile_id, competitor_name.strip(), competitor_party.strip(), competitor_condition.strip(), competitor_territory.strip(), competitor_note.strip(), competitor_url.strip()),
+                    )
+                    st.rerun()
+    with tabs[5]:
+        st.markdown("#### Encuestas formales y ejercicios de campo")
+        st.caption("Captura metodología, fecha, muestra y fuente para distinguir una encuesta verificable de una referencia sin sustento.")
+        if surveys:
+            st.dataframe(pd.DataFrame(surveys), use_container_width=True, hide_index=True)
+        else:
+            st.info("No hay encuestas o ejercicios de campo cargados para este perfil.")
+        with st.form(f"survey_form_{profile_id}", clear_on_submit=True):
+            first, second, third = st.columns(3)
+            survey_name = first.text_input("Nombre del estudio")
+            survey_pollster = second.text_input("Casa encuestadora o responsable")
+            survey_territory = third.text_input("Territorio")
+            fourth, fifth, sixth = st.columns(3)
+            survey_date = fourth.text_input("Fecha de levantamiento")
+            survey_sample = fifth.number_input("Tamaño de muestra", min_value=0, step=1)
+            survey_result = sixth.number_input("Resultado del perfil (%)", min_value=0.0, max_value=100.0, step=0.1)
+            survey_methodology = st.text_area("Metodología y notas")
+            survey_url = st.text_input("Liga de fuente o documento")
+            if st.form_submit_button("Agregar encuesta o ejercicio"):
+                if not survey_name.strip():
+                    st.error("Escribe el nombre del estudio o ejercicio.")
+                else:
+                    execute(
+                        "INSERT INTO viability_surveys (profile_id, name, pollster, territory, fieldwork_date, sample_size, methodology, profile_result_pct, source_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (profile_id, survey_name.strip(), survey_pollster.strip(), survey_territory.strip(), survey_date.strip(), int(survey_sample) or None, survey_methodology.strip(), float(survey_result) if survey_result else None, survey_url.strip()),
+                    )
+                    st.rerun()
+    with tabs[6]:
+        st.markdown("#### Estructura territorial comprobable")
+        st.caption("Registra cobertura y responsables por territorio. No se utilizan perfiles individuales de electores.")
+        if structure_records:
+            st.dataframe(pd.DataFrame(structure_records), use_container_width=True, hide_index=True)
+        else:
+            st.info("No hay registros de estructura territorial para este perfil.")
+        with st.form(f"structure_form_{profile_id}", clear_on_submit=True):
+            first, second, third = st.columns(3)
+            structure_state = first.text_input("Estado", value=selected_state if selected_state != "Todos los estados" else "")
+            structure_municipality = second.text_input("Municipio")
+            structure_district = third.text_input("Distrito")
+            fourth, fifth, sixth = st.columns(3)
+            structure_section = fourth.text_input("Sección electoral")
+            structure_locality = fifth.text_input("Localidad")
+            structure_responsible = sixth.text_input("Responsable")
+            structure_status = st.selectbox("Estatus de cobertura", ["Planeada", "Por validar", "Registrada", "Activa", "Incompleta"], key=f"structure_status_{profile_id}")
+            structure_evidence = st.text_area("Evidencia o nota de verificación")
+            if st.form_submit_button("Agregar registro de estructura"):
+                execute(
+                    "INSERT INTO viability_structure_records (profile_id, state, municipality, district, electoral_section, locality, responsible, coverage_status, evidence_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (profile_id, structure_state.strip(), structure_municipality.strip(), structure_district.strip(), structure_section.strip(), structure_locality.strip(), structure_responsible.strip(), structure_status, structure_evidence.strip()),
+                )
+                st.rerun()
+    with tabs[7]:
+        st.markdown("#### Escenarios de viabilidad y coalición")
+        if coalition_scenarios:
+            st.dataframe(pd.DataFrame(coalition_scenarios), use_container_width=True, hide_index=True)
+        else:
+            st.info("No hay escenarios de coalición cargados. Regístralos como hipótesis hasta que exista una definición formal.")
+        with st.form(f"coalition_form_{profile_id}", clear_on_submit=True):
+            coalition_name = st.text_input("Nombre del escenario")
+            coalition_parties = st.text_input("Partidos o coalición")
+            coalition_scope = st.text_input("Alcance territorial o electoral")
+            coalition_status = st.selectbox("Estatus", ["Hipótesis", "En análisis", "Confirmado", "Descartado"], key=f"coalition_status_{profile_id}")
+            coalition_notes = st.text_area("Supuestos, alcance y observaciones")
+            coalition_url = st.text_input("Liga de fuente pública")
+            if st.form_submit_button("Agregar escenario de coalición"):
+                if not coalition_name.strip():
+                    st.error("Escribe un nombre para el escenario.")
+                else:
+                    execute(
+                        "INSERT INTO viability_coalition_scenarios (profile_id, scenario_name, parties, scope, status, notes, source_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (profile_id, coalition_name.strip(), coalition_parties.strip(), coalition_scope.strip(), coalition_status, coalition_notes.strip(), coalition_url.strip()),
+                    )
+                    st.rerun()
+    with tabs[8]:
+        st.markdown("#### Recursos y capacidad operativa")
+        st.caption("Registra disponibilidad y respaldo documental; evita guardar credenciales, datos bancarios o información personal sensible.")
+        if resources:
+            st.dataframe(pd.DataFrame(resources), use_container_width=True, hide_index=True)
+        else:
+            st.info("No hay registros de recursos o capacidad operativa para este perfil.")
+        with st.form(f"resource_form_{profile_id}", clear_on_submit=True):
+            resource_category = st.selectbox("Categoría", ["Equipo", "Logística", "Comunicación", "Capacitación", "Financiamiento autorizado", "Otra"], key=f"resource_category_{profile_id}")
+            resource_status = st.selectbox("Disponibilidad", ["Por validar", "Disponible", "Parcial", "No disponible"], key=f"resource_status_{profile_id}")
+            resource_amount = st.text_input("Monto o referencia agregada, si aplica")
+            resource_notes = st.text_area("Evidencia, limitaciones o notas")
+            resource_url = st.text_input("Liga de fuente o documento")
+            if st.form_submit_button("Agregar recurso o capacidad"):
+                execute(
+                    "INSERT INTO viability_resource_records (profile_id, category, availability_status, amount_note, source_url, notes) VALUES (?, ?, ?, ?, ?, ?)",
+                    (profile_id, resource_category, resource_status, resource_amount.strip(), resource_url.strip(), resource_notes.strip()),
+                )
+                st.rerun()
+    with tabs[9]:
+        first, second, third = st.columns(3)
+        first.metric("Territorios asignados", int(territories or 0))
+        second.metric("Acciones registradas", int(action_summary["total"] or 0))
+        third.metric("Acciones activas", int(action_summary["activas"] or 0))
+        st.write("Los módulos de Estrategia territorial, Planes de acción, CRM y Seguimiento de campo convierten hallazgos en trabajo verificable.")
+    with tabs[10]:
+        missing = []
+        if not int(sources or 0): missing.append("fuentes activas")
+        if not int(publications or 0): missing.append("registros de evidencia")
+        if not int(election_rows["total"] or 0): missing.append("resultados electorales")
+        if not int(indicator_rows["total"] or 0): missing.append("indicadores INEGI")
+        if not int(territories or 0): missing.append("territorios asignados")
+        if not int(action_summary["total"] or 0): missing.append("acciones de seguimiento")
+        if not competitors: missing.append("competidores o referentes")
+        if not surveys: missing.append("encuestas o ejercicios de campo")
+        if not structure_records: missing.append("estructura territorial comprobable")
+        if not coalition_scenarios: missing.append("escenarios de coalición")
+        if not resources: missing.append("recursos y capacidad operativa")
+        if not formal_conclusion: missing.append("conclusión formal")
+        if missing:
+            st.warning("Falta integrar: " + ", ".join(missing) + ".")
+        else:
+            st.success("El expediente tiene evidencia en todos los bloques básicos. Revisa la calidad y actualidad de cada fuente antes de emitir una versión formal.")
+        st.caption("Los riesgos se documentan con fuentes verificables y se revisan periódicamente; el módulo no construye perfiles individuales de electores.")
+
+
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "Inicio"
-if not st.session_state.get("navigation_groups_v11"):
+if not st.session_state.get("navigation_groups_v18"):
     for widget_key in NAVIGATION_WIDGET_KEYS:
         st.session_state.pop(widget_key, None)
-    st.session_state["navigation_groups_v11"] = True
+    st.session_state["navigation_groups_v18"] = True
     if st.session_state.get("active_page") == "Codex":
         st.session_state["active_page"] = "Inicio"
 
@@ -1560,9 +5524,9 @@ if not st.session_state.get("navigation_groups_v11"):
 with st.sidebar:
     st.markdown(
         """
-        <div class="pulso-kicker">INTELIGENCIA PÚBLICA</div>
-        <div class="pulso-title">Pulso Ciudadano<br><span style="font-size:.68em;font-weight:600;letter-spacing:.04em">Dominio territorial</span></div>
-        <div class="pulso-subtitle">Escucha, contexto territorial y cobertura de medios.</div>
+        <div class="pulso-kicker">INTELIGENCIA ELECTORAL</div>
+        <div class="pulso-title">Go2Win<br><span style="font-size:.68em;font-weight:600;letter-spacing:.04em">Tablero de mando electoral</span></div>
+        <div class="pulso-subtitle">Evidencia, dictamen, territorio, estrategia y seguimiento.</div>
         <span class="pulso-badge">ETAPA 1 · LOCAL</span>
         """,
         unsafe_allow_html=True,
@@ -1578,63 +5542,108 @@ with st.sidebar:
         args=("objective_navigation", OBJECTIVE_NAVIGATION),
     )
     st.divider()
-    st.caption("1 · INFORMACIÓN Y TERRITORIO")
-    st.caption("Perfiles, fuentes, datos originales y su vínculo territorial.")
+    st.caption("1 · EXPEDIENTE DE CANDIDATURA")
+    st.caption("Perfil, elección y dictamen de viabilidad.")
     st.radio(
-        "Módulos de información",
-        list(INFORMATION_NAVIGATION),
+        "Perfil y dictamen",
+        list(PROFILE_NAVIGATION),
         index=None,
-        key="information_navigation",
+        key="profile_navigation",
         label_visibility="collapsed",
         on_change=select_navigation,
-        args=("information_navigation", INFORMATION_NAVIGATION),
+        args=("profile_navigation", PROFILE_NAVIGATION),
     )
     st.divider()
-    st.caption("2 · ANÁLISIS TERRITORIAL")
-    st.caption("Visores, análisis, IA y revisión de resultados.")
+    st.caption("2 · VISORES GIS")
+    st.caption("Explora cartografía, resultados e indicadores sin modificar la operación.")
     st.radio(
-        "Módulos de análisis",
-        list(ANALYSIS_NAVIGATION),
+        "Visores GIS",
+        list(GIS_NAVIGATION),
         index=None,
-        key="analysis_navigation",
+        key="gis_navigation",
         label_visibility="collapsed",
         on_change=select_navigation,
-        args=("analysis_navigation", ANALYSIS_NAVIGATION),
+        args=("gis_navigation", GIS_NAVIGATION),
     )
     st.divider()
-    st.caption("3 · ESTRATEGIA Y ACCIÓN")
-    st.caption("Módulos preparados para convertir análisis en operación territorial.")
+    st.caption("3 · ENTENDER EL TERRITORIO")
+    st.caption("Consulta el mercado, diagnostica condiciones y localiza oportunidades.")
     st.radio(
-        "Módulos de estrategia",
-        list(STRATEGY_NAVIGATION),
+        "Análisis y priorización",
+        list(DIAGNOSTIC_NAVIGATION),
         index=None,
-        key="strategy_navigation",
+        key="diagnostic_navigation",
         label_visibility="collapsed",
         on_change=select_navigation,
-        args=("strategy_navigation", STRATEGY_NAVIGATION),
+        args=("diagnostic_navigation", DIAGNOSTIC_NAVIGATION),
     )
     st.divider()
-    st.caption("4 · COORDINACIÓN Y CONTROL")
+    st.caption("4 · ESCENARIO Y METAS")
+    st.caption("Define la hipótesis electoral y distribuye la meta a todo el territorio.")
     st.radio(
-        "Módulos de coordinación",
-        list(COORDINATION_NAVIGATION),
+        "Escenario y metas",
+        list(DECISION_NAVIGATION),
         index=None,
-        key="coordination_navigation",
+        key="decision_navigation",
         label_visibility="collapsed",
         on_change=select_navigation,
-        args=("coordination_navigation", COORDINATION_NAVIGATION),
+        args=("decision_navigation", DECISION_NAVIGATION),
     )
     st.divider()
-    st.caption("Flujo: información → análisis → estrategia → acción → seguimiento.")
+    st.caption("5 · PRIORIZACIÓN, ESTRATEGIA Y OPERACIÓN")
+    st.caption("Ordena dónde actuar primero, define el rumbo y da seguimiento a la ejecución.")
+    st.radio(
+        "Priorización, estrategia y operación",
+        list(EXECUTION_NAVIGATION),
+        index=None,
+        key="execution_navigation",
+        label_visibility="collapsed",
+        on_change=select_navigation,
+        args=("execution_navigation", EXECUTION_NAVIGATION),
+    )
+    st.divider()
+    st.caption("7 · ESCUCHA Y EVIDENCIA")
+    st.caption("Obtén, analiza, vincula y revisa la información que respalda decisiones.")
+    st.radio(
+        "Módulos de evidencia",
+        list(EVIDENCE_NAVIGATION),
+        index=None,
+        key="evidence_navigation",
+        label_visibility="collapsed",
+        on_change=select_navigation,
+        args=("evidence_navigation", EVIDENCE_NAVIGATION),
+    )
+    st.divider()
+    st.caption("8 · CONFIGURACIÓN Y APOYO")
+    st.radio(
+        "Configuración y apoyo",
+        list(SETTINGS_NAVIGATION),
+        index=None,
+        key="settings_navigation",
+        label_visibility="collapsed",
+        on_change=select_navigation,
+        args=("settings_navigation", SETTINGS_NAVIGATION),
+    )
+    st.divider()
+    st.caption("Flujo: expediente → análisis → escenarios y metas → estrategia → seguimiento.")
     st.caption("Los datos se conservan en esta computadora.")
 
 page = st.session_state["active_page"]
 
-if page not in {"Dominio territorial", "Territorio", "Electoral", "Visor electoral", "INEGI", "Diagnóstico regional del PED", "Perfil territorial"}:
-    st.title(page if page != "Inicio" else "Pulso Ciudadano · Dominio territorial")
+if page not in {"Dominio territorial", "Territorio", "Electoral", "Visor electoral", "INEGI", "Diagnóstico regional del PED", "Perfil territorial", "Dictamen de viabilidad", "Recorrido del dictamen"}:
+    st.title(page if page != "Inicio" else "Go2Win · Tablero de mando electoral")
     st.caption("Etapa 1 local: datos y análisis en tu computadora, sin costo de infraestructura.")
 
-if page == "Planes de acción":
+if page == "Escenarios electorales":
+    render_electoral_scenarios()
+
+elif page == "Mapa de estrategia y operación":
+    render_strategy_operation_map()
+
+elif page == "Metas y control territorial":
+    render_territorial_goals()
+
+elif page == "Planes de acción":
     render_action_plans()
 
 elif page == "Estrategia territorial":
@@ -1643,8 +5652,26 @@ elif page == "Estrategia territorial":
 elif page == "Priorización territorial":
     render_territorial_prioritization()
 
+elif page == "Mapa de oportunidad electoral":
+    render_electoral_opportunity_map()
+
+elif page == "Cruce INEGI + INE":
+    render_inegi_ine_cross_analysis()
+
+elif page == "Mercado electoral":
+    render_electoral_market()
+
 elif page == "Diagnóstico territorial":
     render_territorial_diagnosis()
+
+elif page == "Tablero Electoral":
+    render_electoral_dashboard()
+
+elif page == "Dictamen de viabilidad":
+    render_viability_opinion()
+
+elif page == "Recorrido del dictamen":
+    render_dictamen_reader()
 
 elif page == "Inicio":
     st.subheader("Objetivo del proyecto")
@@ -1653,7 +5680,7 @@ elif page == "Inicio":
         "qué ocurre en el territorio y qué está expresando la ciudadanía."
     )
     st.markdown(
-        "**Pulso Ciudadano · Dominio territorial** integra ambas lecturas en una plataforma local, "
+        "**Go2Win** integra ambas lecturas en una plataforma local, "
         "clara y auditable. Su propósito es ordenar información para hacer mejores preguntas y priorizar "
         "la atención pública."
     )
@@ -1694,6 +5721,188 @@ elif page == "Inicio":
         "La plataforma conserva la fuente original, separa la obtención del análisis y no atribuye ubicaciones "
         "cuando el mensaje no las menciona."
     )
+
+elif page == "Orden de cargas":
+    st.subheader("Orden de cargas en Go2Win")
+    st.caption("Secuencia recomendada para crear un caso de campaña sin mezclar información ni anticipar decisiones.")
+    st.info("Regla de operación: primero información y evidencia; después análisis; luego estrategia; al final operación y seguimiento.")
+    load_steps = [
+        ("1. Crear el perfil", "Registrar nombre, tipo, cargo objetivo, condición, partido o coalición."),
+        ("2. Asociar el territorio", "Asignar estado y después municipios, distritos o secciones que correspondan a la cobertura."),
+        ("3. Cargar información territorial base", "Incorporar cartografía, resultados electorales históricos, lista nominal, participación, votos e indicadores INEGI."),
+        ("4. Cargar el expediente", "Agregar dictámenes, documentos, encuestas, competidores, escenarios y estructura conocida."),
+        ("5. Configurar escucha y evidencia", "Registrar fuentes autorizadas, obtener publicaciones y conservar el enlace al contenido original."),
+        ("6. Completar las 20 variables de viabilidad", "Documentar evidencia, fuente, fecha de corte y estatus antes de asignar puntajes."),
+        ("7. Construir escenarios electorales", "Definir participación esperada, votos necesarios, competidores, coaliciones y escenarios de decisión."),
+        ("8. Definir diagnóstico y estrategia territorial", "Priorizar territorios para defender, crecer, persuadir o recuperar con base en datos agregados."),
+        ("9. Crear metas y planes de acción", "Convertir la estrategia en metas, responsables y actividades; después se conectará con el CRM territorial."),
+    ]
+    for title, description in load_steps:
+        st.markdown(
+            f"<div class='electoral-kpi'><div class='electoral-kpi-label'>{title}</div>"
+            f"<div class='electoral-kpi-note'>{description}</div></div>",
+            unsafe_allow_html=True,
+        )
+
+elif page == "Tableros y reportes":
+    st.subheader("Tablero de evidencia y seguimiento")
+    st.caption(
+        "Corte ejecutivo de la información disponible. Cada indicador conserva su vínculo con fuentes, "
+        "territorio y análisis; no representa una predicción electoral."
+    )
+    dashboard_profiles = query(
+        """
+        SELECT p.id, p.name, COUNT(pub.id) AS publicaciones
+        FROM profiles p
+        LEFT JOIN publications pub ON pub.profile_id = p.id
+        WHERE p.active = 1
+        GROUP BY p.id, p.name
+        ORDER BY publicaciones DESC, p.name
+        """
+    )
+    if not dashboard_profiles:
+        st.info("Registra un perfil para comenzar a construir su tablero de mando.")
+        st.stop()
+    dashboard_options = {
+        f"{row['name']} · {int(row['publicaciones'] or 0):,} registros": row["id"]
+        for row in dashboard_profiles
+    }
+    selected_dashboard_label = st.selectbox(
+        "Perfil del tablero", list(dashboard_options), key="dashboard_profile"
+    )
+    dashboard_profile_id = dashboard_options[selected_dashboard_label]
+
+    summary = query(
+        """
+        SELECT
+            COUNT(DISTINCT p.id) AS publicaciones,
+            COUNT(DISTINCT a.id) AS analizadas,
+            COUNT(DISTINCT s.id) AS fuentes,
+            SUM(CASE WHEN a.sentiment = 'Positivo' THEN 1 ELSE 0 END) AS positivas,
+            SUM(CASE WHEN a.sentiment = 'Negativo' THEN 1 ELSE 0 END) AS negativas,
+            SUM(CASE WHEN a.sentiment = 'Neutral' THEN 1 ELSE 0 END) AS neutras,
+            SUM(CASE WHEN a.urgency IN ('Alta', 'Crítica') THEN 1 ELSE 0 END) AS urgentes
+        FROM publications p
+        LEFT JOIN analyses a ON a.publication_id = p.id
+        LEFT JOIN sources s ON s.id = p.source_id
+        WHERE p.profile_id = ?
+        """,
+        (dashboard_profile_id,),
+    )[0]
+    territorial_summary = query(
+        """
+        SELECT COUNT(DISTINCT municipality) AS municipios
+        FROM publication_territories pt
+        JOIN publications p ON p.id = pt.publication_id
+        WHERE p.profile_id = ? AND municipality IS NOT NULL
+        """,
+        (dashboard_profile_id,),
+    )[0]
+    actions_summary = query(
+        """
+        SELECT COUNT(*) AS total,
+               SUM(CASE WHEN tap.status = 'Concluida' THEN 1 ELSE 0 END) AS concluidas,
+               SUM(CASE WHEN tap.status IN ('Pendiente', 'En curso') THEN 1 ELSE 0 END) AS activas
+        FROM territorial_action_plans tap
+        JOIN territorial_strategies ts ON ts.id = tap.strategy_id
+        WHERE ts.profile_id = ?
+        """,
+        (dashboard_profile_id,),
+    )[0]
+
+    top_metrics = st.columns(5)
+    top_metrics[0].metric("Registros", f"{int(summary['publicaciones'] or 0):,}")
+    top_metrics[1].metric("Analizados", f"{int(summary['analizadas'] or 0):,}")
+    top_metrics[2].metric("Fuentes", int(summary['fuentes'] or 0))
+    top_metrics[3].metric("Municipios vinculados", int(territorial_summary['municipios'] or 0))
+    top_metrics[4].metric("Atención alta o crítica", int(summary['urgentes'] or 0))
+
+    st.markdown("### Lectura ejecutiva")
+    left_panel, right_panel = st.columns([1.05, 1])
+    with left_panel:
+        st.markdown("#### Percepción pública")
+        sentiment_frame = pd.DataFrame([
+            {"Sentimiento": "Positivas", "Registros": int(summary["positivas"] or 0)},
+            {"Sentimiento": "Negativas", "Registros": int(summary["negativas"] or 0)},
+            {"Sentimiento": "Neutras", "Registros": int(summary["neutras"] or 0)},
+        ])
+        st.bar_chart(sentiment_frame.set_index("Sentimiento"), height=260)
+        balance = int(summary["positivas"] or 0) - int(summary["negativas"] or 0)
+        st.caption(f"Balance de sentimiento: {balance:+,} registros positivos menos negativos.")
+    with right_panel:
+        st.markdown("#### Operación territorial")
+        operation_metrics = st.columns(2)
+        operation_metrics[0].metric("Acciones activas", int(actions_summary["activas"] or 0))
+        operation_metrics[1].metric("Acciones concluidas", int(actions_summary["concluidas"] or 0))
+        operation_metrics[0].metric("Total de acciones", int(actions_summary["total"] or 0))
+        operation_metrics[1].metric("Cobertura municipal", int(territorial_summary["municipios"] or 0))
+        st.info(
+            "El tablero reúne escucha, análisis y operación. Las acciones aparecen cuando se registran "
+            "planes territoriales para este perfil."
+        )
+
+    topic_rows = query(
+        """
+        SELECT COALESCE(NULLIF(TRIM(a.topic), ''), 'Sin tema') AS tema, COUNT(*) AS registros
+        FROM analyses a
+        JOIN publications p ON p.id = a.publication_id
+        WHERE p.profile_id = ?
+        GROUP BY tema
+        ORDER BY registros DESC, tema
+        LIMIT 8
+        """,
+        (dashboard_profile_id,),
+    )
+    source_rows = query(
+        """
+        SELECT s.name AS fuente, s.source_type AS tipo, COUNT(p.id) AS registros
+        FROM publications p
+        JOIN sources s ON s.id = p.source_id
+        WHERE p.profile_id = ?
+        GROUP BY s.id, s.name, s.source_type
+        ORDER BY registros DESC, fuente
+        LIMIT 8
+        """,
+        (dashboard_profile_id,),
+    )
+    detail_left, detail_right = st.columns(2)
+    with detail_left:
+        st.markdown("#### Temas con mayor presencia")
+        if topic_rows:
+            topic_frame = pd.DataFrame(topic_rows)
+            st.bar_chart(topic_frame.set_index("tema")[["registros"]], horizontal=True, height=300)
+        else:
+            st.caption("Aún no hay análisis temático disponible para este perfil.")
+    with detail_right:
+        st.markdown("#### Fuentes con información")
+        if source_rows:
+            source_frame = pd.DataFrame(source_rows).rename(columns={"fuente": "Fuente", "tipo": "Tipo", "registros": "Registros"})
+            st.dataframe(source_frame, use_container_width=True, hide_index=True)
+        else:
+            st.caption("Aún no hay fuentes con registros para este perfil.")
+
+    municipality_rows = query(
+        """
+        SELECT pt.municipality AS municipio, COUNT(DISTINCT p.id) AS registros,
+               SUM(CASE WHEN a.urgency IN ('Alta', 'Crítica') THEN 1 ELSE 0 END) AS urgentes
+        FROM publication_territories pt
+        JOIN publications p ON p.id = pt.publication_id
+        LEFT JOIN analyses a ON a.publication_id = p.id
+        WHERE p.profile_id = ? AND pt.municipality IS NOT NULL
+        GROUP BY pt.municipality
+        ORDER BY urgentes DESC, registros DESC, municipio
+        LIMIT 10
+        """,
+        (dashboard_profile_id,),
+    )
+    st.markdown("#### Territorios que requieren revisión")
+    if municipality_rows:
+        municipality_frame = pd.DataFrame(municipality_rows).rename(columns={
+            "municipio": "Municipio", "registros": "Registros vinculados", "urgentes": "Atención alta o crítica"
+        })
+        st.dataframe(municipality_frame, use_container_width=True, hide_index=True)
+    else:
+        st.caption("No hay publicaciones vinculadas explícitamente a municipios para este perfil.")
 
 elif page in FUTURE_MODULES:
     module = FUTURE_MODULES[page]
@@ -2051,6 +6260,9 @@ elif page == "Machine Learning":
         "Este módulo queda preparado para incorporar modelos locales y evaluaciones sin mezclar sus resultados con datos originales."
     )
 
+elif page == "Seguimiento del PMD":
+    render_pmd_tracking()
+
 elif page == "Planeación":
     st.title("Planeación estratégica")
     st.caption("Consulta documentos de contexto y planeación asociados al perfil activo.")
@@ -2382,6 +6594,14 @@ elif page == "Obtención de información":
 
 elif page == "Dominio territorial":
     render_domain_header("Dominio territorial")
+    render_domain_scroll_nav([
+        ("Configuración", "configuracion-gis"),
+        ("Resumen estatal", "ficha-estatal"),
+        ("Mapa", "mapa-gis"),
+        ("Ficha municipal", "ficha-municipal"),
+        ("Volver arriba", "dominio-territorial"),
+    ])
+    st.markdown('<div id="configuracion-gis" class="scroll-anchor"></div>', unsafe_allow_html=True)
     options = profile_options()
     if not options:
         st.warning("Primero crea un perfil y define su territorio para abrir el visor.")
@@ -2436,6 +6656,73 @@ elif page == "Dominio territorial":
         (viewer_state, viewer_election_type, viewer_election_year),
     ) if viewer_election_year is not None else []
     viewer_election_data = decode_election_rows(viewer_election_rows)
+    # El visor inicia con una ficha estatal para que la consulta no dependa de
+    # seleccionar un municipio. Los resultados se agregan exclusivamente a
+    # partir de las filas municipales ya cargadas en la plataforma.
+    state_election_payload: dict[str, float] = {}
+    for election_row in viewer_election_data:
+        for field, value in election_row["payload"].items():
+            try:
+                state_election_payload[field] = state_election_payload.get(field, 0.0) + float(value or 0)
+            except (TypeError, ValueError):
+                continue
+    state_population_row = query(
+        """SELECT SUM(value) AS population, COUNT(DISTINCT municipality_code) AS coverage
+           FROM territorial_indicators
+           WHERE state = ? AND indicator_id = '1002000001'""",
+        (viewer_state,),
+    )
+    state_population = float(state_population_row[0]["population"] or 0) if state_population_row else 0.0
+    state_population_coverage = int(state_population_row[0]["coverage"] or 0) if state_population_row else 0
+    state_indicator_catalog = query(
+        """SELECT indicator_name AS Indicador, period AS Periodo, COUNT(DISTINCT municipality_code) AS Cobertura
+           FROM territorial_indicators
+           WHERE state = ?
+           GROUP BY indicator_id, indicator_name, period
+           ORDER BY indicator_name, period DESC""",
+        (viewer_state,),
+    )
+    state_nominal = float(state_election_payload.get("lista_nominal") or 0)
+    state_votes_total = float(state_election_payload.get("votes_total") or 0)
+    state_turnout = state_votes_total / state_nominal * 100 if state_nominal else 0.0
+    st.markdown('<div id="ficha-estatal" class="scroll-anchor"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="domain-section">0. Consulta la información del estado</div>', unsafe_allow_html=True)
+    state_a, state_b, state_c, state_d = st.columns(4)
+    state_a.metric("Estado", viewer_state)
+    state_b.metric("Municipios", len(viewer_names))
+    state_c.metric(
+        "Población total",
+        f"{state_population:,.0f}" if state_population else "No disponible",
+        f"INEGI · {state_population_coverage} municipios" if state_population_coverage else None,
+    )
+    state_d.metric(
+        "Participación electoral",
+        f"{state_turnout:.1f}%" if state_nominal else "No disponible",
+        f"{viewer_election_type} {viewer_election_year}" if viewer_election_year else None,
+    )
+    state_territorial_tab, state_electoral_tab, state_inegi_tab = st.tabs([
+        "Resumen territorial", "Resultados electorales estatales", "Indicadores INEGI cargados",
+    ])
+    with state_territorial_tab:
+        state_summary_a, state_summary_b, state_summary_c = st.columns(3)
+        state_summary_a.metric("Lista nominal agregada", f"{state_nominal:,.0f}" if state_nominal else "No disponible")
+        state_summary_b.metric("Votos totales agregados", f"{state_votes_total:,.0f}" if state_votes_total else "No disponible")
+        state_summary_c.metric("Municipios con resultado", len(viewer_election_data))
+        st.caption(
+            "El resumen estatal agrega la información municipal disponible. Selecciona después un municipio para abrir sus fichas territorial, electoral e INEGI."
+        )
+    with state_electoral_tab:
+        if state_election_payload:
+            st.markdown(f"#### {viewer_election_type} {viewer_election_year} · resultado agregado")
+            render_electoral_breakdown(state_election_payload)
+        else:
+            st.info("No hay resultados municipales cargados para construir el agregado estatal.")
+    with state_inegi_tab:
+        if state_indicator_catalog:
+            st.dataframe(pd.DataFrame(state_indicator_catalog), use_container_width=True, hide_index=True)
+            st.caption("La cobertura indica en cuántos municipios está disponible cada indicador. Los porcentajes se consultan por municipio, no se suman a nivel estatal.")
+        else:
+            st.info("No hay indicadores INEGI cargados para este estado.")
     election_layers = {"Mapa municipal base": None}
     for key, label in ELECTORAL_VOTE_LABELS.items():
         if any(float(row["payload"].get(key) or 0) > 0 for row in viewer_election_data):
@@ -2472,6 +6759,7 @@ elif page == "Dominio territorial":
         feature for feature in viewer_map_geojson.get("features", [])
         if feature.get("properties", {}).get("municipio") == active_viewer_municipality
     ]
+    st.markdown('<div id="mapa-gis" class="scroll-anchor"></div>', unsafe_allow_html=True)
     st.markdown('<div class="domain-section">1. Selecciona un municipio en el mapa</div>', unsafe_allow_html=True)
     map_event = st.pydeck_chart(
         pdk.Deck(
@@ -2532,6 +6820,7 @@ elif page == "Dominio territorial":
     viewer_row = viewer_municipalities.loc[
         viewer_municipalities["municipio"].astype(str) == active_viewer_municipality
     ].iloc[0]
+    st.markdown('<div id="ficha-municipal" class="scroll-anchor"></div>', unsafe_allow_html=True)
     st.markdown('<div class="domain-section">2. Consulta la información del municipio</div>', unsafe_allow_html=True)
     municipality_title, municipality_state, municipality_code = st.columns([2, 1, 1])
     municipality_title.metric("Municipio", active_viewer_municipality)
@@ -2737,6 +7026,15 @@ elif page == "Diagnóstico regional del PED":
 
 elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
     render_domain_header(page)
+    if page == "Visor electoral":
+        render_domain_scroll_nav([
+            ("Configuración", "configuracion-electoral"),
+            ("Rutas", "rutas-electorales"),
+            ("Ficha", "ficha-electoral"),
+            ("Mapa", "mapa-electoral"),
+            ("Arriba", "visor-electoral"),
+        ])
+        st.markdown('<div id="configuracion-electoral" class="scroll-anchor"></div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="domain-note">Selecciona un perfil, define el tema o nivel de consulta y utiliza el mapa como apoyo visual para comparar y profundizar.</div>',
         unsafe_allow_html=True,
@@ -2918,6 +7216,8 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
         st.caption(f"Capa municipal activa: {gis_source}")
         st.stop()
 
+    if page == "Visor electoral":
+        st.markdown('<div id="rutas-electorales" class="scroll-anchor"></div>', unsafe_allow_html=True)
     st.markdown("### 1. Ruta de consulta")
     district_result_rows = query(
         """
@@ -3022,13 +7322,19 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
             help="Los municipios y sus cifras se calculan únicamente con las secciones de este distrito.",
         )
         district_sections = [row for row in section_rows if row["Distrito"] == chosen_district]
-        aggregate: dict[tuple[str, str], dict] = {}
+        # Algunas importaciones históricas de secciones no incluían la clave
+        # municipal. Agrupamos por nombre normalizado y conservamos la clave
+        # válida que aparezca en cualquiera de sus secciones; de lo contrario
+        # el mismo municipio se duplicaba y la ficha INEGI quedaba vacía.
+        aggregate: dict[str, dict] = {}
         for row in district_sections:
-            key = (row["Clave municipio"], municipality_match_key(row["Municipio"]))
+            key = municipality_match_key(row["Municipio"])
             bucket = aggregate.setdefault(key, {
                 "Municipio": row["Municipio"], "Clave municipio": row["Clave municipio"],
                 "Secciones con resultado": 0, "payload": {},
             })
+            if not str(bucket["Clave municipio"] or "").strip("0") and str(row["Clave municipio"] or "").strip("0"):
+                bucket["Clave municipio"] = row["Clave municipio"]
             bucket["Secciones con resultado"] += 1
             for field, value in row["payload"].items():
                 if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -3230,6 +7536,18 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
                 """,
                 (context_state, municipality_code),
             )
+            # Respaldo para cargas históricas sin clave municipal: el nombre
+            # también existe en el catálogo INEGI y permite recuperar la ficha.
+            if not stored_inegi:
+                stored_inegi = query(
+                    """
+                    SELECT indicator_name AS Indicador, value AS Valor, unit AS Unidad, period AS Periodo
+                    FROM territorial_indicators
+                    WHERE state = ? AND lower(municipality) = lower(?)
+                    ORDER BY indicator_name, period DESC
+                    """,
+                    (context_state, ficha_municipality),
+                )
             if stored_inegi:
                 st.markdown("##### Indicadores oficiales cargados")
                 st.dataframe(pd.DataFrame(stored_inegi), use_container_width=True, hide_index=True)
@@ -3348,13 +7666,38 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
             ficha_c.metric("Participación", f"{float(section_payload.get('participacion_pct') or 0):.1f}%")
             ficha_d.metric("Semáforo", chosen_section_row_top["Semáforo territorial"])
             render_electoral_breakdown(section_payload)
+            if section_payload.get("ieeq_descripcion_territorial"):
+                st.markdown("**Contexto territorial oficial de la sección**")
+                st.write(section_payload["ieeq_descripcion_territorial"])
+                current_roll, current_list = st.columns(2)
+                current_roll.metric(
+                    "Padrón electoral publicado",
+                    f"{float(section_payload.get('ieeq_padron_electoral_actual') or 0):,.0f}",
+                )
+                current_list.metric(
+                    "Lista nominal publicada",
+                    f"{float(section_payload.get('ieeq_lista_nominal_actual') or 0):,.0f}",
+                )
+                if section_payload.get("ieeq_plano_seccional"):
+                    st.link_button(
+                        "Abrir plano oficial de la sección",
+                        section_payload["ieeq_plano_seccional"],
+                    )
         st.markdown("### 4. Mapa seccional")
         map_column = st.container()
         ficha_column = st.empty()
         with map_column:
             section_geojson, section_source = load_electoral_sections_context(context_state)
             if section_geojson is None:
-                st.warning("No se pudo cargar la capa oficial de secciones para este estado.")
+                if context_state == "Querétaro":
+                    st.info(
+                        "La ficha ya incorpora el catálogo oficial del IEEQ para 1,007 secciones "
+                        "(contexto territorial, padrón, lista nominal y plano individual). "
+                        "El polígono vectorial de cada sección sigue pendiente de una fuente geográfica oficial reutilizable; "
+                        "no se dibuja una aproximación."
+                    )
+                else:
+                    st.warning("No se pudo cargar la capa oficial de secciones para este estado.")
             else:
                 section_map_column = {
                     "Participación electoral (%)": "participacion_pct",
@@ -3483,9 +7826,19 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
             })
         district_frame = pd.DataFrame(district_records)
         st.markdown("### 2. Tema de análisis")
+        district_metric_options = [
+            "Participación electoral (%)", "Lista nominal", "Votos totales", "Votos opción más votada",
+        ]
+        available_district_metrics = [
+            metric for metric in district_metric_options
+            if pd.to_numeric(district_frame[metric], errors="coerce").notna().any()
+        ]
+        if not available_district_metrics:
+            st.warning("La elección seleccionada no contiene métricas distritales utilizables.")
+            st.stop()
         district_metric = st.radio(
             "Tema distrital",
-            ["Participación electoral (%)", "Lista nominal", "Votos totales", "Votos opción más votada"],
+            available_district_metrics,
             horizontal=True,
             key="district_result_metric",
             label_visibility="collapsed",
@@ -3541,6 +7894,12 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
                 errors="coerce",
             )
             matched_districts = int(district_map_values.notna().sum())
+            recognized_districts = sum(
+                bool(feature.get("properties", {}).get("clave_distrito"))
+                for feature in enriched_district_geojson.get("features", [])
+            )
+            if page == "Visor electoral":
+                st.markdown('<div id="ficha-electoral" class="scroll-anchor"></div>', unsafe_allow_html=True)
             st.markdown("### 3. Ficha electoral de distrito")
             district_options = district_frame["Distrito"].tolist()
             pending_district = st.session_state.pop("pending_electoral_district", None)
@@ -3558,17 +7917,27 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
                  if row["district_code"] == chosen_district_row_top["Clave distrito"]),
                 {},
             )
-            district_participation_top = float(district_payload.get("participacion_pct") or 0)
+            district_participation_top = pd.to_numeric(
+                district_payload.get("participacion_pct"), errors="coerce"
+            )
             district_average_top = pd.to_numeric(
                 district_frame["Participación electoral (%)"], errors="coerce"
             ).mean()
             with st.container(border=True):
                 ficha_a, ficha_b, ficha_c, ficha_d = st.columns(4)
-                ficha_a.metric("Lista nominal", f"{float(district_payload.get('lista_nominal') or 0):,.0f}")
+                nominal_top = pd.to_numeric(district_payload.get("lista_nominal"), errors="coerce")
+                ficha_a.metric("Lista nominal", f"{float(nominal_top):,.0f}" if pd.notna(nominal_top) else "No disponible")
                 ficha_b.metric("Votos totales", f"{float(district_payload.get('votes_total') or 0):,.0f}")
-                ficha_c.metric("Participación", f"{district_participation_top:.1f}%", f"{district_participation_top - district_average_top:+.1f} pp vs. promedio estatal")
+                ficha_c.metric(
+                    "Participación",
+                    f"{float(district_participation_top):.1f}%" if pd.notna(district_participation_top) else "No disponible",
+                    f"{float(district_participation_top - district_average_top):+.1f} pp vs. promedio estatal"
+                    if pd.notna(district_participation_top) and pd.notna(district_average_top) else None,
+                )
                 ficha_d.metric("Cabecera", chosen_district_row_top["Cabecera distrital"])
                 render_electoral_breakdown(district_payload)
+            if page == "Visor electoral":
+                st.markdown('<div id="mapa-electoral" class="scroll-anchor"></div>', unsafe_allow_html=True)
             st.markdown("### 4. Mapa distrital")
             map_column = st.container()
             ficha_column = st.empty()
@@ -3630,6 +7999,11 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
                         f"Capa distrital: {district_geojson_source or 'GeoJSON'}. "
                         f"{matched_districts} polígonos vinculados con resultados oficiales."
                     )
+                elif recognized_districts:
+                    st.info(
+                        f"Se reconocieron {recognized_districts} distritos, pero la métrica “{district_metric}” "
+                        "no está disponible para la elección elegida. Selecciona otra métrica."
+                    )
                 else:
                     st.warning(
                         "La capa se cargó, pero no se reconocieron claves de distrito compatibles. "
@@ -3644,14 +8018,19 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
                 participation_values = pd.to_numeric(
                     district_frame["Participación electoral (%)"], errors="coerce"
                 )
-                district_participation = float(chosen_district_row["Participación electoral (%)"])
+                district_participation = pd.to_numeric(
+                    chosen_district_row["Participación electoral (%)"], errors="coerce"
+                )
                 district_average = participation_values.mean()
                 st.caption(f"Cabecera distrital: {chosen_district_row['Cabecera distrital']}")
-                st.metric("Lista nominal", f"{int(chosen_district_row['Lista nominal']):,}")
+                nominal_value = pd.to_numeric(chosen_district_row["Lista nominal"], errors="coerce")
+                st.metric("Lista nominal", f"{int(nominal_value):,}" if pd.notna(nominal_value) else "No disponible")
                 st.metric("Votos totales", f"{int(chosen_district_row['Votos totales']):,}")
                 st.metric(
-                    "Participación", f"{district_participation:.1f}%",
-                    f"{district_participation - district_average:+.1f} pp vs. promedio estatal",
+                    "Participación",
+                    f"{float(district_participation):.1f}%" if pd.notna(district_participation) else "No disponible",
+                    f"{float(district_participation - district_average):+.1f} pp vs. promedio estatal"
+                    if pd.notna(district_participation) and pd.notna(district_average) else None,
                 )
                 st.metric("Opción con más votos", chosen_district_row["Opción con más votos"])
 
@@ -4211,7 +8590,9 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
             [column for column in leading_columns if column in municipal_detail.columns] + remaining_columns
         ]
     if municipality_filter != "Todos los municipios":
-        municipal_detail = municipal_detail[municipal_detail["municipio"] == municipality_filter]
+        municipal_detail = municipal_detail[
+            municipal_detail["municipio"].map(municipality_match_key) == municipality_match_key(municipality_filter)
+        ]
     municipal_detail = municipal_detail.rename(
         columns={
             "municipio": "municipio",
@@ -4225,17 +8606,50 @@ elif page in {"Territorio", "Electoral", "Visor electoral", "INEGI"}:
             "pmd_estatus": "estatus PMD",
         }
     )
-    st.dataframe(
-        municipal_detail,
-        use_container_width=True,
-        hide_index=True,
-        key=f"municipal_detail_inegi_v3_{active_municipality}",
-        column_config={
-            "plan municipal de desarrollo": st.column_config.LinkColumn(
-                "Plan municipal de desarrollo", display_text="Consultar documento"
-            )
-        },
-    )
+    if municipality_filter != "Todos los municipios" and not municipal_detail.empty:
+        detail = municipal_detail.iloc[0]
+        excluded_fields = {"clave_municipio", "geometry", "geom", "id"}
+        vertical_fields = [
+            column for column in municipal_detail.columns
+            if column not in excluded_fields and pd.notna(detail.get(column))
+            and str(detail.get(column)).strip() not in {"", "nan", "None"}
+        ]
+        st.markdown(f"#### Ficha municipal · {detail.get('municipio', municipality_filter)}")
+        st.caption("Consulta los indicadores uno debajo de otro; la ficha corresponde al municipio seleccionado.")
+        with st.container(border=True):
+            for column in vertical_fields:
+                if column == "municipio":
+                    continue
+                label = str(column).replace("_", " ").capitalize()
+                value = detail.get(column)
+                label_column, value_column = st.columns([1, 1.35])
+                label_column.markdown(f"**{label}**")
+                if column == "plan municipal de desarrollo" and str(value).startswith("http"):
+                    value_column.markdown(f"[Consultar documento]({value})")
+                else:
+                    numeric_value = pd.to_numeric(value, errors="coerce")
+                    if pd.notna(numeric_value) and not isinstance(value, bool):
+                        suffix = "%" if "%" in label else ""
+                        formatted = (
+                            f"{float(numeric_value):,.1f}{suffix}"
+                            if suffix else f"{float(numeric_value):,.0f}"
+                        )
+                        value_column.write(formatted)
+                    else:
+                        value_column.write(str(value))
+                st.divider()
+    else:
+        st.dataframe(
+            municipal_detail,
+            use_container_width=True,
+            hide_index=True,
+            key=f"municipal_detail_inegi_v3_{active_municipality}",
+            column_config={
+                "plan municipal de desarrollo": st.column_config.LinkColumn(
+                    "Plan municipal de desarrollo", display_text="Consultar documento"
+                )
+            },
+        )
     if detail_inegi_rows:
         st.caption("Las columnas que inician con ‘INEGI:’ son los indicadores descargados y guardados para este estado.")
     st.caption(f"Capa activa: {gis_source}")

@@ -1,0 +1,211 @@
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Medio ambiente y bienestar animal Tema: Cambio climático 
+Objetivo:  Reducir la huella de carbono en el municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Intensidad energética de la economía al año por cada millón de actividad económica Periodicidad: Anual 
+Descripción: Mide los KWh al año por cada millón de actividad económica Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Intensidad energética de la economía Variable B: 
+Valor Unidad de medida  Valor Unidad de medida  
+16,994 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:   Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+16,994 Tasa 2023 16,848 14,433 12,017 
+ 
+01
+ 
+Eje: Medio ambiente y bienestar animal Tema: Cambio climático 
+Objetivo: Preservar la biodiversidad y los servicios ecosistemáticos de la Reserva Cuxtal Tipo de algoritmo: Número 
+Indicador: Número de registros de especies bioindicadoras presentes en la Reserva Cuxtal registradas en el Sistema Nacional de 
+Información sobre Biodiversidad (SNIB) Periodicidad: Anual 
+Descripción: Mide el número de registros en el Sistema Nacional de Información sobre Biodiversidad (SNIB) Fórmula de cálculo: A=A 
+Tendencia: Constante 
+      
+Variable A: Número de registros en el SNIB Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+252,696  Registros     
+Periodo Fuente  Periodo Fuente  
+2024  Enciclovida 2024, CONABIO   
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+252696  Registros 2024  252,696 252,696 252,696 
+  METAS E INDICADORES
+MÉRIDA CONTIGO ES MEJOR
+Eje: Medio ambiente y bienestar animal Tema: Cuidado del agua y conservación de recursos 
+Objetivo:  Aumentar la conciencia sobre la importancia de la conservación de recursos hídricos Tipo de algoritmo: Tasa 
+Indicador: Consumo de agua per cápita Periodicidad: Anual 
+Descripción: Mide la cantidad de agua en metros cúbicos consumida en promedio por habitante Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Consumo de agua Variable B: 
+Valor Unidad de medida  Valor Unidad de medida  
+151 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:   Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+151 Tasa 2023 148 147 146 
+ 
+02
+Eje: Medio ambiente y bienestar animal Tema: Cuidado del agua y conservación de recursos 
+Objetivo:  Mejorar prácticas sostenibles de uso y conservación del agua en Mérida Tipo de algoritmo: Tasa 
+Indicador: Capacidad de tratamiento de agua en operación por cada mil habitantes Periodicidad: Anual 
+Descripción: Mide la capacidad de tratamiento de agua en l/s por cada mil habitantes Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Capacidad de tratamiento de agua en operación Variable B: 
+Valor Unidad de medida  Valor Unidad de medida  
+0.4 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:   Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+0.4 Tasa 2023 0.4 0.5 0.7 
+ 
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-202703
+ 
+Eje: Medio ambiente y bienestar animal Tema: Bienestar animal 
+Objetivo: Mejorar las condiciones de vida de los animales del municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Crecimiento en el número de registro en animales de compañía Periodicidad: Anual 
+Descripción: Mide la variación en el número de animales de compañía registrados en el Registro Municipal de Animales de Compañía 
+(REMAC) 
+Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Ascendente 
+      
+Variable A: Variación del número de registros de animales de compañía Variable B: Número de registros de animales de compañía en el REMAC durante 2026 
+Valor Unidad de medida  Valor Unidad de medida  
+N.D. Porcentaje  N.D. Registros  
+Periodo Fuente  Periodo Fuente  
+2026  Registros administrativos 2026  Registros administrativos 
+      
+Variable C: Número de registros de animales de compañía en el REMAC durante 2025 Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+N.D. Registros     
+Periodo Fuente  Periodo Fuente  
+2025  Registros administrativos   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+N.D. Porcentaje 2026  1.0% 5.0% 10.0% 
+ 
+Eje: Medio ambiente y bienestar animal Tema: Bienestar animal 
+Objetivo: Aumentar la adopción de animales en situación de calle del municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Variación porcentual de animales de compañía adoptados Periodicidad: Anual 
+Descripción: Mide la variación en el número de animales de compañía adoptados Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Ascendente 
+      
+Variable A: Variación del número de animales de compañía adoptados Variable B: Número de animales de compañía adoptados durante 2026 
+Valor Unidad de medida  Valor Unidad de medida 
+N.D. Porcentaje  N.D. Registros  
+Periodo Fuente  Periodo Fuente  
+2026  Registros administrativos 2026  Registros administrativos 
+      
+Variable C: Número de animales de compañía adoptados durante 2025 Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+N.D. Registros     
+Periodo Fuente  Periodo Fuente  
+2025  Registros administrativos   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+N.D. Porcentaje 2026  1.0% 5.0% 10.0% 
+MÉRIDA CONTIGO ES MEJOR
+04
+Eje: Medio ambiente y bienestar animal Tema: Infraestructura verde 
+Objetivo: Mejorar la calidad de vida y la sostenibilidad de las personas del municipio de Mérida con la implementación de 
+infraestructura verde Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de pérdida arbórea Periodicidad: Anual 
+Descripción: Mide la cobertura arbórea perdida en el año con respecto a la cobertura total Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de pérdida arbórea Variable B: Hectáreas perdidas de cobertura arbórea de 30% de densidad del dosel arbóreo 
+Valor Unidad de medida  Valor Unidad de medida  
+1.0% Porcentaje  266 Hectáreas  
+Periodo Fuente  Periodo Fuente  
+2023 Loss Cover Tree 2023, Global Forest Watch 2023 Loss Cover Tree 2023, Global Forest Watch 
+      
+Variable C: Cobertura arbórea Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+25,549 Hectáreas     
+Periodo Fuente  Periodo Fuente  
+2010 Loss Cover Tree 2023, Global Forest Watch   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+1.0% Porcentaje 2023 1.0% 0.8% 0.6% 
+ 
+Eje: Medio ambiente y bienestar animal Tema: Infraestructura verde 
+Objetivo:  Aumentar la sensibilización sobre la importancia de la infraestructura verde Tipo de algoritmo: Número 
+Indicador: Eliminaciones netas de carbono Periodicidad: Anual 
+Descripción: Mide la diferencia entre las emisiones absorbidas y las emitidas Fórmula de cálculo: A=(-B/C)/1000 
+Tendencia: Descendente 
+      
+Variable A: Eliminaciones netas de carbono Variable B: Emisiones absorbidas de carbono 
+Valor Unidad de medida  Valor Unidad de medida  
+-68.1 GtCO2e  173,753 GtCO2e  
+Periodo Fuente  Periodo Fuente  
+2023 Carbon data 2023, Global Forest Watch 2023 Carbon data 2023, Global Forest Watch 
+      
+Variable C: Emisiones emitidas de carbono Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+105,678 GtCO2e     
+Periodo Fuente  Periodo Fuente  
+2023 Carbon data 2023, Global Forest Watch   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+-68.1 GtCO2e 2023 -89.0 -98.5 -107.9 
+ 
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-202705
+Eje: Medio ambiente y bienestar animal Tema: Cambio climático 
+Objetivo:  Aumentar la conciencia sobre el cambio climático en el municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Tasa de Empresas Socialmente Responsables por cada 10 mil empresas Periodicidad: Anual 
+Descripción: Mide el número de Empresas Socialmente Responsables en comparativa a todas las empresas de la Ciudad Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Empresa socialmente responsable Variable B: 
+Valor Unidad de medida  Valor Unidad de medida  
+6.5 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:   Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+6.5 Tasa 2023 6.1 6.9 7.8 
+ 
