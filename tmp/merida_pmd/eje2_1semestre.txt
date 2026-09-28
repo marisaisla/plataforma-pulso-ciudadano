@@ -1,0 +1,435 @@
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Prosperidad y empleo Tema: Comercio y servicios 
+Objetivo: Incrementar el crecimiento de los comercios locales, mediante la adopción de tecnología y mejores prácticas comerciales 
+en el municipio de Mérida Tipo de algoritmo: Número 
+Indicador: Número de unidades económicas en el sector comercio Periodicidad: Semestral 
+Descripción: Mide el número de unidades económicas en el sector comercio Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Número de unidades económicas en el sector de comercio Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+20,712 Unidades económicas     
+Periodo Fuente  Periodo Fuente  
+May-24 Directorio Estadístico Nacional de Unidades Económicas may-24, 
+INEGI 
+  
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+20,712 Unidades económicas May-24 20,641 20,837 21,032 
+ 
+Eje: Prosperidad y empleo Tema: Comercio y servicios 
+Objetivo: Incrementar las oportunidades comerciales de artesanos, emprendedores y pequeños productores Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población ocupada en pequeños establecimientos Periodicidad: Trimestral 
+Descripción: Mide la proporción de trabajadores ocupados en pequeños establecimientos en relación al total de trabajadores Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población ocupada en pequeños establecimientos Variable B: Población ocupada en pequeños establecimientos 
+Valor Unidad de medida  Valor Unidad de medida 
+18.5% Porcentaje  119,815 Personas  
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 
+      
+Variable C: Población ocupada Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+647,917 Personas     
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+18.5% Porcentaje 2T24 17.8% 19.0% 20.1% 
+ 
+01
+  METAS E INDICADORES
+MÉRIDA CONTIGO ES MEJOR
+Eje: Prosperidad y empleo Tema: Formalidad 
+Objetivo: Incrementar el número de empleos formales en el municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Crecimiento anual acumulado de trabajadores asegurados Periodicidad: Mensual 
+Descripción: Mide la variación del número de trabajadores asegurados en septiembre del año en curso con respecto al número de 
+trabajadores asegurados durante diciembre del año anterior 
+Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Ascendente 
+      
+Variable A: Variación del número de trabajadores asegurados Variable B: Número de trabajadores en el mes de septiembre de 2024 
+Valor Unidad de medida  Valor Unidad de medida 
+1.8% Porcentaje  336,031 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS Sep-24 Trabajadores asegurados sep-24, IMSS 
+      
+Variable C: Trabajadores asegurados en el mes de diciembre de 2023 Variable D:   
+Valor Unidad de medida  Valor Unidad de medida 
+329,986 Personas     
+Periodo Fuente  Periodo Fuente  
+Dic-23 Trabajadores asegurados dic-23, IMSS   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+1.8% Variación Sep-24 1.4% 1.9% 2.3% 
+ 
+Eje: Prosperidad y empleo Tema: Formalidad 
+Objetivo: Reducir la informalidad laboral mediante programas de regularización en el municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Tasa de informalidad Periodicidad: Trimestral 
+Descripción: Mide la proporción de la población ocupada en la informalidad Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Tasa de informalidad laboral (TIL 1) Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+48.3 Tasa     
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+48.3 Tasa 2T24 48.4 47.8 47.2 
+ 
+02
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Prosperidad y empleo Tema: Industria 
+Objetivo: Diversificar la base industrial de Mérida, atrayendo inversiones en sectores estratégicos Tipo de algoritmo: Número 
+Indicador: Diversificación económica Periodicidad: Anual 
+Descripción: Mide el número de sectores económicos presentes Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Diversificación económica Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+768 Número     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+768 Número 2023 764 771 779 
+ 
+Eje: Prosperidad y empleo Tema: Industria 
+Objetivo: Mejorar la productividad industrial a través de la modernización tecnológica en el municipio de Mérida Tipo de algoritmo: Número 
+Indicador: Productividad total de los factores Periodicidad: Anual 
+Descripción: Mide la tasa de crecimiento anual de la productividad total de los factores mediante parámetros del modelo KLEMS, 
+con respecto a la participación del municipio en el PIB 
+Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Productividad total de los factores Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+0.2 Número      
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+0.2 Número 2023 0.1 0.3 0.4 
+ 
+03
+MÉRIDA CONTIGO ES MEJOR
+Eje: Prosperidad y empleo Tema: Turismo 
+Objetivo: Incrementar la estadía de los turistas en Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de ocupación hotelera Periodicidad: Mensual 
+Descripción: Mide la proporción de la ocupación hotelera sobre la oferta hotelera Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de ocupación hotelera Variable B: Número de cuartos ocupados 
+Valor Unidad de medida  Valor Unidad de medida  
+56.1% Porcentaje  144,220 Cuartos  
+Periodo Fuente  Periodo Fuente  
+Ago-24 Datatur ago-24, SECTUR Ago-24 Datatur ago-24, SECTUR 
+      
+Variable C: Número de cuartos disponibles Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+257,235 Cuartos     
+Periodo Fuente  Periodo Fuente  
+Ago-24 Datatur ago-24, SECTUR   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+56.1% Porcentaje Ago-24 57.2% 60.5% 63.7% 
+ 
+Eje: Prosperidad y empleo Tema: Turismo 
+Objetivo: Incrementar la llegada de personas turistas a Mérida Tipo de algoritmo: Número 
+Indicador: Estadía promedio Periodicidad: Mensual 
+Descripción: Mide el tiempo promedio en días que duran los turistas en la Ciudad  Fórmula de cálculo: A=B/(C+D) 
+Tendencia: Ascendente 
+      
+Variable A: Estadía promedio de los turistas con pernocta Variable B: Número de turistas noche 
+Valor Unidad de medida  Valor Unidad de medida  
+1.6 Días  274,792 Personas  
+Periodo Fuente  Periodo Fuente  
+Ago-24 Datatur ago-24, SECTUR Ago-24 Datatur ago-24, SECTUR 
+      
+Variable C: Número de turistas no residentes Variable D: Número de turistas residentes 
+Valor Unidad de medida  Valor Unidad de medida  
+25,655 Personas  143,669 Personas  
+Periodo Fuente  Periodo Fuente  
+Ago-24 Datatur ago-24, SECTUR Ago-24 Datatur ago-24, SECTUR 
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+1.6 Días Ago-24 1.6 1.7 1.8 
+ 
+04
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Prosperidad y empleo Tema: Turismo 
+Objetivo: Incrementar la oferta turística en Mérida Tipo de algoritmo: Número 
+Indicador: Número de unidades económicas en el sector turismo Periodicidad: Semestral 
+Descripción: Mide el número de unidades económicas en el sector turismo Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Número de unidades económicas en el sector de turismo Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+7,807 Unidades económicas     
+Periodo Fuente  Periodo Fuente  
+May-24 Directorio Estadístico Nacional de Unidades Económicas may-24, 
+INEGI 
+  
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+7,807 Unidades económicas May-24 7,847 7,904 7,960 
+ 
+Eje: Prosperidad y empleo Tema: Turismo 
+Objetivo: Mejorar las oportunidades de empleo turístico en Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población ocupada en el sector turismo Periodicidad: Trimestral 
+Descripción: Mide la proporción de la población ocupada en el sector turismo sobre la población ocupada Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población ocupada en el sector restaurantes y servicios de alojamiento Variable B: Población ocupada en el sector restaurantes y servicios de alojamiento 
+Valor Unidad de medida  Valor Unidad de medida  
+11.3% Porcentaje  73,466 Personas  
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 
+      
+Variable C: Población ocupada Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+647,917 Personas     
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+11.3% Porcentaje 2T24 11.0% 12.0% 12.9% 
+ 
+05
+MÉRIDA CONTIGO ES MEJOR
+Eje: Prosperidad y empleo Tema: Capital humano y emprendimiento 
+Objetivo: Aumentar la independencia económica de la población Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de trabajadores por cuenta propia Periodicidad: Trimestral 
+Descripción: Mide la proporción de la población ocupada por cuenta propia sobre la población ocupada Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población ocupada por cuenta propia Variable B: Población ocupada por cuenta propia 
+Valor Unidad de medida  Valor Unidad de medida  
+19.2% Porcentaje  124,501 Personas  
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 
+      
+Variable C: Población ocupada Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+647,917 Personas     
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+19.2% Porcentaje 2T24 19.8% 20.6% 21.4% 
+ 
+Eje: Prosperidad y empleo Tema: Capital humano y emprendimiento 
+Objetivo: Aumentar la productividad laboral en el municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Producto medio de trabajo Periodicidad: Anual 
+Descripción: Mide la actividad económica por horas trabajadas al año Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Producto medio de trabajo Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+164 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+164 Tasa 2023 153.0 172.3 191.5 
+ 
+06
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Prosperidad y empleo Tema: Capital humano y emprendimiento 
+Objetivo: Incrementar la calidad del empleo en el municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Crecimiento anual del salario promedio diario Periodicidad: Mensual 
+Descripción: Mide el crecimiento del salario promedio diario del mes de septiembre de 2024 con respecto al salario que se tenía en 
+el mes de diciembre de 2023 
+Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Ascendente 
+      
+Variable A: Variación del salario promedio diario Variable B: Salario promedio diario en el mes de septiembre de 2024 
+Valor Unidad de medida  Valor Unidad de medida  
+7.7% Porcentaje  493.82 Pesos  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS Sep-24 Trabajadores asegurados sep-24, IMSS 
+      
+Variable C: Salario promedio diario en el mes de diciembre de 2023 Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+458.42 Pesos     
+Periodo Fuente  Periodo Fuente  
+Dic-23 Trabajadores asegurados dic-23, IMSS   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+7.7% Variación Sep-24 7.7% 8.0% 8.2% 
+ 
+Eje: Prosperidad y empleo Tema: Competitividad 
+Objetivo: Incrementar la competitividad en el municipio de Mérida Tipo de algoritmo: Ranking 
+Indicador: Índice de Competitividad Urbana Periodicidad: Anual 
+Descripción: Mide el nivel de competitividad de la Ciudad Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Ranking en el Índice de Competitividad Urbana Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+7 Ranking     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+7 Ranking 2023 7 5 3 
+ 
+07
+MÉRIDA CONTIGO ES MEJOR
+Eje: Prosperidad y empleo Tema: Competitividad 
+Objetivo: Incrementar la inversión extranjera en el municipio de Mérida Tipo de algoritmo: Número 
+Indicador: Inversión extranjera directa Periodicidad: Anual 
+Descripción: Mide el promedio mó vil de tres añ os de la inversió n extranjera directa neta que recibe el estado al que pertenece la 
+ciudad 
+Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Inversión extranjera directa Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+458 Número     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:    Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+458 Número 2023 349 512 675 
+ 
+08
+Eje: Prosperidad y empleo Tema: Competitividad 
+Objetivo: Mejorar las condiciones para la innovación, ciencia y tecnología Tipo de algoritmo: Ranking 
+Indicador: Subíndice de Innovación Periodicidad: Anual 
+Descripción: Mide la capacidad para competir en sectores de alto valor agregado intensivos en conocimiento y tecnología Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Ranking en el subíndice de Innovación Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+9 Ranking     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+9 Ranking 2023 9 8 7 
+ 
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Prosperidad y empleo Tema: Mejora regulatoria 
+Objetivo: Mejorar los procesos y trámites administrativos en el Ayuntamiento de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Avance de la Estrategia Nacional de Mejora Regulatoria Periodicidad: Anual 
+Descripción: Mide los esfuerzos por parte del gobierno para contar con regulaciones claras, que promuevan el máximo bienestar 
+económico y social, trámites y servicios ágiles para el ciudadano, e inspecciones y verificaciones apegadas al estado de derecho, 
+así como garantizar la consecución de los objetivos, metas y líneas de acción establecidas en la Estrategia 
+Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de avance en el Indicador de la Estrategia Nacional de Mejora Regulatoria Variable B:  
+Valor Unidad de medida  Valor Unidad de medida  
+56.6% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2022 Indicador de la Estrategia Nacional de Mejora Regulatoria 2022, 
+ONMR 
+  
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+56.6% Porcentaje 2022 59.1% 64.2% 69.2% 
+ 
+09
+Eje: Prosperidad y empleo Tema: Comercio y servicios 
+Objetivo: Aumentar la competitividad del sector servicios a través de la capacitación y certificación en el municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Crecimiento anual de trabajadores asegurados en el sector comercio Periodicidad: Mensual 
+Descripción: Mide la variación del número de trabajadores asegurados en el sector comercio de septiembre del año en curso con 
+respecto al número de trabajadores asegurados en el sector comercio durante diciembre del año anterior 
+Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Ascendente 
+      
+Variable A: Variación del número de trabajadores asegurados en el sector comercio Variable B: Número de trabajadores en el sector comercio en el mes de septiembre de 2024 
+Valor Unidad de medida  Valor Unidad de medida 
+2.2% Porcentaje  76,423 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS Sep-24 Trabajadores asegurados sep-24, IMSS 
+      
+Variable C: Trabajadores asegurados en el sector comercio en el mes de diciembre de 2023 Variable D:   
+Valor Unidad de medida  Valor Unidad de medida 
+74,769 Personas     
+Periodo Fuente  Periodo Fuente  
+Dic-23 Trabajadores asegurados dic-23, IMSS   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+2.2% Porcentaje Sep-24 2.5% 3.1% 3.6% 
+ 

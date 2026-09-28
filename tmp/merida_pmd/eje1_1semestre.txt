@@ -1,0 +1,578 @@
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+  METAS E INDICADORES
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Salud 
+Objetivo: Incrementar el acceso a la salud en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población con carencia por acceso a los servicios de salud Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que presenta carencia por acceso a los servicios de salud con respecto a la población 
+total 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población con carencia por acceso a los servicios de salud Variable B: Población con carencia por acceso a los servicios de salud 
+Valor Unidad de medida  Valor Unidad de medida 
+28.5% Porcentaje  268,281 Personas  
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza a nivel municipio 2020, CONEVAL 2020 Pobreza a nivel municipio 2020, CONEVAL 
+      
+Variable C: Población en el municipio Variable D: 
+Valor Unidad de medida  Valor Unidad de medida 
+941,438 Personas     
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza a nivel municipio 2020, CONEVAL   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+28.5% Porcentaje 2020 27.2% 22.1% 17.1% 
+Eje: Inclusión, bienestar y desarrollo social Tema: Salud 
+Objetivo: Incrementar la salud integral en el municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Personal de salud por cada 10 mil habitantes Periodicidad: Anual 
+Descripción: Mide el número de médicos y enfermeras con relación a la población total Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Tasa de personal de salud por cada 10 mil personas Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+61.7 Tasa     
+Periodo Fuente  Periodo Fuente  
+2023 Índice de Competitividad Urbana 2023, IMCO   
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+61.7 Tasa 2023 61.4 62.9 64.4 
+ 
+01
+MÉRIDA CONTIGO ES MEJOR
+Eje: Inclusión, bienestar y desarrollo social Tema: Salud 
+Objetivo: Mejorar la salud mental de la ciudadanía del municipio de Mérida Tipo de algoritmo: Variación 
+Indicador: Variación porcentual anual en el número de pacientes atendidos en temas de  trastornos mentales y comportamiento Periodicidad: Anual 
+Descripción: Mide el crecimiento de pacientes atendidos en temas de trastornos mentales y del comportamiento Fórmula de cálculo: A=[(B/C)-1]*100 
+Tendencia: Ascendente 
+      
+Variable A: Variación en el número de pacientes atendidos en temas de transtornos mentales y 
+del comportamiento 
+Variable B: Número de pacientes atendidos en temas de transtornos mentales y del 
+comportamiento en el año 2023 
+Valor Unidad de medida  Valor Unidad de medida 
+42.6% Porcentaje  77 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Estadísticas de salud 2023, INEGI 2023 Estadísticas de salud 2023, INEGI 
+      
+Variable C: Número de pacientes atendidos en temas de transtornos mentales y del 
+comportamiento en el año 2022 
+Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+54 Personas     
+Periodo Fuente  Periodo Fuente  
+2022 Estadísticas de salud 2022, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+42.6% Porcentaje 2023 7.7% 10.9% 26.5% 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Alimentación 
+Objetivo: Disminuir la desnutrición en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población con carencia por acceso a la alimentación Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que presenta carencia por acceso a la alimentación con respecto a la población 
+total 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población con carencia por acceso a la alimentación Variable B: Población con carencia por acceso a la alimentación 
+Valor Unidad de medida  Valor Unidad de medida 
+19.0% Porcentaje  178,633 Personas  
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza a nivel municipio 2020, CONEVAL 2020  Pobreza a nivel municipio 2020, CONEVAL 
+      
+Variable C: Población en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+941,438 Personas     
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza a nivel municipio 2020, CONEVAL   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+19.0% Porcentaje 2020  18.2% 15.4% 12.5% 
+ 
+02
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Inclusión, bienestar y desarrollo social Tema: Educación 
+Objetivo: Disminuir el rezago educativo en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población con rezago educativo Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que presenta rezago educativo con respecto a la población total Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población con rezago educativo Variable B: Población con rezago educativo 
+Valor Unidad de medida  Valor Unidad de medida 
+12.0% Porcentaje  112,703 Personas  
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza a nivel municipio 2020, CONEVAL 2020  Pobreza a nivel municipio 2020, CONEVAL 
+      
+Variable C: Población en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+941,438 Personas     
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza a nivel municipio 2020, CONEVAL   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+12.0% Porcentaje 2020  12.1% 11.1% 10.1% 
+ 
+03
+Eje: Inclusión, bienestar y desarrollo social Tema: Alimentación 
+Objetivo: Mejorar la alimentación en la primera infancia en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población en menores de 17 años con carencia por acceso a la alimentación Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población menor de 17 años que presenta carencia por acceso a la alimentación con respecto 
+a la población de 17 años o menos 
+Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población de 0 a 17 años con carencia por acceso a la alimentación Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+21.2% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza por grupos poblacionales a escala municipal 2020, 
+CONEVAL 
+  
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+21.2% Porcentaje 2020  20.8% 21.0% 18.0% 
+ 
+MÉRIDA CONTIGO ES MEJOR
+Eje: Inclusión, bienestar y desarrollo social Tema: Educación 
+Objetivo: Disminuir la deserción escolar de las juventudes del municipio de Mérida Tipo de algoritmo: Tasa 
+Indicador: Tasa de abandono escolar en educación primaria Periodicidad: Anual 
+Descripción: Mide el número de alumnos que no continúan con su educación por cada 100 alumnos Fórmula de cálculo: A=((B-C)/B)*100 
+Tendencia: Descendente 
+      
+Variable A: Tasa de abandono escolar en educación primaria Variable B: Número de alumnos matriculados en grado 1 a 5 durante el ciclo escolar 2022-2023 
+Valor Unidad de medida  Valor Unidad de medida 
+1.9 Tasa  74,027 Personas  
+Periodo Fuente  Periodo Fuente  
+Ciclo escolar 2022-2023 Sistema Interactivo de Consulta de Estadística Educativa Ciclo 
+escolar 2022-2023, SEP 
+Ciclo escolar 2022-2023 Sistema Interactivo de Consulta de Estadística Educativa 
+Ciclo escolar 2022-2023, SEP 
+      
+Variable C: Número de alumnos matriculados en grado 2 a 6 durante el ciclo escolar 2023-2024 Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+72,646 Personas     
+Periodo Fuente  Periodo Fuente  
+Ciclo escolar 2023-2024 Sistema Interactivo de Consulta de Estadística Educativa Ciclo 
+escolar 2023-2024, SEP 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+1.9 Tasa Ciclo escolar 2022-2023 2.0 1.6 1.2 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Atención a grupos en situación de vulnerabilidad 
+Objetivo: Mejorar la calidad de vida de las personas con discapacidad en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población con discapacidad afiliadas a servicios de salud Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población con discapacidad que se encuentra afiliada a servicios de salud con respecto a la 
+población con discapacidad 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población con discapacidad afiliada a servicios de salud Variable B: Población con discapacidad afiliada a servicios de salud 
+Valor Unidad de medida  Valor Unidad de medida 
+81.2% Porcentaje  147,695 Personas  
+Periodo Fuente  Periodo Fuente  
+2020  Censo de Población y Vivienda 2020, INEGI 2020  Censo de Población y Vivienda 2020, INEGI 
+      
+Variable C: Población con discapacidad en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+181,897 Personas     
+Periodo Fuente  Periodo Fuente  
+2020  Censo de Población y Vivienda 2020, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+81.2% Porcentaje 2020  82.5% 83.2% 84.0% 
+ 
+04
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Inclusión, bienestar y desarrollo social Tema: Atención a grupos en situación de vulnerabilidad 
+Objetivo: Mejorar la calidad de vida de las personas adultas mayores en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población mayor de 65 años afiliada a servicios de salud Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población mayor a 65 años que se encuentra afiliada a servicios de salud con respecto a la 
+población total de 65 años o más 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población mayor de 65 años afiliada a servicios de salud Variable B: Población mayor a 65 años afiliada a servicios de salud 
+Valor Unidad de medida  Valor Unidad de medida 
+89.9% Porcentaje  86,774 Personas  
+Periodo Fuente  Periodo Fuente  
+2020  Censo de Población y Vivienda 2020, INEGI 2020  Censo de Población y Vivienda 2020, INEGI 
+      
+Variable C: Población mayor de 65 años en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+96,559 Personas     
+Periodo Fuente  Periodo Fuente  
+2020  Censo de Población y Vivienda 2020, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+89.9% Porcentaje 2020  91.1% 93.4% 95.8% 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Atención a grupos en situación de vulnerabilidad 
+Objetivo: Disminuir la pobreza extrema en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población en situación de pobreza extrema Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que se encuentra en situación de pobreza extrema con respecto a la población total Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población en situación de pobreza extrema Variable B: Población en situación de pobreza extrema 
+Valor Unidad de medida  Valor Unidad de medida 
+2.9% Porcentaje  27,572 Personas  
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza a nivel municipio 2020, CONEVAL 2020  Pobreza a nivel municipio 2020, CONEVAL 
+      
+Variable C: Población en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+941,438 Personas     
+Periodo Fuente  Periodo Fuente  
+2020  Pobreza a nivel municipio 2020, CONEVAL   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+2.9% Porcentaje 2020  2.5% 2.4% 2.2% 
+ 
+05
+MÉRIDA CONTIGO ES MEJOR
+Eje: Inclusión, bienestar y desarrollo social Tema: Mujeres 
+Objetivo: Incrementar las condiciones socioecómicas  para la autonomía y empoderamiento de las mujeres mediante acciones 
+focalizadas que reconozcan las interseccionalidades de su diversidad Tipo de algoritmo: Porcentaje 
+Indicador: Brecha salarial Periodicidad: Mensual 
+Descripción: Mide la diferencia proporcional del salario promedio diario de los hombres contra el de las mujeres Fórmula de cálculo: A=((B-C)/B)*100 
+Tendencia: Descendente 
+      
+Variable A: Brecha salarial Variable B: Salario promedio diario en hombres 
+Valor Unidad de medida  Valor Unidad de medida 
+5.4% Porcentaje  505 Pesos  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS Sep-24 Trabajadores asegurados sep-24, IMSS 
+      
+Variable C: Salario promedio diario en mujeres Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+478 Pesos     
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+5.4% Porcentaje Sep-24 4.4% 3.9% 3.4% 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Mujeres 
+Objetivo: Aumentar el acceso de las mujeres y niñas a su derecho a una vida libre de violencias Tipo de algoritmo: Tasa 
+Indicador: Tasa de prevalencia delictiva en mujeres Periodicidad: Anual 
+Descripción: Mide el número de víctimas por cada 100 mil mujeres Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Tasa de prevalencia delictiva en mujeres Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+21,570 Tasa     
+Periodo Fuente  Periodo Fuente  
+2024  Encuesta Nacional de Victimización y Percepción sobre 
+Seguridad Pública 2024, INEGI 
+  
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+21,570 Tasa 2024  20,753 19,166 17,578 
+ 
+06
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Inclusión, bienestar y desarrollo social Tema: Mujeres 
+Objetivo: Mejorar la salud integral de las mujeres y niñas en el municipio de Mérida, desde las perspectivas de género, la interculturalidad, 
+el respeto a los derechos humanos y la cultura de paz Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de mujeres aseguradas con acceso a los servicios de salud Periodicidad: Mensual 
+Descripción: Mide la proporción de la población de mujeres que se son trabajadoras aseguradas con respecto a la población de 
+trabajadores asegurados 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de mujeres aseguradas Variable B: Número de mujeres aseguradas 
+Valor Unidad de medida  Valor Unidad de medida 
+40.6% Porcentaje  136,293 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS Sep-24 Trabajadores asegurados sep-24, IMSS 
+      
+Variable C: Número de trabajadores asegurados Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+336,031 Personas     
+Periodo Fuente  Periodo Fuente  
+Sep-24 Trabajadores asegurados sep-24, IMSS   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+40.6% Porcentaje Sep-24 41.6% 41.8% 42.0% 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Juventudes 
+Objetivo: Mejorar las oportunidades para las juventudes del municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población de 15 a 24 años ocupadas Periodicidad: Trimestral 
+Descripción: Mide la proporción de la población ocupada de 15 a 24 años con respecto a la población de 15 a 24 años Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población de 15 a 24 años ocupada  Variable B: Población de 15 a 24 años ocupada 
+Valor Unidad de medida  Valor Unidad de medida 
+14.6% Porcentaje  94,776 Personas  
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI 
+      
+Variable C: Población ocupada Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+647,917 Personas     
+Periodo Fuente  Periodo Fuente  
+2T24 Encuesta Nacional de Ocupación y Empleo 2T24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+14.6% Porcentaje 2T24 14.7% 15.3% 16.0% 
+ 
+07
+MÉRIDA CONTIGO ES MEJOR
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Pueblo maya y migrantes 
+Objetivo: Incrementar las condiciones que faciliten el acceso de la población mayahablante a sus derechos económicos, sociales y 
+culturales en su propia lengua en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población que se identifica con la cultura maya en situación de pobreza Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que se identifica con la cultura maya que se encuentran en situación de pobreza con 
+respecto a la población en comunidades mayas 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población que se identifica con la cultura maya en situación de 
+pobreza 
+Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+37.4% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza por grupos poblacionales a escala municipal 2020, 
+CONEVAL 
+  
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+37.4% Porcentaje 2020 37.9% 34.5% 31.1% 
+08
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Pueblo maya y migrantes 
+Objetivo: Incrementar la identidad maya entre los habitantes del municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población que habla lengua maya Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que habla lengua maya con respecto a la población total Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población que habla la lengua maya Variable B: Población de 3 años y más que habla lengua maya 
+Valor Unidad de medida  Valor Unidad de medida 
+7.4% Porcentaje  71,040 Personas  
+Periodo Fuente  Periodo Fuente  
+2020 Censo de Población y Vivienda 2020, INEGI 2020 Censo de Población y Vivienda 2020, INEGI 
+      
+Variable C: Población de 3 años y más en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+957,485 Personas     
+Periodo Fuente  Periodo Fuente  
+2020 Censo de Población y Vivienda 2020, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+7.4% Porcentaje 2020 8.5% 9.8% 11.1% 
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Inclusión, bienestar y desarrollo social Tema: Vivienda 
+Objetivo: Mejorar la calidad y espacios de la vivienda de las personas en situación de vulnerabilidad en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población con carencia por calidad y espacios de la vivienda Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que presenta carencia por calidad y espacios de la vivienda con respecto a la 
+población total 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población con carencia por calidad y espacios de la vivienda Variable B: Población con carencia por calidad y espacios de la vivienda 
+Valor Unidad de medida  Valor Unidad de medida 
+4.8% Porcentaje  44,999 Personas  
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza a nivel municipio 2020, CONEVAL 2020 Pobreza a nivel municipio 2020, CONEVAL 
+      
+Variable C: Población en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+941,438 Personas     
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza a nivel municipio 2020, CONEVAL   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+4.8% Porcentaje 2020 5.8% 3.9% 1.9% 
+ 
+09
+Eje: Inclusión, bienestar y desarrollo social Tema: Pueblo maya y migrantes 
+Objetivo: Aumentar la inclusión social, económica y cultural de las personas migrantes Tipo de algoritmo: Porcentaje 
+Indicador: Flujo Migratorio Periodicidad: Quinquenal 
+Descripción: Mide la proporción de migrantes que viven en el municipio Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Constante 
+      
+Variable A: Porcentaje de población migrante con asentamiento en el municipio Variable B: Población que reside en el municipio pero nació en otra entidad 
+Valor Unidad de medida  Valor Unidad de medida 
+18.9% Porcentaje  188,353 Personas  
+Periodo Fuente  Periodo Fuente  
+2020 Censo de Población y Vivienda 2020, INEGI 2020 Censo de Población y Vivienda 2020, INEGI 
+      
+Variable C: Población total del municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+995,129 Personas     
+Periodo Fuente  Periodo Fuente  
+2020 Censo de Población y Vivienda 2020, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+18.9% Porcentaje 2020 18.9% 18.9% 18.9% 
+ 
+MÉRIDA CONTIGO ES MEJOR
+Eje: Inclusión, bienestar y desarrollo social Tema: Vivienda 
+Objetivo: Mejorar el acceso a los servicios básicos de la vivienda a las personas en situación de vulnerabilidad  Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población con carencia por acceso a los servicios básicos en la vivienda Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que presenta carencia por acceso a los servicios básicos en la vivienda con respecto a 
+la población total 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población con carencia por acceso a los servicios básicos en la 
+vivienda 
+Variable B: Población con carencia por acceso a los servicios básicos en la vivienda 
+Valor Unidad de medida  Valor Unidad de medida 
+8.7% Porcentaje  82,068 Personas  
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza a nivel municipio 2020, CONEVAL 2020 Pobreza a nivel municipio 2020, CONEVAL 
+      
+Variable C: Población en el municipio Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+941,438 Personas     
+Periodo Fuente  Periodo Fuente  
+2020 Pobreza a nivel municipio 2020, CONEVAL   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+8.7% Porcentaje 2020 8.4% 7.1% 5.7% 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Arte y cultura 
+Objetivo: Aumentar la generación de bienes y servicios culturales Tipo de algoritmo: Número 
+Indicador: Número de espacios culturales Periodicidad: Mensual 
+Descripción: Mide el número de espacios culturales que hay en la Ciudad con respecto a museos, teatros y centros culturales Fórmula de cálculo: A=B+C+D 
+Tendencia: Ascendente 
+      
+Variable A: Número de espacios culturales Variable B: Número de museos 
+Valor Unidad de medida  Valor Unidad de medida 
+82  Número  20 Número  
+Periodo Fuente  Periodo Fuente  
+Nov-24 Sistema de Información Cultural nov-24, Secretaría de Cultura Nov-24 Sistema de Información Cultural nov-24, Secretaría de 
+Cultura 
+      
+Variable C: Número de teatros Variable D: Número de centros culturales 
+Valor Unidad de medida  Valor Unidad de medida 
+30 Número  32 Número  
+Periodo Fuente  Periodo Fuente  
+Nov-24 Sistema de Información Cultural nov-24, Secretaría de Cultura Nov-24 Sistema de Información Cultural nov-24, Secretaría de 
+Cultura 
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+82  Número Nov-24 85  98  105  
+ 
+10
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Inclusión, bienestar y desarrollo social Tema: Arte y cultura 
+Objetivo: Aumentar la participación de la población en espacios y actividades culturales del municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población que se identifica con la cultura maya Periodicidad: Quinquenal 
+Descripción: Mide la proporción de la población que se identifica con la cultura maya con respecto a la población total Fórmula de cálculo: A=A 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población que se considera indígena Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+43.8% Porcentaje     
+Periodo Fuente  Periodo Fuente  
+2020 Censo de Población y Vivienda 2020, INEGI   
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+43.8% Porcentaje 2020 43.7% 46.4% 49.1% 
+ 
+Eje: Inclusión, bienestar y desarrollo social Tema: Deporte 
+Objetivo: Incrementar la activación física en la población del municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población de 18 años y más que realiza alguna actividad física Periodicidad: Anual 
+Descripción: Mide la proporción de la población de 18 años y más que realiza una actividad física con respecto a la población mayor 
+a 18 años 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población mayor de 18 años que realiza alguna actividad física Variable B: Población mayor de 18 años que practica alguna actividad física 
+Valor Unidad de medida  Valor Unidad de medida 
+45.7% Porcentaje  311,307 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Módulo de Práctica Deportiva y Ejercicio Físico 2023, INEGI 2023 Módulo de Práctica Deportiva y Ejercicio Físico 2023, INEGI 
+      
+Variable C: Población mayor de 18 años Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+680,701 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Módulo de Práctica Deportiva y Ejercicio Físico 2023, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+45.7% Porcentaje 2023 43.0% 52.6% 62.1% 
+ 
+11
+MÉRIDA CONTIGO ES MEJOR
+Eje: Inclusión, bienestar y desarrollo social Tema: Respeto de los derechos humanos  
+Objetivo: Disminuir la discriminación y la negación de los derechos de las personas en el municipio de Mérida Tipo de algoritmo: Número 
+Indicador: Número de expedientes en materia de Derechos Humanos Periodicidad: Anual 
+Descripción: Mide el número de expedientes registrados en materia de Derechos Humanos Fórmula de cálculo: A=A 
+Tendencia: Descendente 
+      
+Variable A: Número de expedientes registrados en materia de Derechos Humanos Variable B:  
+Valor Unidad de medida  Valor Unidad de medida 
+126 Expedientes     
+Periodo Fuente  Periodo Fuente  
+2024 Sistema Nacional de Alerta de Violación de Derechos Humanos 
+2024, CNDH 
+  
+      
+Variable C:  Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+      
+Periodo Fuente  Periodo Fuente  
+    
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+126 Expedientes 2024 124 97 70 
+ 
+12

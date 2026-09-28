@@ -336,12 +336,375 @@ def initialize_database() -> None:
                 FOREIGN KEY (strategy_id) REFERENCES territorial_strategies(id) ON DELETE CASCADE,
                 FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
             );
+
+            CREATE TABLE IF NOT EXISTS development_plans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                municipality TEXT NOT NULL,
+                title TEXT NOT NULL,
+                period TEXT,
+                official_status TEXT NOT NULL DEFAULT 'Por homologar a documento oficial',
+                source_url TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, state, municipality, title),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS development_plan_axes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                plan_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'Por homologar a documento oficial',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(plan_id, name),
+                FOREIGN KEY (plan_id) REFERENCES development_plans(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS development_plan_targets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                axis_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                baseline_value REAL,
+                target_value REAL,
+                current_value REAL,
+                unit TEXT,
+                frequency TEXT,
+                territory_scope TEXT,
+                status TEXT NOT NULL DEFAULT 'Pendiente de fuente oficial',
+                source_url TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(axis_id, name),
+                FOREIGN KEY (axis_id) REFERENCES development_plan_axes(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS development_plan_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_id INTEGER NOT NULL,
+                period TEXT NOT NULL,
+                territory_name TEXT,
+                physical_value REAL,
+                financial_amount REAL,
+                progress_pct REAL,
+                status TEXT NOT NULL DEFAULT 'Reportado',
+                evidence_url TEXT,
+                evidence_note TEXT,
+                perception_note TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(target_id, period, territory_name),
+                FOREIGN KEY (target_id) REFERENCES development_plan_targets(id) ON DELETE CASCADE
+            );
+
+            -- A government report may describe a verified result without publishing the
+            -- denominator required to calculate progress against a PMD indicator.  Keep
+            -- those results separate from numeric progress so that a reported action is
+            -- never mistaken for completion of a formal target.
+            CREATE TABLE IF NOT EXISTS development_plan_reported_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                plan_id INTEGER NOT NULL,
+                axis_id INTEGER,
+                period TEXT NOT NULL,
+                title TEXT NOT NULL,
+                reported_value REAL,
+                unit TEXT,
+                territory_scope TEXT,
+                status TEXT NOT NULL DEFAULT 'Resultado oficial reportado',
+                evidence_url TEXT NOT NULL,
+                evidence_note TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(plan_id, period, title),
+                FOREIGN KEY (plan_id) REFERENCES development_plans(id) ON DELETE CASCADE,
+                FOREIGN KEY (axis_id) REFERENCES development_plan_axes(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_development_plan_profile
+                ON development_plans(profile_id, state, municipality);
+            CREATE INDEX IF NOT EXISTS idx_development_target_axis
+                ON development_plan_targets(axis_id);
+            CREATE INDEX IF NOT EXISTS idx_development_result_plan
+                ON development_plan_reported_results(plan_id, period);
+
+            CREATE TABLE IF NOT EXISTS operational_annual_plans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                municipality TEXT NOT NULL,
+                title TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                total_budget REAL,
+                status TEXT NOT NULL DEFAULT 'Pendiente de fuente oficial',
+                source_url TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, state, municipality, year, title),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS operational_annual_programs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                poa_id INTEGER NOT NULL,
+                axis_id INTEGER,
+                name TEXT NOT NULL,
+                responsible_unit TEXT,
+                annual_goal REAL,
+                goal_unit TEXT,
+                funding_source TEXT,
+                allocated_budget REAL,
+                exercised_budget REAL,
+                execution_pct REAL,
+                status TEXT NOT NULL DEFAULT 'Pendiente de avance',
+                source_url TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(poa_id, name),
+                FOREIGN KEY (poa_id) REFERENCES operational_annual_plans(id) ON DELETE CASCADE,
+                FOREIGN KEY (axis_id) REFERENCES development_plan_axes(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_operational_plan_profile
+                ON operational_annual_plans(profile_id, state, municipality, year);
+            CREATE INDEX IF NOT EXISTS idx_operational_program_poa
+                ON operational_annual_programs(poa_id);
+
+            CREATE TABLE IF NOT EXISTS municipal_funding_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                municipality TEXT NOT NULL,
+                fiscal_year INTEGER NOT NULL,
+                cutoff_period TEXT NOT NULL,
+                source_name TEXT NOT NULL,
+                source_class TEXT NOT NULL,
+                amount_received REAL NOT NULL,
+                source_url TEXT NOT NULL,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, municipality, fiscal_year, cutoff_period, source_name),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_funding_snapshot_profile
+                ON municipal_funding_snapshots(profile_id, state, municipality, fiscal_year, cutoff_period);
+
+            CREATE TABLE IF NOT EXISTS municipal_financial_closures (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                municipality TEXT NOT NULL,
+                fiscal_year INTEGER NOT NULL,
+                approved_income_budget REAL,
+                collected_income REAL,
+                income_management REAL,
+                taxes REAL,
+                transfers_and_contributions REAL,
+                accounting_expenses REAL,
+                operating_expenses REAL,
+                personnel_expenses REAL,
+                source_url TEXT NOT NULL,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, municipality, fiscal_year),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_financial_closure_profile
+                ON municipal_financial_closures(profile_id, state, municipality, fiscal_year);
+
+            CREATE TABLE IF NOT EXISTS territorial_vote_targets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                election_year INTEGER NOT NULL,
+                territorial_level TEXT NOT NULL,
+                district TEXT NOT NULL DEFAULT '',
+                municipality TEXT NOT NULL DEFAULT '',
+                electoral_section TEXT NOT NULL DEFAULT '',
+                scenario_id INTEGER,
+                reference_option TEXT NOT NULL,
+                historical_valid_votes INTEGER NOT NULL DEFAULT 0,
+                historical_reference_votes INTEGER NOT NULL DEFAULT 0,
+                target_percentage REAL NOT NULL,
+                target_votes INTEGER NOT NULL DEFAULT 0,
+                vote_gap INTEGER NOT NULL DEFAULT 0,
+                classification TEXT NOT NULL DEFAULT 'Crecimiento',
+                responsible TEXT,
+                coverage_status TEXT NOT NULL DEFAULT 'Sin asignar',
+                evidence_note TEXT,
+                status TEXT NOT NULL DEFAULT 'Propuesta',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, state, election_year, territorial_level, district, municipality,
+                       electoral_section, reference_option),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE,
+                FOREIGN KEY (scenario_id) REFERENCES electoral_scenarios(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_vote_targets_profile_territory
+                ON territorial_vote_targets(profile_id, state, election_year, territorial_level, district, municipality);
+
+            CREATE TABLE IF NOT EXISTS electoral_scenarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                election_year INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                target_percentage REAL NOT NULL,
+                participation_assumption REAL,
+                competition_context TEXT,
+                coalition_context TEXT,
+                rationale TEXT,
+                status TEXT NOT NULL DEFAULT 'Borrador',
+                active INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, state, election_year, name),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_competitors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                party_or_coalition TEXT,
+                condition TEXT,
+                territory TEXT,
+                positioning_note TEXT,
+                source_url TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_surveys (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                pollster TEXT,
+                territory TEXT,
+                fieldwork_date TEXT,
+                sample_size INTEGER,
+                methodology TEXT,
+                profile_result_pct REAL,
+                source_url TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_structure_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                state TEXT,
+                municipality TEXT,
+                district TEXT,
+                electoral_section TEXT,
+                locality TEXT,
+                responsible TEXT,
+                coverage_status TEXT NOT NULL DEFAULT 'Por validar',
+                evidence_note TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_coalition_scenarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                scenario_name TEXT NOT NULL,
+                parties TEXT,
+                scope TEXT,
+                status TEXT NOT NULL DEFAULT 'Hipótesis',
+                notes TEXT,
+                source_url TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_resource_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                availability_status TEXT NOT NULL DEFAULT 'Por validar',
+                amount_note TEXT,
+                source_url TEXT,
+                notes TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_conclusions (
+                profile_id INTEGER PRIMARY KEY,
+                assessment_status TEXT NOT NULL DEFAULT 'En elaboración',
+                strengths TEXT,
+                risks TEXT,
+                conditions TEXT,
+                next_step TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_variable_assessments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                variable_code TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'Pendiente',
+                evidence_note TEXT,
+                source_url TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, variable_code),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_electoral_scores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                variable_code TEXT NOT NULL,
+                score REAL NOT NULL CHECK(score >= 0 AND score <= 100),
+                notes TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, variable_code),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS viability_electoral_evidence (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                variable_code TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'Pendiente',
+                evidence_note TEXT,
+                source_label TEXT,
+                source_url TEXT,
+                reference_date TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(profile_id, variable_code),
+                FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+            );
             """
         )
         # Migración segura para bases creadas antes de agregar la liga de origen.
         reference_columns = {row[1] for row in conn.execute("PRAGMA table_info(reference_documents)")}
         if "source_url" not in reference_columns:
             conn.execute("ALTER TABLE reference_documents ADD COLUMN source_url TEXT")
+        variable_assessment_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(viability_variable_assessments)")
+        }
+        variable_assessment_additions = {
+            "metric_label": "TEXT",
+            "target_value": "REAL",
+            "actual_value": "REAL",
+            "metric_unit": "TEXT",
+        }
+        for column, definition in variable_assessment_additions.items():
+            if column not in variable_assessment_columns:
+                conn.execute(
+                    f"ALTER TABLE viability_variable_assessments ADD COLUMN {column} {definition}"
+                )
         existing_columns = {
             row["name"] for row in conn.execute("PRAGMA table_info(import_runs)").fetchall()
         }
@@ -356,6 +719,23 @@ def initialize_database() -> None:
             if column not in existing_columns:
                 conn.execute(f"ALTER TABLE import_runs ADD COLUMN {column} {definition}")
 
+        action_plan_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(territorial_action_plans)").fetchall()
+        }
+        action_plan_additions = {
+            "district": "TEXT",
+            "electoral_section": "TEXT",
+        }
+        for column, definition in action_plan_additions.items():
+            if column not in action_plan_columns:
+                conn.execute(f"ALTER TABLE territorial_action_plans ADD COLUMN {column} {definition}")
+
+        target_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(territorial_vote_targets)").fetchall()
+        }
+        if "scenario_id" not in target_columns:
+            conn.execute("ALTER TABLE territorial_vote_targets ADD COLUMN scenario_id INTEGER")
+
         analysis_columns = {
             row["name"] for row in conn.execute("PRAGMA table_info(analyses)").fetchall()
         }
@@ -368,6 +748,12 @@ def initialize_database() -> None:
         for column, definition in analysis_additions.items():
             if column not in analysis_columns:
                 conn.execute(f"ALTER TABLE analyses ADD COLUMN {column} {definition}")
+
+        operational_program_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(operational_annual_programs)").fetchall()
+        }
+        if "funding_source" not in operational_program_columns:
+            conn.execute("ALTER TABLE operational_annual_programs ADD COLUMN funding_source TEXT")
 
         # Cada perfil inicia con su nombre como criterio mínimo de relevancia.
         # El usuario puede añadir alias y variantes desde la pantalla de obtención.

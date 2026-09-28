@@ -1,0 +1,184 @@
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Servicios públicos Tema: Servicios públicos de calidad 
+Objetivo:  Mejorar el sistema de alcantarillado y sistemas de drenaje pluvial en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población satisfecha o muy satisfecha con el servicio de drenaje y alcantarillado Periodicidad: Bienal  
+Descripción: Mide la proporción de la población de 18 años y más satisfecha y muy satisfecha con el servicio de drenaje y 
+alcantarillado 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población de 18 años y más satisfecha con el servicio de drenaje y 
+alcantarillado 
+Variable B: Población de 18 años y más satisfecha con el servicio de drenaje y alcantarillado 
+Valor Unidad de medida  Valor Unidad de medida  
+40.5% Porcentaje  364,460 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+40.5% Porcentaje 2023 43.4% 45.0% 46.6% 
+ Eje: Servicios públicos Tema: Servicios públicos de calidad 
+Objetivo:  Mejorar la calidad del servicio de alumbrado público de manera sostenible en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población satisfecha o muy satisfecha con el servicio de alumbrado público Periodicidad: Bienal  
+Descripción: Mide la proporción de la población de 18 años y más satisfecha y muy satisfecha con el servicio de alumbrado público Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población de 18 años y más satisfecha con el servicio de alumbrado 
+público 
+Variable B: Población de 18 años y más satisfecha con el servicio de alumbrado público 
+Valor Unidad de medida  Valor Unidad de medida  
+37.2% Porcentaje  334,778 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+37.2% Porcentaje 2023 43.1% 45.8% 48.4% 
+ 
+01
+  METAS E INDICADORES
+MÉRIDA CONTIGO ES MEJOR
+Eje: Servicios públicos Tema: Servicios públicos de calidad 
+Objetivo:  Mejorar la calidad de los espacios públicos en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población satisfecha o muy satisfecha con el servicio de parques y jardines públicos Periodicidad: Bienal  
+Descripción: Mide la proporción de la población de 18 años y más satisfecha y muy satisfecha con el servicio de parques y jardines 
+públicos 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población de 18 años y más satisfecha con el servicio de parques y 
+jardines públicos 
+Variable B: Población de 18 años y más satisfecha con el servicio de parques y jardines 
+Valor Unidad de medida  Valor Unidad de medida  
+60.6% Porcentaje  544,666 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:   
+Valor Unidad de medida  Valor Unidad de medida  
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+60.6% Porcentaje 2023 64.7% 68.6% 72.5% 
+ 
+Eje: Servicios públicos Tema: Servicios públicos de calidad 
+Objetivo: Mejorar la calidad de los espacios públicos de comercialización Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población que identifica a mercados y centrales de abasto en mal estado como problemática Periodicidad: Trimestral 
+Descripción: Mide la proporción de la población que considera como problemática el mal estado de mercados y centrales de 
+abasto 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Descendente 
+      
+Variable A: Porcentaje de población mayor de 18 años que percibe el mal estado de mercados y 
+central de abastos como problemática 
+Variable B: Población de 18 años y más que considera el mal estado de mercados y central de 
+abastos como problemática 
+Valor Unidad de medida  Valor Unidad de medida  
+23.4% Porcentaje  221,643 Personas  
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+945,367 Personas     
+Periodo Fuente  Periodo Fuente  
+Sep-24 Encuesta Nacional de Seguridad Pública Urbana sep-24, INEGI   
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+23.4% Porcentaje Sep-24 22.7% 21.3% 19.8% 
+ 
+02
+AYUNTAMIENTO DE MÉRIDA       PLAN MUNICIPAL DE DESARROLLO 2024-2027
+Eje: Servicios públicos Tema: Servicios públicos de calidad 
+Objetivo: Incrementar la sostenibilidad en la gestión de los residuos municipales y con ello, la protección de la salud pública Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población satisfecha o muy satisfecha con el servicio de recolección de basura Periodicidad: Bienal
+Descripción: Mide la proporción de la población de 18 años y más satisfecha y muy satisfecha con el servicio de recolección de 
+basura 
+Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población de 18 años y más satisfecha con el servicio de recolección de 
+basura 
+Variable B: Población de 18 años y más satisfecha con el servicio de recolección de basura 
+Valor Unidad de medida  Valor Unidad de medida  
+66.6% Porcentaje  598,404 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:  
+Valor Unidad de medida  Valor Unidad de medida  
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+66.6% Porcentaje 2023 67.8% 69.5% 71.2% 
+ 
+ 
+Eje: Servicios públicos Tema: Obras públicas 
+Objetivo: Mejorar la infraestructura urbana en el municipio de Mérida Tipo de algoritmo: Porcentaje 
+Indicador: Porcentaje de población satisfecha o muy satisfecha con el servicio de calles y avenidas Periodicidad: Bienal  
+Descripción: Mide la proporción de la población de 18 años y más satisfecha y muy satisfecha con el servicio de calles y avenidas Fórmula de cálculo: A=(B/C)*100 
+Tendencia: Ascendente 
+      
+Variable A: Porcentaje de población de 18 años y más satisfecha con el servicio de calles y 
+avenidas 
+Variable B: Población de 18 años y más satisfecha con el servicio de calles y avenidas 
+Valor Unidad de medida  Valor Unidad de medida  
+39.2% Porcentaje  352,132 Personas  
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 
+2023, INEGI 
+      
+Variable C: Total de población de 18 años y más Variable D:  
+Valor Unidad de medida  Valor Unidad de medida 
+899,124 Personas     
+Periodo Fuente  Periodo Fuente  
+2023 Encuesta Nacional de Calidad e Impacto Gubernamental 2023, 
+INEGI 
+  
+      
+Línea base Meta 2027 
+Valor Unidad de medida Periodo Escenario conservador Escenario meta Escenario favorable 
+39.2% Porcentaje 2023 44.2% 46.8% 49.4% 
+03

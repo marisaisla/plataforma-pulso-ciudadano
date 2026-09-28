@@ -8,7 +8,7 @@ import requests
 
 
 BASE_URL = "https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml"
-STATE_CODES = {"Sonora": "26", "Chihuahua": "08"}
+STATE_CODES = {"Sonora": "26", "Chihuahua": "08", "Nayarit": "18", "Querétaro": "22", "Yucatán": "31"}
 CORE_INDICATORS = {
     "Población · Total": "1002000001",
     "Población · Hombres": "1002000002",
@@ -103,7 +103,9 @@ def _metadata(indicator_id: str, token: str) -> str:
 
 
 def _one_municipality(indicator_id: str, area: str, token: str) -> dict | None:
-    url = f"{BASE_URL}/INDICATOR/{indicator_id}/es/{area}/true/BISE/2.0/{token}?type=json"
+    # ``false`` solicita la serie del ámbito indicado. ``true`` sólo funciona
+    # para algunos agregados y devolvía vacío para municipios.
+    url = f"{BASE_URL}/INDICATOR/{indicator_id}/es/{area}/false/BISE/2.0/{token}?type=json"
     response = requests.get(url, timeout=30)
     response.raise_for_status()
     series = response.json().get("Series", [])
@@ -126,11 +128,21 @@ def collect_municipal_indicator(
         return [], [f"INEGI no permitió consultar los metadatos: {error}"], indicator_id
 
     tasks = []
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    # Sixteen concurrent municipal requests keep state-wide imports responsive
+    # while remaining bounded for the public INEGI service.
+    with ThreadPoolExecutor(max_workers=16) as executor:
         for feature in features:
             properties = feature.get("properties", {})
-            municipal_code = str(properties.get("cve_agem", "")).zfill(3)
-            municipality = properties.get("municipio", properties.get("nom_agem", "Sin nombre"))
+            raw_code = properties.get(
+                "cve_agem", properties.get("CVE_MUN", properties.get("municipio", ""))
+            )
+            try:
+                municipal_code = str(int(float(raw_code))).zfill(3)
+            except (TypeError, ValueError):
+                municipal_code = "000"
+            municipality = properties.get(
+                "nom_agem", properties.get("NOM_MUN", properties.get("nombre", "Sin nombre"))
+            )
             if municipal_code and municipal_code != "000":
                 tasks.append((municipal_code, municipality, executor.submit(
                     _one_municipality, indicator_id, f"{state_code}{municipal_code}", token
