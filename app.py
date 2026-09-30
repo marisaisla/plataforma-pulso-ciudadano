@@ -17,6 +17,13 @@ import streamlit.components.v1 as components
 from pypdf import PdfReader
 
 from services.database import DB_PATH, execute, initialize_database, query, record_obtainment_run
+from services.field_staff_ui import render_field_staff
+from services.field_staff import initialize_staff
+from services.field_tasks_ui import render_task_assignment
+from services.field_reports_ui import render_task_reports
+from services.web_auth import initialize_auth
+from services.web_auth_ui import require_login, session_token
+from services.web_portal import render_portal
 from services.capture import (
     analyze_pending,
     capture_media_headlines,
@@ -65,6 +72,12 @@ from services.territorial_pulse import (
 
 st.set_page_config(page_title="Go2Win · Tablero de mando electoral", page_icon="📍", layout="wide")
 initialize_database()
+initialize_staff()
+initialize_auth()
+web_user = require_login()
+if web_user['role_key'] != 'administrator':
+    render_portal()
+    st.stop()
 
 st.markdown(
     """
@@ -558,6 +571,7 @@ EVIDENCE_NAVIGATION = {
     "25  Revisión e historial": "Revisión e historial",
 }
 SETTINGS_NAVIGATION = {
+    "Personal y Telegram": "Personal y Telegram",
     "26  Territorios y fuentes": "Territorio y fuentes",
     "27  Perfil territorial": "Perfil territorial",
     "28  Conexiones privadas": "Configuración de conexiones",
@@ -3896,7 +3910,9 @@ def render_territorial_strategy() -> None:
 
 def render_action_plans() -> None:
     """Operational plan for already defined territorial strategies."""
+    initialize_staff()
     st.subheader("Planes de acción")
+    st.button("Actualizar actividades y recepciones")
     st.caption(
         "Organiza la ejecución por actividad, responsable, fecha, prioridad, estatus y evidencia. "
         "El seguimiento se concentra en tareas territoriales, no en datos individuales de electores."
@@ -3968,11 +3984,14 @@ def render_action_plans() -> None:
 
     actions = query(
         """
-        SELECT id, activity_name, activity_description, district, electoral_section, responsible, due_date, priority_level,
-               status, evidence_note, completed_at
-        FROM territorial_action_plans
-        WHERE strategy_id = ?
-        ORDER BY CASE priority_level WHEN 'Alta' THEN 1 WHEN 'Media' THEN 2 ELSE 3 END, due_date, id
+        SELECT t.id, t.activity_name, t.activity_description, t.district, t.electoral_section, t.responsible,
+               t.due_date, t.priority_level, t.status, t.evidence_note, t.completed_at,
+               w.name AS trabajador_telegram, a.received_at AS recepcion_telegram_utc
+        FROM territorial_action_plans t
+        LEFT JOIN field_task_assignments a ON a.task_id = t.id
+        LEFT JOIN field_workers w ON w.id = a.worker_id
+        WHERE t.strategy_id = ?
+        ORDER BY CASE t.priority_level WHEN 'Alta' THEN 1 WHEN 'Media' THEN 2 ELSE 3 END, t.due_date, t.id
         """,
         (strategy["id"],),
     )
@@ -3989,9 +4008,11 @@ def render_action_plans() -> None:
     st.dataframe(
         summary.drop(columns=["id"]), use_container_width=True, hide_index=True,
     )
-    action_lookup = {f"{row['activity_name']} · {row['due_date'] or 'sin fecha'}": row for row in actions}
+    action_lookup = {f"#{row['id']} · {row['activity_name']} · {row['due_date'] or 'sin fecha'}": row for row in actions}
     selected_action_label = st.selectbox("Actualizar una actividad", list(action_lookup), key=f"update_action_{strategy['id']}")
     selected_action = action_lookup[selected_action_label]
+    render_task_assignment(selected_action)
+    render_task_reports(selected_action['id'])
     update_columns = st.columns(2)
     new_status = update_columns[0].selectbox(
         "Estatus", ["Pendiente", "En curso", "Concluida", "Cancelada"],
@@ -5634,7 +5655,10 @@ if page not in {"Dominio territorial", "Territorio", "Electoral", "Visor elector
     st.title(page if page != "Inicio" else "Go2Win · Tablero de mando electoral")
     st.caption("Etapa 1 local: datos y análisis en tu computadora, sin costo de infraestructura.")
 
-if page == "Escenarios electorales":
+if page == "Personal y Telegram":
+    render_field_staff()
+
+elif page == "Escenarios electorales":
     render_electoral_scenarios()
 
 elif page == "Mapa de estrategia y operación":
