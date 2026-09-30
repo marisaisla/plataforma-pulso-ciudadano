@@ -4,6 +4,8 @@ Primera base local de la plataforma integrada. No modifica las bases de los Puls
 
 ## Ejecutar
 
+Go2Win ahora requiere inicio de sesión. Para el primer acceso ejecuta `.\.venv\Scripts\python.exe scripts\crear_admin.py` y define tus propias credenciales. Consulta [Inicio de sesión](INICIO_DE_SESION.md). El usuario de campo existente conserva su rol y Telegram.
+
 ~~~powershell
 ## 🚀 Instalación y Ejecución
 
@@ -51,3 +53,11 @@ La aplicación crea automáticamente el archivo data\pulso_ciudadano_local.db.
 - Base preparada para importar después resultados de Pulso detallado, Pulso necesidades y Pulso medios.
 
 La etapa 1 funciona localmente. No requiere Supabase ni otro servicio de infraestructura.
+
+## Prueba de Telegram
+
+Para registrar trabajadores y activar su acceso real, consulta [Vinculación de personal con Telegram](TELEGRAM_INTEGRADOR.md). Ejecuta `scripts/integrador_telegram.py` en lugar del script de demostración. Ya permite consultar tareas asignadas, confirmar recepción, enviar reportes de texto con folio y consultar su revisión. Las evidencias fotográficas siguen pendientes.
+
+Los cinco roles y sus alcances por campaña y territorio se administran en **Personal y Telegram**. Consulta [Roles y permisos](ROLES_Y_PERMISOS.md) para configurarlos y conocer el alcance del control de acceso actual.
+
+El script `scripts/prueba_bot_telegram.py` permite ejecutar la demostración del bot desde este proyecto. Consulta [la guía de Telegram](TELEGRAM_PRUEBA.md) para configurar el token en PowerShell y probar los comandos. Esta prueba todavía no consulta ni guarda datos en Go2Win.
