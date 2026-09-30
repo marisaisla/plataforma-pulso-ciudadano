@@ -693,6 +693,11 @@ def run_prompt_query(
 
         source_blocks = []
         for index, publication in enumerate(publications, start=1):
+            saved_analyses = [dict(row) for row in conn.execute(
+                """SELECT ap.name AS enfoque, ar.sentiment AS sentimiento, ar.topic AS tema,
+                          ar.explanation AS explicacion, ar.urgency AS urgencia
+                   FROM analysis_results ar JOIN analysis_approaches ap ON ap.id=ar.approach_id
+                   WHERE ar.publication_id=?""", (publication['id'],))]
             source_blocks.append(
                 f"[FUENTE {index}]\n"
                 f"ID: {publication['id']}\n"
@@ -702,6 +707,7 @@ def run_prompt_query(
                 f"Fecha: {publication['published_at'] or 'Sin fecha'}\n"
                 f"Texto: {clean_text(publication['text'] or '')[:1400]}\n"
                 f"Enlace: {publication['url'] or 'Sin enlace'}"
+                f"\nAnálisis guardados (interpretaciones, no hechos comprobados): {json.dumps(saved_analyses, ensure_ascii=False)}"
             )
             result["sources"].append(dict(publication))
 

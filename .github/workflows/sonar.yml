@@ -1,0 +1,28 @@
+name: SonarQube Cloud Analysis
+
+on:
+  push:
+    branches:
+      - '**'        # Se ejecuta al hacer push en CUALQUIER rama (presente o futura)
+  pull_request:
+    types: [opened, synchronize, reopened]   # Se ejecuta en todos los Pull Requests hacia cualquier rama
+
+jobs:
+  sonarcloud:
+    name: SonarQube Cloud Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Desactiva el clonado superficial para mayor precisión
+
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=marisaisla
+            -Dsonar.projectKey=marisaisla_plataforma-pulso-ciudadano
+            -Dsonar.sources=.

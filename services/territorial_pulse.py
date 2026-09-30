@@ -79,13 +79,15 @@ def municipal_pulse_summary(profile_id: int, state: str) -> list[dict]:
             """
             SELECT pt.municipality,
                    COUNT(DISTINCT p.id) AS publications,
-                   SUM(CASE WHEN a.sentiment = 'Positivo' THEN 1 ELSE 0 END) AS positive,
-                   SUM(CASE WHEN a.sentiment = 'Negativo' THEN 1 ELSE 0 END) AS negative,
-                   SUM(CASE WHEN a.sentiment = 'Neutro' THEN 1 ELSE 0 END) AS neutral,
-                   SUM(CASE WHEN a.urgency IN ('Alta', 'Crítica') THEN 1 ELSE 0 END) AS high_urgency
+                   SUM(CASE WHEN COALESCE(ar.sentiment,a.sentiment) IN ('Positivo','Favorable') THEN 1 ELSE 0 END) AS positive,
+                   SUM(CASE WHEN COALESCE(ar.sentiment,a.sentiment) IN ('Negativo','Crítico') THEN 1 ELSE 0 END) AS negative,
+                   SUM(CASE WHEN COALESCE(ar.sentiment,a.sentiment) IN ('Neutro','Neutral') THEN 1 ELSE 0 END) AS neutral,
+                   SUM(CASE WHEN COALESCE(ar.urgency,a.urgency) IN ('Alta', 'Crítica') THEN 1 ELSE 0 END) AS high_urgency
             FROM publication_territories pt
             JOIN publications p ON p.id = pt.publication_id
             LEFT JOIN analyses a ON a.publication_id = p.id
+            LEFT JOIN analysis_results ar ON ar.publication_id=p.id
+              AND ar.approach_id=(SELECT id FROM analysis_approaches WHERE name='Perfil político')
             WHERE p.profile_id = ? AND pt.state = ? AND pt.municipality IS NOT NULL
             GROUP BY pt.municipality
             ORDER BY publications DESC, pt.municipality

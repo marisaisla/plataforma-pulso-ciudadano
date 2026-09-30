@@ -1,4 +1,4 @@
-from datetime import date
+﻿from datetime import date
 import json
 from html import escape
 import math
@@ -414,9 +414,123 @@ ELECTORAL_VOTE_LABELS = {
     "votes_pt_qi": "Coalición PT-QI",
     "votes_pt_morena_naem": "Coalición PT-Morena-NAEM",
     "votes_cc_pt_morena_naem": "Candidatura común PT-Morena-NAEM",
+    "votes_morena_naem": "Candidatura común Morena-NAEM",
+    "votes_pt_naem": "Candidatura común PT-NAEM",
+    "votes_coalicion_pt_morena": "Coalición PT-Morena",
+    "votes_coalicion_pt_morena_nach": "Coalición PT-Morena-Nueva Alianza Chihuahua",
+    "votes_coalicion_morena_nach": "Coalición Morena-Nueva Alianza Chihuahua",
+    "votes_coalicion_pt_nach": "Coalición PT-Nueva Alianza Chihuahua",
+    "votes_pt_pvem_morena_nan": "Juntos Haremos Historia Nayarit",
+    "votes_shh": "Sigamos Haciendo Historia",
+    "votes_jdch": "Juntos Defendamos Chihuahua",
     "votes_va_por_sonora": "Va por Sonora",
     "votes_juntos_haremos_historia_sonora": "Juntos Haremos Historia en Sonora",
 }
+
+
+# Estas agrupaciones convierten el desglose de marcas de boleta publicado por
+# la autoridad en una lectura de fuerza por candidatura/bloque. Sólo se suman
+# columnas que corresponden al mismo bloque; los demás partidos permanecen
+# visibles de manera independiente.
+ELECTORAL_BLOCKS = (
+    (
+        "Morena–PT–PVEM",
+        {
+            "votes_morena", "votes_pt", "votes_pvem", "votes_sigamos_haciendo_historia",
+            "votes_juntos_haremos_historia_sonora", "votes_pvem_pt_morena",
+            "votes_pvem_pt_morena_naem", "votes_cc_pvem_pt_morena",
+            "votes_pt_morena_naem", "votes_cc_pt_morena_naem",
+            "votes_morena_naem", "votes_pt_naem", "votes_pvem_pt", "votes_pvem_morena", "votes_pt_morena",
+            "votes_coalicion_pt_morena", "votes_coalicion_pt_morena_nach",
+            "votes_coalicion_morena_nach", "votes_coalicion_pt_nach",
+            "votes_pt_pvem_morena_nan", "votes_shh",
+        },
+    ),
+    (
+        "PAN–PRI–PRD",
+        {
+            "votes_pan", "votes_pri", "votes_prd", "votes_coalicion_pan_pri_prd",
+            "votes_coalicion_pan_pri", "votes_coalicion_pan_prd", "votes_coalicion_pri_prd",
+            "votes_fuerza_y_corazon_sonora", "votes_va_por_sonora", "votes_pan_pri_prd",
+            "votes_jdch",
+        },
+    ),
+    (
+        "PAN–PRI–PRD–Nueva Alianza",
+        {
+            "votes_pan_pri_prd_naem", "votes_cc_pan_pri_prd_naem",
+            "votes_pan_pri_naem", "votes_pan_prd_naem", "votes_pri_prd_naem",
+            "votes_pan_naem", "votes_pri_naem", "votes_prd_naem",
+        },
+    ),
+    (
+        "PAN–PRI–PRD–Nueva Alianza Yucatán",
+        {
+            "votes_pan_pri_prd_nay", "votes_pan_pri_nay", "votes_pan_prd_nay",
+            "votes_pri_prd_nay", "votes_pan_nay", "votes_pri_nay", "votes_prd_nay",
+            "votes_prd_nay_2",
+        },
+    ),
+)
+
+# Algunas fuentes ya incluyen, además de las marcas partidistas, el total de
+# cada candidatura. En esos casos las marcas de los partidos que la integran
+# son componentes informativos y no deben volver a sumarse en el pastel.
+PREAGGREGATED_CANDIDATURES = {
+    ("Chihuahua", 2024, "Diputaciones locales"): {
+        "votes_shh": "Sigamos Haciendo Historia",
+        "votes_jdch": "Juntos Defendamos Chihuahua",
+        "votes_mc": "Movimiento Ciudadano",
+        "votes_pvem": "PVEM",
+        "votes_pueblo": "PUEBLO",
+        "votes_mxrep": "México Republicano",
+    },
+}
+
+
+def consolidated_electoral_blocks(
+    market: pd.DataFrame,
+    option_keys: list[str],
+    state: str | None = None,
+    election_year: int | None = None,
+    election_type: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return a candidate/block reading and the official, unaggregated ballot reading."""
+    official = pd.DataFrame([
+        {"Opción oficial en boleta": ELECTORAL_VOTE_LABELS.get(key, key.replace("votes_", "").replace("_", " ").upper()),
+         "Votos": int(market[key].sum()), "clave": key}
+        for key in option_keys
+    ]).sort_values("Votos", ascending=False).reset_index(drop=True)
+
+    preaggregated = PREAGGREGATED_CANDIDATURES.get((state, election_year, election_type), {})
+    if preaggregated:
+        blocks = [
+            {"Opción": label, "Votos": int(market[key].sum())}
+            for key, label in preaggregated.items()
+            if key in option_keys and market[key].sum() > 0
+        ]
+        return pd.DataFrame(blocks).sort_values("Votos", ascending=False).reset_index(drop=True), official
+
+    pending = set(option_keys)
+    blocks: list[dict] = []
+    for block_name, block_keys in ELECTORAL_BLOCKS:
+        present_keys = pending.intersection(block_keys)
+        if not present_keys:
+            continue
+        # Un bloque se consolida sólo cuando la fuente trae al menos una
+        # combinación/coalición de esa misma candidatura. Si sólo aparecen
+        # partidos individuales, se conservan como partidos separados.
+        has_alliance_mark = any(key not in {"votes_morena", "votes_pt", "votes_pvem", "votes_pan", "votes_pri", "votes_prd"} for key in present_keys)
+        if not has_alliance_mark:
+            continue
+        blocks.append({"Opción": block_name, "Votos": int(sum(market[key].sum() for key in present_keys))})
+        pending.difference_update(present_keys)
+    for key in sorted(pending):
+        blocks.append({
+            "Opción": ELECTORAL_VOTE_LABELS.get(key, key.replace("votes_", "").replace("_", " ").upper()),
+            "Votos": int(market[key].sum()),
+        })
+    return pd.DataFrame(blocks).sort_values("Votos", ascending=False).reset_index(drop=True), official
 
 
 def render_electoral_breakdown(payload: dict) -> None:
@@ -550,7 +664,7 @@ EXECUTION_NAVIGATION = {
     "19  Alertas territoriales": "Alertas territoriales",
 }
 EVIDENCE_NAVIGATION = {
-    "20  Obtención de información": "Obtención de información",
+    "20  Fuentes y actualización": "Fuentes y actualización",
     "21  Bandeja de evidencia": "Bandeja de registros",
     "22  Enfoques de análisis": "Enfoques de análisis",
     "23  Vinculación territorial": "Vinculación territorial",
@@ -1447,7 +1561,7 @@ def render_electoral_dashboard() -> None:
             f"1. **Perfil territorial:** asignar el estado y municipios de cobertura de {profile_name}.\n"
             "2. **Territorio y fuentes:** cargar cartografía municipal/seccional y resultados oficiales comparables.\n"
             "3. **Perfil territorial:** descargar indicadores INEGI municipales.\n"
-            "4. **Obtención de información:** configurar medios, RSS y cuentas públicas autorizadas.\n"
+            "4. **Fuentes y actualización:** configurar medios, RSS y cuentas públicas autorizadas.\n"
             "5. **Escenarios electorales:** documentar supuestos y generar metas agregadas.\n"
             "6. **Estrategia, planes y CRM:** convertir hallazgos en tareas, responsables y evidencia de campo."
         )
@@ -1589,17 +1703,21 @@ def render_electoral_market() -> None:
     if not option_keys:
         st.warning("Esta carga no incluye votación por partido, coalición o candidatura.")
         return
-    option_labels = {
-        ELECTORAL_VOTE_LABELS.get(key, key.replace("votes_", "").replace("_", " ").upper()): key
-        for key in option_keys
-    }
-    selected_option_label = st.selectbox(
-        "Opción política de referencia",
-        list(option_labels),
-        key=f"market_option_{state}_{election_year}_{election_type}",
+    consolidated_distribution, official_distribution = consolidated_electoral_blocks(
+        market, option_keys, state, election_year, election_type
     )
-    reference_key = option_labels[selected_option_label]
-    reference_votes = int(market[reference_key].sum())
+    consolidated_distribution["Porcentaje"] = (
+        consolidated_distribution["Votos"] / valid_votes * 100 if valid_votes else 0.0
+    )
+    selected_option_label = st.selectbox(
+        "Bloque o partido de referencia",
+        list(consolidated_distribution["Opción"]),
+        key=f"market_block_{state}_{election_year}_{election_type}",
+        help="Esta lectura suma las marcas de boleta que pertenecen a una misma candidatura o alianza; los partidos sin alianza se muestran solos.",
+    )
+    reference_votes = int(consolidated_distribution.loc[
+        consolidated_distribution["Opción"] == selected_option_label, "Votos"
+    ].iloc[0])
     reference_share = reference_votes / valid_votes * 100 if valid_votes else 0
 
     cards = st.columns(5)
@@ -1643,14 +1761,12 @@ def render_electoral_market() -> None:
         else:
             st.info("No hay un escenario activo. El siguiente paso es registrarlo y validarlo en Escenarios electorales.")
     with right:
-        st.markdown(f"### Participación del mercado electoral · {election_year}")
-        distribution = pd.DataFrame([
-            {"Opción": label, "Votos": int(market[key].sum())}
-            for label, key in option_labels.items()
-        ]).sort_values("Votos", ascending=False).reset_index(drop=True)
-        distribution["Porcentaje"] = (
-            distribution["Votos"] / valid_votes * 100 if valid_votes else 0.0
+        st.markdown(f"### Fuerza electoral consolidada · {election_year}")
+        st.caption(
+            "El gráfico agrupa las marcas de boleta de una misma candidatura o alianza. "
+            "No compara un partido aislado contra su propia coalición."
         )
+        distribution = consolidated_distribution
         # Un pastel con todas las candidaturas menores sería ilegible. Conserva
         # las ocho fuerzas principales y agrupa el resto sin perder su peso.
         pie_distribution = distribution.head(8).copy()
@@ -1713,12 +1829,29 @@ def render_electoral_market() -> None:
             unsafe_allow_html=True,
         )
         st.caption(
-            f"Distribución de votos válidos de la elección histórica {election_year}. "
+            f"Distribución consolidada de votos válidos de la elección histórica {election_year}. "
             "Las ocho fuerzas con mayor votación se muestran por separado; las demás se agrupan como Otras opciones."
         )
+        with st.expander("Ver detalle oficial de marcas en boleta"):
+            official_distribution["Porcentaje de votos válidos"] = (
+                official_distribution["Votos"] / valid_votes * 100 if valid_votes else 0.0
+            )
+            st.caption(
+                "Este desglose reproduce las opciones publicadas por la autoridad. Úsalo para auditoría; "
+                "la gráfica principal es la lectura recomendable para comparar fuerzas electorales."
+            )
+            st.dataframe(
+                official_distribution.drop(columns="clave"),
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Votos": st.column_config.NumberColumn(format="%,d"),
+                    "Porcentaje de votos válidos": st.column_config.NumberColumn(format="%.1f%%"),
+                },
+            )
     st.caption(
         f"Fuente: resultados de **{election_type} {election_year}** cargados en la plataforma. "
-        "Las coaliciones se presentan conforme a las columnas oficiales disponibles en la fuente."
+        "El detalle de boleta conserva las columnas oficiales; la gráfica principal consolida alianzas identificables."
     )
     comparison_elections = sorted(
         (year, result_type)
@@ -6373,18 +6506,21 @@ elif page == "Configuración de conexiones":
                 st.error("No fue posible encontrar un token utilizable en el proyecto anterior.")
     st.info(
         "Esta sección prepara las conexiones. X, YouTube, INEGI y DENUE se habilitarán "
-        "en Obtención de información conforme construyamos cada conector."
+        "en Fuentes y actualización conforme construyamos cada conector."
     )
 
-elif page == "Obtención de información":
-    st.subheader("Obtención de información")
-    st.caption("Esta pantalla solo obtiene y guarda información cruda. No realiza análisis.")
+elif page == "Fuentes y actualización":
+    st.subheader("Fuentes y actualización")
+    st.caption(
+        "Aquí se actualiza la información pública de un perfil. Después se revisa en Bandeja de registros; "
+        "el análisis se realiza en los módulos de diagnóstico y estrategia."
+    )
     options = profile_options()
     if not options:
         st.info("Primero crea un perfil y registra sus fuentes.")
         st.stop()
 
-    chosen = st.selectbox("Perfil para obtener información", list(options))
+    chosen = st.selectbox("Perfil a monitorear", list(options))
     profile_id = options[chosen]
     all_sources = query(
         """
@@ -6416,62 +6552,57 @@ elif page == "Obtención de información":
     )
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Medios digitales registrados", len(registered_media))
-    col2.metric("Fuentes RSS activas", len(rss_sources))
-    col3.metric("Otras fuentes configuradas", len(all_sources) - len(registered_media) - len(rss_sources))
-    col4.metric("Registros crudos guardados", existing)
+    col1.metric("Medios configurados", len(registered_media))
+    col2.metric("Feeds RSS activos", len(rss_sources))
+    col3.metric("Otros canales", len(all_sources) - len(registered_media) - len(rss_sources))
+    col4.metric("Registros capturados", existing)
 
-    st.subheader("Filtro de relevancia para RSS y medios web")
-    st.caption(
-        "Antes de guardar, RSS y medios web comparan el titular y el resumen contra estas "
-        "palabras. Así se descartan notas que no se relacionan con el perfil."
-    )
-    configured_keywords = query(
-        "SELECT keyword FROM profile_keywords WHERE profile_id = ? AND active = 1 ORDER BY keyword",
-        (profile_id,),
-    )
-    keyword_value = "\n".join(row["keyword"] for row in configured_keywords)
-    with st.form("profile_keywords"):
-        keyword_input = st.text_area(
-            "Palabras clave y alias (una por renglón o separadas por coma)",
-            value=keyword_value,
-            height=120,
-            help="Incluye el nombre completo, apodos públicos, cargo y variantes relevantes.",
-        )
-        save_keywords = st.form_submit_button("Guardar filtro de relevancia")
-        if save_keywords:
-            keywords = sorted({
-                item.strip() for item in keyword_input.replace(",", "\n").splitlines()
-                if len(item.strip()) >= 3
-            })
-            if not keywords:
-                st.error("Registra al menos una palabra clave de tres caracteres o más.")
-            else:
-                execute("DELETE FROM profile_keywords WHERE profile_id = ?", (profile_id,))
-                for keyword in keywords:
-                    execute(
-                        "INSERT INTO profile_keywords (profile_id, keyword, active) VALUES (?, ?, 1)",
-                        (profile_id, keyword),
-                    )
-                st.success(f"Filtro guardado con {len(keywords)} palabras clave.")
-                st.rerun()
-
-    st.subheader("Fuentes disponibles por tipo")
-    source_types = ["Medio digital", "RSS", "X", "YouTube", "Fuente institucional", "Importación de archivo", "Encuesta"]
-    cards = st.columns(3)
-    for index, source_type in enumerate(source_types):
-        configured = [row for row in all_sources if row["tipo"] == source_type]
-        cards[index % 3].info(f"**{source_type}**\n\n{len(configured)} fuente(s) configurada(s)")
+    st.markdown("### 1. Fuentes del perfil")
+    st.caption("Estas son las fuentes que se consultarán al presionar Actualizar. Agrega o ajusta fuentes antes de iniciar una consulta.")
 
     if all_sources:
         st.dataframe(pd.DataFrame(all_sources), use_container_width=True, hide_index=True)
     else:
-        st.warning("No hay fuentes activas registradas para este perfil.")
+        st.warning("Este perfil no tiene fuentes activas. Registra primero un medio, un RSS, una cuenta X o una fuente institucional.")
 
-    st.subheader("Ejecutar obtención manual")
-    st.write("Elige el botón del tipo de fuente que deseas consultar. Ninguna ejecución es automática.")
+    with st.expander("Ajustar palabras clave para filtrar resultados"):
+        st.caption(
+            "La plataforma conserva sólo notas relacionadas con estas palabras. Incluye nombre completo, alias públicos, "
+            "cargo y variantes útiles."
+        )
+        configured_keywords = query(
+            "SELECT keyword FROM profile_keywords WHERE profile_id = ? AND active = 1 ORDER BY keyword",
+            (profile_id,),
+        )
+        keyword_value = "\n".join(row["keyword"] for row in configured_keywords)
+        with st.form("profile_keywords"):
+            keyword_input = st.text_area(
+                "Palabras clave y alias (una por renglón o separadas por coma)",
+                value=keyword_value,
+                height=120,
+            )
+            save_keywords = st.form_submit_button("Guardar palabras clave")
+            if save_keywords:
+                keywords = sorted({
+                    item.strip() for item in keyword_input.replace(",", "\n").splitlines()
+                    if len(item.strip()) >= 3
+                })
+                if not keywords:
+                    st.error("Registra al menos una palabra clave de tres caracteres o más.")
+                else:
+                    execute("DELETE FROM profile_keywords WHERE profile_id = ?", (profile_id,))
+                    for keyword in keywords:
+                        execute(
+                            "INSERT INTO profile_keywords (profile_id, keyword, active) VALUES (?, ?, 1)",
+                            (profile_id, keyword),
+                        )
+                    st.success(f"Palabras clave actualizadas: {len(keywords)}.")
+                    st.rerun()
+
+    st.markdown("### 2. Actualizar información")
+    st.caption("Elige el canal que deseas actualizar. La plataforma no realiza consultas automáticas.")
     media_button, rss_button = st.columns(2)
-    if media_button.button("Ejecutar medios web", type="primary", disabled=not registered_media):
+    if media_button.button("Actualizar noticias de medios", type="primary", disabled=not registered_media):
         with st.spinner("Leyendo titulares públicos de los medios registrados..."):
             result = capture_media_headlines(profile_id)
         record_obtainment_run(profile_id, "Medio digital", result)
@@ -6484,21 +6615,33 @@ elif page == "Obtención de información":
             st.warning("Algunos medios no respondieron:\n\n- " + "\n- ".join(result["errors"]))
         st.rerun()
 
-    if rss_button.button("Ejecutar RSS", disabled=not rss_sources):
-        with st.spinner("Leyendo feeds RSS..."):
-            result = capture_rss(profile_id)
-        record_obtainment_run(profile_id, "RSS", result)
-        st.success(
-            f"Consulta terminada: {result['new_publications']} publicaciones nuevas y "
-            f"{result['duplicates']} duplicadas y {result['not_relevant']} sin relación omitidas."
-        )
-        if result["errors"]:
-            st.warning("Algunas fuentes requieren revisión:\n\n- " + "\n- ".join(result["errors"]))
+    if rss_sources:
+        if rss_button.button("Actualizar feeds RSS"):
+            with st.spinner("Leyendo feeds RSS..."):
+                result = capture_rss(profile_id)
+            record_obtainment_run(profile_id, "RSS", result)
+            st.success(
+                f"Consulta terminada: {result['new_publications']} publicaciones nuevas y "
+                f"{result['duplicates']} duplicadas y {result['not_relevant']} sin relación omitidas."
+            )
+            if result["errors"]:
+                st.warning("Algunas fuentes requieren revisión:\n\n- " + "\n- ".join(result["errors"]))
+            st.rerun()
+    elif rss_button.button("Buscar y activar feeds RSS", disabled=not registered_media):
+        with st.spinner("Buscando feeds RSS publicados por los medios configurados..."):
+            discovery = discover_rss(profile_id)
+        st.success(f"Se activaron {discovery['added']} feeds nuevos. Actualiza la pantalla para consultarlos.")
+        if discovery["errors"]:
+            st.warning("Algunos sitios no respondieron:\n\n- " + "\n- ".join(discovery["errors"]))
         st.rerun()
 
     x_default_query = (
         '("Maru Campos" OR "María Eugenia Campos") lang:es -is:retweet'
         if "María Eugenia Campos" in chosen
+        else '("Cecilia Patrón" OR "Cecilia Patron" OR "@CeciliaPatronL") lang:es -is:retweet'
+        if "Cecilia" in chosen
+        else '("Felifer" OR "Felipe Fernando Macías" OR "Felipe Macías" OR "@FeliFerMacias" OR from:FeliFerMacias) lang:es -is:retweet'
+        if "Felipe Fernando Macías" in chosen
         else f'"{chosen.rsplit(" (#", 1)[0]}" lang:es -is:retweet'
     )
     with st.expander("Configurar búsqueda de X", expanded=bool(x_sources)):
@@ -6513,7 +6656,7 @@ elif page == "Obtención de información":
         )
         x_limit = st.slider("Máximo de publicaciones por consulta", 10, 100, 25, 5)
         if st.button(
-            "Ejecutar X",
+            "Actualizar conversación pública en X",
             type="primary",
             disabled=not x_sources,
             help=None if x_sources else "Registra una fuente de tipo X para este perfil.",
@@ -6530,10 +6673,9 @@ elif page == "Obtención de información":
                 )
             st.rerun()
 
-    youtube_button, institutional_button, file_button = st.columns(3)
-    youtube_button.button("Ejecutar YouTube", disabled=True, help="Pendiente registrar la clave privada de YouTube.")
+    institutional_button = st.columns(1)[0]
     if institutional_button.button(
-        "Ejecutar fuentes institucionales",
+        "Actualizar fuentes institucionales",
         disabled=not institutional_sources,
     ):
         with st.spinner("Leyendo titulares públicos de las fuentes institucionales..."):
@@ -6546,47 +6688,37 @@ elif page == "Obtención de información":
         if result["errors"]:
             st.warning("Algunas fuentes no respondieron:\n\n- " + "\n- ".join(result["errors"]))
         st.rerun()
-    file_button.button(
-        "Importar archivo",
-        disabled=True,
-        help="La importación de archivos se habilitará como conector independiente.",
-    )
 
-    st.subheader("Administrar feeds RSS")
-    action_left, action_right = st.columns(2)
-    if action_left.button("Buscar feeds RSS en medios registrados", disabled=not registered_media):
-        with st.spinner("Buscando feeds RSS publicados por los medios..."):
-            discovery = discover_rss(profile_id)
-        st.success(
-            f"Revisión terminada: {discovery['added']} feeds nuevos, "
-            f"{discovery['existing']} ya registrados, {discovery['checked']} medios revisados."
-        )
-        if discovery["errors"]:
-            st.warning("Algunos sitios no respondieron:\n\n- " + "\n- ".join(discovery["errors"]))
-        st.rerun()
-    with action_right.form("manual_rss", clear_on_submit=True):
-        manual_name = st.text_input("Nombre del feed RSS")
-        manual_url = st.text_input("URL completa del feed RSS")
-        add_rss = st.form_submit_button("Agregar feed RSS")
-        if add_rss:
-            if not manual_name.strip() or not manual_url.strip().startswith(("http://", "https://")):
-                st.error("Escribe nombre y una URL válida que inicie con http:// o https://.")
-            else:
-                execute(
-                    "INSERT INTO sources (profile_id, source_type, name, account_or_url) VALUES (?, 'RSS', ?, ?)",
-                    (profile_id, manual_name.strip(), manual_url.strip()),
-                )
-                st.success("Feed RSS agregado. Actualiza la página para verlo en la lista.")
+    with st.expander("Administrar feeds RSS"):
+        action_left, action_right = st.columns(2)
+        if action_left.button("Buscar feeds en los medios configurados", disabled=not registered_media):
+            with st.spinner("Buscando feeds RSS publicados por los medios..."):
+                discovery = discover_rss(profile_id)
+            st.success(
+                f"Revisión terminada: {discovery['added']} feeds nuevos, "
+                f"{discovery['existing']} ya registrados, {discovery['checked']} medios revisados."
+            )
+            if discovery["errors"]:
+                st.warning("Algunos sitios no respondieron:\n\n- " + "\n- ".join(discovery["errors"]))
+            st.rerun()
+        with action_right.form("manual_rss", clear_on_submit=True):
+            manual_name = st.text_input("Nombre del feed RSS")
+            manual_url = st.text_input("URL completa del feed RSS")
+            add_rss = st.form_submit_button("Agregar feed RSS")
+            if add_rss:
+                if not manual_name.strip() or not manual_url.strip().startswith(("http://", "https://")):
+                    st.error("Escribe nombre y una URL válida que inicie con http:// o https://.")
+                else:
+                    execute(
+                        "INSERT INTO sources (profile_id, source_type, name, account_or_url) VALUES (?, 'RSS', ?, ?)",
+                        (profile_id, manual_name.strip(), manual_url.strip()),
+                    )
+                    st.success("Feed RSS agregado. Actualiza la página para verlo en la lista.")
+        if rss_sources:
+            st.dataframe(pd.DataFrame(rss_sources), use_container_width=True, hide_index=True)
 
-    if not rss_sources:
-        st.warning(
-            "Todavía no hay feeds RSS detectados. Presiona “Buscar feeds RSS en medios registrados” "
-            "para revisar los medios de la tabla anterior."
-        )
-    else:
-        st.dataframe(pd.DataFrame(rss_sources), use_container_width=True, hide_index=True)
-
-    st.subheader("Bitácora de ejecuciones")
+    st.markdown("### 3. Resultado de las actualizaciones")
+    st.caption("Al terminar una actualización, revisa los registros en Bandeja de registros para clasificarlos y vincularlos al territorio.")
     if latest_runs:
         st.dataframe(pd.DataFrame(latest_runs), use_container_width=True, hide_index=True)
     else:
@@ -8712,6 +8844,22 @@ elif page == "Vinculación territorial":
         st.markdown("#### Resumen de vínculos por municipio")
         st.dataframe(summary_frame, use_container_width=True, hide_index=True)
     st.caption(f"Capa municipal utilizada: {linking_source}")
+    st.caption("Los lugares detectados por IA son propuestas de lectura. La vinculación municipal se valida contra el catálogo y la mención explícita en el texto, sin otra consulta de IA.")
+    territory_results = query(
+        """SELECT p.id AS mensaje, p.title AS titulo, ar.topic AS lugares_detectados,
+                  ar.explanation AS explicacion,
+                  (SELECT GROUP_CONCAT(pt.municipality, ', ') FROM publication_territories pt
+                   WHERE pt.publication_id=p.id AND pt.state=?) AS municipios_vinculados,
+                  p.url AS enlace
+           FROM publications p JOIN analysis_results ar ON ar.publication_id=p.id
+           JOIN analysis_approaches ap ON ap.id=ar.approach_id
+           WHERE p.profile_id=? AND ap.name='Territorial' ORDER BY p.id DESC""",
+        (linking_state, linking_profile_id),
+    )
+    if territory_results:
+        st.markdown("#### Lugares detectados y vínculos municipales")
+        st.dataframe(pd.DataFrame(territory_results), hide_index=True, width="stretch",
+                     column_config={"enlace": st.column_config.LinkColumn("Original", display_text="Abrir")})
 
 elif page == "Bandeja de registros":
     st.subheader("Bandeja de registros")
@@ -8770,245 +8918,15 @@ elif page == "Bandeja de registros":
         st.info("No hay registros para este filtro.")
 
 elif page == "Enfoques de análisis":
-    st.subheader("Enfoques de análisis")
-    st.caption("Este módulo analiza información que ya fue obtenida. No consulta fuentes externas.")
-    options = profile_options()
-    if not options:
-        st.info("Primero crea un perfil.")
-        st.stop()
-    chosen = st.selectbox("Perfil para analizar", list(options), key="analysis_profile")
-    profile_id = options[chosen]
-    available_types = query(
-        """
-        SELECT DISTINCT s.source_type AS tipo
-        FROM publications p
-        JOIN sources s ON s.id = p.source_id
-        WHERE p.profile_id = ?
-        ORDER BY s.source_type
-        """,
-        (profile_id,),
-    )
-    source_type_options = ["Todas las fuentes"] + [row["tipo"] for row in available_types]
-    selected_source_type = st.selectbox(
-        "Fuente que deseas analizar",
-        source_type_options,
-        index=source_type_options.index("X") if "X" in source_type_options else 0,
-        help="El filtro solo limita qué registros se analizan; no elimina ni modifica los demás.",
-    )
-    approaches = query(
-        "SELECT name, description FROM analysis_approaches WHERE active = 1 ORDER BY id"
-    )
-    approach_names = [row["name"] for row in approaches]
-    if "selected_approach" not in st.session_state:
-        st.session_state.selected_approach = approach_names[0]
-    st.markdown("#### Paso 1. Elige un enfoque")
-    approach_buttons = st.columns(len(approach_names))
-    for index, approach in enumerate(approaches):
-        is_selected = st.session_state.selected_approach == approach["name"]
-        if approach_buttons[index].button(
-            f"Elegir: {approach['name']}",
-            key=f"approach_{approach['name']}",
-            type="primary" if is_selected else "secondary",
-            use_container_width=True,
-        ):
-            st.session_state.selected_approach = approach["name"]
-            st.rerun()
-    selected_approach = st.session_state.selected_approach
-    selected_description = next(
-        row["description"] for row in approaches if row["name"] == selected_approach
-    )
-    st.info(f"**Enfoque activo: {selected_approach}.** {selected_description}")
-    source_filter = "" if selected_source_type == "Todas las fuentes" else "AND s.source_type = ?"
-    source_parameters = (profile_id,) if not source_filter else (profile_id, selected_source_type)
-    pending = query(
-        f"""
-        SELECT p.id, s.name AS fuente, p.title AS titulo, p.collected_at AS obtenido
-        FROM publications p
-        JOIN sources s ON s.id = p.source_id
-        LEFT JOIN analyses a ON a.publication_id = p.id
-        WHERE p.profile_id = ? AND a.id IS NULL {source_filter}
-        ORDER BY p.collected_at DESC
-        """,
-        source_parameters,
-    )
-    analyzed_count = query(
-        f"""
-        SELECT COUNT(*) AS total FROM publications p
-        JOIN analyses a ON a.publication_id = p.id
-        JOIN sources s ON s.id = p.source_id
-        WHERE p.profile_id = ? {source_filter}
-        """,
-        source_parameters,
-    )[0]["total"]
-    left, right = st.columns(2)
-    left.metric("Registros pendientes de análisis", len(pending))
-    right.metric("Registros analizados", analyzed_count)
-    st.caption("Reglas locales: clasificación rápida por palabras clave.")
-    if st.button("Analizar registros pendientes", type="primary", disabled=not pending):
-        result = analyze_pending(
-            profile_id,
-            None if selected_source_type == "Todas las fuentes" else selected_source_type,
-        )
-        st.success(f"Análisis terminado: {result['analyzed']} registros clasificados.")
-        if result["errors"]:
-            st.warning("\n".join(result["errors"]))
-        st.rerun()
+    from services.analysis_view import render_analysis
 
-    st.divider()
-    st.subheader("Análisis contextual con OpenAI")
-    st.markdown("#### Paso 2. Procesa los registros pendientes")
-    st.caption(
-        "Reconoce contexto, ironía y si el mensaje se refiere realmente al perfil. "
-        "Esta prueba procesa como máximo 10 publicaciones de X por ejecución."
-    )
-    approach_pending = query(
-        """
-        SELECT COUNT(*) AS total
-        FROM publications p
-        JOIN sources s ON s.id = p.source_id
-        JOIN analysis_approaches ap ON ap.name = ?
-        LEFT JOIN analysis_results ar
-          ON ar.publication_id = p.id AND ar.approach_id = ap.id
-        WHERE p.profile_id = ? AND s.source_type = ? AND ar.id IS NULL
-        """,
-        (selected_approach, profile_id, selected_source_type),
-    )[0]["total"] if selected_source_type != "Todas las fuentes" else 0
-    approach_done = query(
-        """
-        SELECT COUNT(*) AS total
-        FROM analysis_results ar
-        JOIN analysis_approaches ap ON ap.id = ar.approach_id
-        JOIN publications p ON p.id = ar.publication_id
-        JOIN sources s ON s.id = p.source_id
-        WHERE ap.name = ? AND p.profile_id = ? AND s.source_type = ?
-        """,
-        (selected_approach, profile_id, selected_source_type),
-    )[0]["total"] if selected_source_type != "Todas las fuentes" else 0
-    approach_left, approach_right = st.columns(2)
-    approach_left.metric("Pendientes para este enfoque", approach_pending)
-    approach_right.metric("Procesados con este enfoque", approach_done)
-    openai_ready = bool(get_setting("OPENAI_API_KEY"))
-    openai_limit = st.slider("Registros de X para esta prueba", 1, 10, 10)
-    can_use_openai = selected_source_type != "Todas las fuentes" and openai_ready
-    st.caption("Acciones directas: procesa un enfoque sin cambiar el enfoque activo.")
-    direct_buttons = st.columns(3)
-    for index, approach in enumerate(approach_names):
-        if direct_buttons[index % 3].button(
-            f"Procesar: {approach}",
-            key=f"process_direct_{approach}",
-            disabled=not can_use_openai,
-            use_container_width=True,
-        ):
-            with st.spinner(f"Procesando “{approach}” con OpenAI..."):
-                direct_result = analyze_approach_with_openai(
-                    profile_id, selected_source_type, approach, openai_limit
-                )
-            if direct_result["errors"]:
-                st.warning(
-                    f"“{approach}” terminó con observaciones:\n\n- "
-                    + "\n- ".join(direct_result["errors"])
-                )
-            else:
-                st.success(
-                    f"“{approach}” procesó {direct_result['analyzed']} registro(s)."
-                )
-    if st.button(
-        f"Procesar hasta {openai_limit} registros de {selected_source_type} con “{selected_approach}”",
-        type="primary",
-        disabled=not can_use_openai,
-        help=(
-            "Selecciona una fuente específica y configura la API key de OpenAI."
-            if not can_use_openai else None
-        ),
-    ):
-        with st.spinner("Aplicando el enfoque seleccionado con OpenAI..."):
-            result = analyze_approach_with_openai(
-                profile_id, selected_source_type, selected_approach, openai_limit
-            )
-        if result["errors"]:
-            st.warning("La prueba terminó con observaciones:\n\n- " + "\n- ".join(result["errors"]))
-        if result["analyzed"]:
-            st.success(
-                f"OpenAI analizó {result['analyzed']} registro(s) con el enfoque "
-                f"“{selected_approach}” y el modelo {result['model']}."
-            )
-
-    approach_results = query(
-        """
-        SELECT p.published_at AS fecha, s.name AS fuente, p.title AS titulo,
-               ar.sentiment AS sentimiento, ar.content_type AS tipo_contenido,
-               ar.topic AS tema, ar.urgency AS urgencia, ar.relation_to_profile AS relacion,
-               ar.explanation AS explicacion, ar.method AS metodo, p.url AS enlace
-        FROM analysis_results ar
-        JOIN analysis_approaches ap ON ap.id = ar.approach_id
-        JOIN publications p ON p.id = ar.publication_id
-        JOIN sources s ON s.id = p.source_id
-        WHERE p.profile_id = ? AND ap.name = ?
-        ORDER BY ar.analyzed_at DESC LIMIT 100
-        """,
-        (profile_id, selected_approach),
-    )
-    if approach_results:
-        st.subheader(f"Resultados: {selected_approach}")
-        st.dataframe(
-            pd.DataFrame(approach_results),
-            use_container_width=True,
-            hide_index=True,
-            column_config={"enlace": st.column_config.LinkColumn("Publicación original", display_text="Abrir fuente")},
-        )
-    if pending:
-        st.subheader("Información pendiente")
-        st.dataframe(pd.DataFrame(pending), use_container_width=True, hide_index=True)
-
-    records = query(
-        f"""
-        SELECT p.published_at AS fecha, s.name AS fuente, p.title AS titulo,
-               a.sentiment AS sentimiento, a.content_type AS tipo_contenido,
-               a.topic AS tema, a.urgency AS urgencia, a.relation_to_profile AS relacion,
-               a.explanation AS explicacion, a.method AS metodo, p.url AS enlace
-        FROM publications p
-        JOIN sources s ON s.id = p.source_id
-        JOIN analyses a ON a.publication_id = p.id
-        WHERE p.profile_id = ? {source_filter}
-        ORDER BY p.collected_at DESC
-        LIMIT 100
-        """,
-        source_parameters,
-    )
-    if records:
-        st.subheader("Resultados analizados")
-        results_table = pd.DataFrame(records)
-        contextual_columns = ["tipo_contenido", "relacion", "explicacion"]
-        for column in contextual_columns:
-            results_table[column] = results_table[column].fillna(
-                "Pendiente de análisis con OpenAI"
-            )
-        results_table["metodo"] = results_table["metodo"].fillna("Sin método registrado")
-        st.dataframe(
-            results_table,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "enlace": st.column_config.LinkColumn(
-                    "Publicación original",
-                    display_text="Abrir en X",
-                    help="Abre la publicación pública original en X.",
-                ),
-            },
-        )
-        summary = (
-            pd.DataFrame(records)
-            .groupby("sentimiento", as_index=False)
-            .size()
-            .rename(columns={"size": "publicaciones"})
-        )
-        st.subheader("Resumen inicial")
-        st.bar_chart(summary.set_index("sentimiento"))
+    render_analysis(profile_options())
 
 elif page == "Prompts y consultas IA":
     st.subheader("Prompts y consultas IA")
+    st.info("Consulta opcional con costo de API. Cada ejecución hace una nueva solicitud. Leer el historial no consulta IA ni genera ese costo.")
     st.caption(
-        "Consulta OpenAI sobre mensajes que ya están guardados. No obtiene datos nuevos ni reemplaza análisis existentes."
+        "Pregunta sobre mensajes y sus análisis guardados. No obtiene datos nuevos ni reemplaza análisis existentes."
     )
     options = profile_options()
     if not options:
@@ -9226,6 +9144,36 @@ elif page == "Revisión e historial":
         st.stop()
     chosen = st.selectbox("Perfil", list(options), key="history_profile")
     profile_id = options[chosen]
+    unified_history = query(
+        """SELECT p.id AS mensaje, p.title AS titulo, ap.name AS enfoque,
+                  ar.sentiment AS sentimiento, ar.topic AS tema, ar.explanation AS explicacion,
+                  ar.method AS metodo, ar.model AS modelo, ar.analyzed_at AS fecha, p.url AS enlace
+           FROM analysis_results ar JOIN publications p ON p.id=ar.publication_id
+           JOIN analysis_approaches ap ON ap.id=ar.approach_id
+           WHERE p.profile_id=? ORDER BY ar.analyzed_at DESC, p.id DESC""", (profile_id,))
+    st.caption("Consulta local sin costo de IA. Los análisis completos se conservan; al ampliar una clasificación básica se guarda su versión anterior.")
+    unified_versions = query(
+        """SELECT v.publication_id AS mensaje, ap.name AS enfoque, v.replaced_at AS reemplazado,
+                  v.previous_result AS resultado_anterior
+           FROM analysis_result_versions v JOIN publications p ON p.id=v.publication_id
+           JOIN analysis_approaches ap ON ap.id=v.approach_id
+           WHERE p.profile_id=? ORDER BY v.id DESC""", (profile_id,))
+    if unified_versions:
+        with st.expander("Versiones anteriores de los enfoques"):
+            version_display = []
+            for version in unified_versions:
+                previous = json.loads(version["resultado_anterior"])
+                version_display.append({
+                    "Mensaje": version["mensaje"], "Enfoque": version["enfoque"],
+                    "Reemplazado": version["reemplazado"], "Sentimiento anterior": previous.get("sentiment"),
+                    "Tema anterior": previous.get("topic"), "Explicación anterior": previous.get("explanation"),
+                    "Método anterior": previous.get("method"), "Modelo anterior": previous.get("model"),
+                })
+            st.dataframe(pd.DataFrame(version_display), hide_index=True, width="stretch")
+    if unified_history:
+        st.markdown("#### Análisis por mensaje y enfoque")
+        st.dataframe(pd.DataFrame(unified_history), hide_index=True, width="stretch",
+                     column_config={"enlace": st.column_config.LinkColumn("Original", display_text="Abrir")})
     current_results = query(
         """
         SELECT p.published_at AS fecha, s.source_type AS tipo_fuente, s.name AS fuente,
@@ -9260,12 +9208,12 @@ elif page == "Revisión e historial":
     left.metric("Resultados actuales", len(current_results))
     right.metric("Versiones en historial", len(history_rows))
     if current_results:
-        st.markdown("#### Resultados actuales")
+        st.markdown("#### Clasificación original conservada")
         st.dataframe(pd.DataFrame(current_results), use_container_width=True, hide_index=True)
     if history_rows:
         st.markdown("#### Clasificaciones anteriores")
         st.dataframe(pd.DataFrame(history_rows), use_container_width=True, hide_index=True)
-    if not current_results and not history_rows:
+    if not current_results and not history_rows and not unified_history:
         st.info("Todavía no hay resultados ni versiones anteriores para este perfil.")
 
 elif page == "Manual de usuario":
