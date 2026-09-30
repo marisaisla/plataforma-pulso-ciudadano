@@ -190,6 +190,15 @@ def initialize_database() -> None:
                 FOREIGN KEY (approach_id) REFERENCES analysis_approaches(id) ON DELETE CASCADE
             );
 
+            CREATE TABLE IF NOT EXISTS analysis_result_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                publication_id INTEGER NOT NULL,
+                approach_id INTEGER NOT NULL,
+                previous_result TEXT NOT NULL,
+                replaced_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (publication_id) REFERENCES publications(id) ON DELETE CASCADE
+            );
+
             CREATE TABLE IF NOT EXISTS prompt_catalog (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,

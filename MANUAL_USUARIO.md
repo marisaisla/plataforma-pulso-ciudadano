@@ -124,30 +124,23 @@ El CSV necesita estas columnas:
 
 La aplicación omite registros duplicados e informa las filas no válidas.
 
-## 9. Captura y análisis de RSS
+## 9. Mensajes, análisis y resultados
 
-Entre a Captura y análisis.
+En **20 · Fuentes y actualización** se capturan publicaciones. En **22 · Enfoques de análisis** se selecciona el perfil y se pulsa **Analizar mensajes pendientes**.
 
-Este módulo actualmente captura únicamente fuentes con tipo RSS. Antes de utilizarlo:
+Cada ejecución procesa hasta diez mensajes. Para cada mensaje se hace una sola consulta de API con los enfoques faltantes o básicos: sentimiento hacia el perfil, necesidades, gestión, tipo de contenido y territorio. Los resultados anteriores se conservan. Un mensaje completo no se vuelve a consultar.
 
-1. Registre una fuente RSS activa para el perfil.
-2. Escriba la URL completa del feed RSS, por ejemplo https://sitio.mx/feed.
-3. Seleccione el perfil.
-4. Presione Consultar fuentes RSS ahora.
+El botón indica cuántas consultas puede generar. Cambiar filtros, leer mensajes, navegar o consultar gráficas no llama a la IA.
 
-La plataforma hará lo siguiente:
+En **Consultar resultados** se filtra por fuente, periodo, sentimiento, estado o texto. Las gráficas muestran distribución, evolución y temas. Los botones **Anterior** y **Siguiente** permiten ver cada mensaje con todos sus análisis y su enlace original. Los mensajes parciales muestran los enfoques que faltan; las gráficas usan el sentimiento de Perfil político o, si no existe, la clasificación anterior. No representan una encuesta de aprobación.
 
-- Lee los artículos nuevos del feed.
-- Guarda título, texto disponible, enlace y fecha.
-- Evita guardar el mismo artículo dos veces.
-- Clasifica inicialmente sentimiento, tema y urgencia.
-- Muestra las publicaciones y un resumen por sentimiento.
+En **23 · Vinculación territorial**, los lugares detectados se muestran junto a los municipios vinculados. La vinculación exige una mención explícita y un nombre del catálogo municipal; no deduce el domicilio del autor ni hace otra consulta de IA.
 
-La clasificación actual usa reglas locales básicas. Es una primera aproximación que debe revisarse antes de tomar decisiones.
+En **25 · Revisión e historial** se consultan los enfoques guardados, método, modelo y fecha, además de la clasificación original y sus versiones anteriores. Completar un mensaje agrega enfoques faltantes. Si sólo había una clasificación básica o incompleta, se amplía y su versión anterior se conserva en el historial. Los análisis completos no se reprocesan.
 
 ## 10. Prompts y consultas IA
 
-Entre a **Prompts y consultas IA** para formular preguntas sobre mensajes que ya están guardados.
+Entre a **Prompts y consultas IA** para formular preguntas opcionales sobre mensajes y sus análisis guardados. Cada ejecución genera una nueva consulta de API con costo; leer el historial no genera otra consulta. Los análisis guardados se envían como interpretaciones y los textos originales como respaldo.
 
 1. Seleccione el perfil, fuente y periodo.
 2. Mantenga activado el filtro de mensajes relacionados cuando analice una persona específica.
