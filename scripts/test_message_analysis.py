@@ -2,6 +2,7 @@
 import gc
 import json
 import tempfile
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import patch, Mock
@@ -13,6 +14,9 @@ from services.territorial_pulse import rebuild_explicit_municipality_links, muni
 
 class MessageAnalysisTest(unittest.TestCase):
     def setUp(self):
+        backend_patch = patch.dict(os.environ, {"DB_BACKEND": "sqlite"})
+        backend_patch.start()
+        self.addCleanup(backend_patch.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.db_patch = patch.object(db, "DB_PATH", Path(self.temp.name) / "test.db")
         self.db_patch.start()

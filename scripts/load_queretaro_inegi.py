@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import json
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 from services.inegi import CORE_INDICATORS, collect_municipal_indicator
 from services.settings import get_setting
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATABASE = ROOT / "data" / "pulso_ciudadano_local.db"
 STATE = "Querétaro"
 
 # Claves geoestadísticas INEGI verificadas contra la serie municipal de población 2020.
@@ -35,7 +36,7 @@ def main() -> None:
     ]
     stored = 0
     errors: list[str] = []
-    with sqlite3.connect(DATABASE) as conn:
+    with connection() as conn:
         for indicator_id in dict.fromkeys(CORE_INDICATORS.values()):
             rows, current_errors, _ = collect_municipal_indicator(STATE, features, indicator_id, token)
             errors.extend(current_errors)

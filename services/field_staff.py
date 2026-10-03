@@ -4,7 +4,7 @@ import secrets
 import time
 from contextlib import closing
 
-from services.database import connection
+from services.database import connection, is_postgresql
 from services.field_permissions import initialize_permissions, describe_access, audit
 from services.field_tasks import initialize_tasks, task_page, task_detail, confirm_task
 from services.field_reports import (
@@ -13,6 +13,10 @@ from services.field_reports import (
 
 
 def initialize_staff():
+    if is_postgresql():
+        from services.postgres_backend import validate_schema
+        validate_schema()
+        return
     with closing(connection()) as conn, conn:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS field_workers (
@@ -44,9 +48,9 @@ def create_worker(name, team=''):
         raise ValueError('Escribe un nombre y usa como máximo 120 caracteres por campo.')
     with closing(connection()) as conn, conn:
         return conn.execute(
-            'INSERT INTO field_workers (name, team, created_at) VALUES (?, ?, ?)',
+            'INSERT INTO field_workers (name, team, created_at) VALUES (?, ?, ?) RETURNING id',
             (name, team, int(time.time())),
-        ).lastrowid
+        ).fetchone()[0]
 
 
 def list_workers():

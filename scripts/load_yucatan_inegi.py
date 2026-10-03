@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
+import sys
 
 from services.inegi import CORE_INDICATORS, collect_municipal_indicator
 from services.settings import get_setting
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATABASE = ROOT / "data" / "pulso_ciudadano_local.db"
 MAP = ROOT / "data" / "yucatan_municipios_inegi.geojson"
 STATE = "Yucatán"
 
@@ -25,7 +26,7 @@ def main() -> None:
     stored, errors = 0, []
     requested = set(sys.argv[1:])
     indicator_ids = [indicator_id for indicator_id in dict.fromkeys(CORE_INDICATORS.values()) if not requested or indicator_id in requested]
-    with sqlite3.connect(DATABASE) as conn:
+    with connection() as conn:
         for indicator_id in indicator_ids:
             rows, current_errors, _ = collect_municipal_indicator(STATE, features, indicator_id, token)
             errors.extend(current_errors)

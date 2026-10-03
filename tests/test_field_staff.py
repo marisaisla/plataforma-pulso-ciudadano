@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 import sqlite3
@@ -14,6 +15,9 @@ def message(user, text, chat_type='private'):
 
 class StaffTests(unittest.TestCase):
     def setUp(self):
+        backend_patch = patch.dict(os.environ, {"DB_BACKEND": "sqlite"})
+        backend_patch.start()
+        self.addCleanup(backend_patch.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / 'test.db'

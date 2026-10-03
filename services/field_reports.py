@@ -87,7 +87,10 @@ def select_report_task(conn, worker_id, task_id, generation, callback_id):
             return 'Esta selección ya fue atendida. Usa /reportar para iniciar otro reporte.'
     else:
         conn.execute('INSERT INTO field_report_selections VALUES (?, ?)', (callback_id, worker_id))
-        conn.execute('INSERT OR REPLACE INTO field_report_sessions VALUES (?, ?, ?, ?, ?, ?)',
+        conn.execute('INSERT INTO field_report_sessions VALUES (?, ?, ?, ?, ?, ?) '
+                     'ON CONFLICT(worker_id) DO UPDATE SET task_id=excluded.task_id, '
+                     'generation=excluded.generation, selection_id=excluded.selection_id, '
+                     'started_at=excluded.started_at, expires_at=excluded.expires_at',
                      (worker_id, task_id, generation, callback_id, now, now + 1800))
     return (f'Escribe el avance de la tarea #{task_id} en un solo mensaje (máximo 4000 caracteres). '
             'Quedará por validar. Tienes 30 minutos; /cancelar descarta la captura.')
@@ -124,8 +127,8 @@ def capture_report(conn, worker_id, message):
     if not isinstance(message.get('message_id'), int):
         return 'No se pudo identificar el mensaje. Envía el texto nuevamente.'
     rid = conn.execute('''INSERT INTO field_reports
-        (task_id,worker_id,generation,body,source_chat_id,source_message_id) VALUES (?,?,?,?,?,?)''',
-        (session['task_id'], worker_id, session['generation'], text, message['chat']['id'], message['message_id'])).lastrowid
+        (task_id,worker_id,generation,body,source_chat_id,source_message_id) VALUES (?,?,?,?,?,?) RETURNING id''',
+        (session['task_id'], worker_id, session['generation'], text, message['chat']['id'], message['message_id'])).fetchone()[0]
     conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker_id,))
     return saved_reply(rid)
 

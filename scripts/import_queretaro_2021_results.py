@@ -8,15 +8,16 @@ plataforma permanece identificada como Marco Geográfico Electoral del INE.
 from __future__ import annotations
 
 import json
-import sqlite3
-import unicodedata
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
+import unicodedata
 
 import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATABASE = ROOT / "data" / "pulso_ciudadano_local.db"
 SOURCE_FILE = ROOT / "data" / "raw" / "queretaro_2021_ayuntamiento.xlsx"
 SOURCE_URL = "https://ieeq.mx/contenido/elecciones/2020_2021/resultados/2021_Ayuntamiento.xlsx"
 STATE = "Querétaro"
@@ -108,7 +109,7 @@ def run() -> None:
     municipalities = municipalities.dropna(subset=["ID_MUNICIPIO", "MUNICIPIO"])
     sections = sections.dropna(subset=["ID_DISTRITO_LOCAL", "ID_MUNICIPIO", "MUNICIPIO", "SECCION"])
 
-    con = sqlite3.connect(DATABASE)
+    con = connection()
     try:
         catalog = {}
         for (municipality,) in con.execute(

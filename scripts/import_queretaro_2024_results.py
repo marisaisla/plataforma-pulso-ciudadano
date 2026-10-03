@@ -7,16 +7,17 @@ elección de diputaciones locales, ambas desagregadas a nivel casilla.
 from __future__ import annotations
 
 import json
-import sqlite3
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 import unicodedata
 from collections import defaultdict
-from pathlib import Path
 
 import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATABASE = ROOT / "data" / "pulso_ciudadano_local.db"
 RAW = ROOT / "data" / "raw" / "ieeq_2024" / "IEEQ_RESULTADOS_QRO"
 AYUNTAMIENTO_FILE = RAW / "IEEQ_AYUN_QRO" / "QRO_AYUN_RESULTADOS_2024.csv"
 DIPUTACION_FILE = RAW / "IEEQ_DIP_QRO" / "QRO_DIP_LOC_RESULTADOS_2024.csv"
@@ -100,7 +101,7 @@ def run() -> None:
     catalog_entries = json.loads(CATALOG_FILE.read_text(encoding="utf-8"))
     section_catalog = {str(item["seccion"]).zfill(4): item for item in catalog_entries}
 
-    con = sqlite3.connect(DATABASE)
+    con = connection()
     try:
         municipal_catalog = {
             key(municipality): municipality

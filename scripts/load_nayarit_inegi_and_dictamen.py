@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 import json
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 from services.inegi import CORE_INDICATORS, collect_municipal_indicator
 from services.settings import get_setting
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 GEOJSON = ROOT / "data" / "nayarit_municipios_2025.geojson"
 PROFILE_ID = 7
 DICTAMEN_PATH = ROOT / "data" / "reference_documents" / "Dictamen_Viabilidad_Electoral_Maria_Geraldine_Ponce_Mendez_Nayarit_2027.pdf"
@@ -61,7 +62,7 @@ ELECTORAL_MODEL = {
 }
 
 
-def load_inegi(conn: sqlite3.Connection) -> tuple[int, list[str]]:
+def load_inegi(conn) -> tuple[int, list[str]]:
     token = get_setting("INEGI_INDICATORS_TOKEN")
     if not token:
         raise RuntimeError("No hay token de Banco de Indicadores INEGI configurado.")
@@ -87,7 +88,7 @@ def load_inegi(conn: sqlite3.Connection) -> tuple[int, list[str]]:
     return stored, errors
 
 
-def load_variables(conn: sqlite3.Connection) -> int:
+def load_variables(conn) -> int:
     source = str(DICTAMEN_PATH)
     for code, (status, note, label, actual, target, unit) in VARIABLES.items():
         conn.execute(
@@ -119,7 +120,7 @@ def load_variables(conn: sqlite3.Connection) -> int:
     return len(VARIABLES)
 
 
-def load_electoral_model(conn: sqlite3.Connection) -> int:
+def load_electoral_model(conn) -> int:
     source = str(DICTAMEN_PATH)
     for code, (score, note) in ELECTORAL_MODEL.items():
         conn.execute(
@@ -146,7 +147,7 @@ def load_electoral_model(conn: sqlite3.Connection) -> int:
 
 
 def main() -> None:
-    with sqlite3.connect(DB) as conn:
+    with connection() as conn:
         indicator_rows, errors = load_inegi(conn)
         variable_rows = load_variables(conn)
         electoral_scores = load_electoral_model(conn)

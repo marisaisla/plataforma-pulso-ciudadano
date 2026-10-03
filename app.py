@@ -16,7 +16,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pypdf import PdfReader
 
-from services.database import DB_PATH, execute, initialize_database, query, record_obtainment_run
+from services.database import create_profile, DB_PATH, execute, initialize_database, query, record_obtainment_run
 from services.field_staff_ui import render_field_staff
 from services.field_staff import initialize_staff
 from services.field_tasks_ui import render_task_assignment
@@ -1071,7 +1071,7 @@ def render_territorial_diagnosis() -> None:
         JOIN sources s ON s.id = p.source_id
         LEFT JOIN analyses a ON a.publication_id = p.id
         WHERE p.profile_id = ? AND pt.state = ? AND pt.municipality = ?
-        ORDER BY COALESCE(a.urgency = 'Alta', 0) DESC, p.collected_at DESC
+        ORDER BY CASE WHEN a.urgency = 'Alta' THEN 1 ELSE 0 END DESC, p.collected_at DESC
         LIMIT 50
         """,
         (profile_id, selected_state, selected_municipality),
@@ -6090,10 +6090,7 @@ elif page == "Perfiles y trayectorias":
             if not name.strip():
                 st.error("Escribe un nombre para el perfil.")
             else:
-                execute(
-                    "INSERT INTO profiles (name, actor_type, notes) VALUES (?, ?, ?)",
-                    (name.strip(), actor_type, notes.strip()),
-                )
+                create_profile(name.strip(), actor_type, notes.strip())
                 st.success("Perfil guardado.")
 
     profiles = query("SELECT id, name, actor_type, active, notes FROM profiles ORDER BY name")

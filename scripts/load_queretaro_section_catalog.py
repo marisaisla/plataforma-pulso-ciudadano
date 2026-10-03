@@ -11,13 +11,14 @@ from __future__ import annotations
 import html
 import json
 import re
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 from urllib.request import urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATABASE = ROOT / "data" / "pulso_ciudadano_local.db"
 URL = "https://ieeq.mx/elecciones/cartografia-electoral/Dto/{district}/"
 
 
@@ -67,7 +68,7 @@ def main() -> None:
         catalog.update(fetch_district(district))
         print(f"Distrito {district:02d}: {len(catalog):,} secciones acumuladas.")
 
-    conn = sqlite3.connect(DATABASE)
+    conn = connection()
     rows = conn.execute(
         """SELECT id, section_code, payload FROM territorial_section_results
            WHERE state = 'Querétaro' AND election_year = 2024"""

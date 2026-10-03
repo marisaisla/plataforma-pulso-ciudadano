@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import tempfile
 import time
@@ -14,6 +15,9 @@ NEW_PASSWORD = 'Nueva contraseña ficticia 6789'
 
 class AuthTests(unittest.TestCase):
     def setUp(self):
+        backend_patch = patch.dict(os.environ, {"DB_BACKEND": "sqlite"})
+        backend_patch.start()
+        self.addCleanup(backend_patch.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / 'auth.db'

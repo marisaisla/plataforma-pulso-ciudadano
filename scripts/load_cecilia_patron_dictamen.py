@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 DOCUMENT = ROOT / "data" / "reference_documents" / "Dictamen_Viabilidad_Electoral_Cecilia_Patron_Laviada_Merida_2027.pdf"
 PROFILE_NAME = "Cecilia Anunciación Patrón Laviada"
 STATE = "Yucatán"
@@ -62,25 +63,24 @@ SURVEYS = [
 
 
 def main() -> None:
-    with sqlite3.connect(DB) as conn:
-        conn.row_factory = sqlite3.Row
+    with connection() as conn:
         existing = conn.execute("SELECT id FROM profiles WHERE name=?", (PROFILE_NAME,)).fetchone()
         if existing:
             profile_id = int(existing["id"])
             conn.execute("UPDATE profiles SET active=1, notes=? WHERE id=?", ("Perfil incorporado desde dictamen de viabilidad electoral de Mérida 2027.", profile_id))
         else:
             cursor = conn.execute(
-                "INSERT INTO profiles (name, actor_type, active, notes) VALUES (?, 'Persona', 1, ?)",
+                "INSERT INTO profiles (name, actor_type, active, notes) VALUES (?, 'Persona', 1, ?) RETURNING id",
                 (PROFILE_NAME, "Perfil incorporado desde dictamen de viabilidad electoral de Mérida 2027."),
             )
-            profile_id = int(cursor.lastrowid)
+            profile_id = int(cursor.fetchone()[0])
 
         state_territory = conn.execute("SELECT id FROM territories WHERE territory_type='Estado' AND state=?", (STATE,)).fetchone()
         merida_territory = conn.execute("SELECT id FROM territories WHERE territory_type='Municipio' AND state=? AND municipality='Mérida'", (STATE,)).fetchone()
         if not state_territory or not merida_territory:
             raise RuntimeError("No se encontró la base territorial de Yucatán o el municipio de Mérida.")
-        conn.execute("INSERT OR REPLACE INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'cobertura')", (profile_id, state_territory["id"]))
-        conn.execute("INSERT OR REPLACE INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'representación')", (profile_id, merida_territory["id"]))
+        conn.execute("INSERT INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'cobertura') ON CONFLICT(profile_id, territory_id) DO UPDATE SET relationship_type=excluded.relationship_type", (profile_id, state_territory["id"]))
+        conn.execute("INSERT INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'representación') ON CONFLICT(profile_id, territory_id) DO UPDATE SET relationship_type=excluded.relationship_type", (profile_id, merida_territory["id"]))
 
         conn.execute("DELETE FROM profile_positions WHERE profile_id=?", (profile_id,))
         conn.executemany(

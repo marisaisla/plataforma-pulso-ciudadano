@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import json
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 BOOK = ROOT / "data" / "nayarit_fuentes_oficiales" / "IEEN_Nayarit_2021_Gubernatura.xlsx"
 SOURCE_URL = "https://ieenayarit.org/PDF/elecciones/2021/Gob21.xlsx"
 PROFILE_ID = 7
@@ -59,7 +60,7 @@ def number(value: object) -> float:
     return 0.0 if pd.isna(parsed) else float(parsed)
 
 
-def load_election(conn: sqlite3.Connection) -> int:
+def load_election(conn) -> int:
     frame = pd.read_excel(BOOK, sheet_name="Concentrado", header=5).dropna(how="all")
     count = 0
     for _, row in frame.iterrows():
@@ -96,7 +97,7 @@ def load_election(conn: sqlite3.Connection) -> int:
     return count
 
 
-def load_competitors(conn: sqlite3.Connection) -> int:
+def load_competitors(conn) -> int:
     conn.execute("DELETE FROM viability_competitors WHERE profile_id=?", (PROFILE_ID,))
     conn.executemany(
         """INSERT INTO viability_competitors
@@ -107,7 +108,7 @@ def load_competitors(conn: sqlite3.Connection) -> int:
     return len(COMPETITORS)
 
 
-def load_polls(conn: sqlite3.Connection) -> int:
+def load_polls(conn) -> int:
     conn.execute("DELETE FROM viability_surveys WHERE profile_id=?", (PROFILE_ID,))
     conn.executemany(
         """INSERT INTO viability_surveys
@@ -120,7 +121,7 @@ def load_polls(conn: sqlite3.Connection) -> int:
 
 
 def main() -> None:
-    with sqlite3.connect(DB) as conn:
+    with connection() as conn:
         result = {
             "municipios_gubernatura_2021": load_election(conn),
             "competidores": load_competitors(conn),

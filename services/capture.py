@@ -716,14 +716,14 @@ def run_prompt_query(
             INSERT INTO prompt_runs
             (profile_id, prompt_catalog_id, prompt_text, source_filter, date_from, date_to,
              publication_ids, records_sent, model, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'En proceso')
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'En proceso') RETURNING id
             """,
             (
                 profile_id, prompt_catalog_id, prompt_text.strip(), source_filter, date_from, date_to,
                 json.dumps([publication["id"] for publication in publications]), len(publications), model,
             ),
         )
-        run_id = run_cursor.lastrowid
+        run_id = run_cursor.fetchone()[0]
         result["run_id"] = run_id
 
         common_rules = (

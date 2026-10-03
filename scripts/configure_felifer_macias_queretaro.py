@@ -7,12 +7,13 @@ candidatura formal para 2027.
 
 from __future__ import annotations
 
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 PROFILE_NAME = "Felipe Fernando Macías Olvera"
 STATE = "Querétaro"
 
@@ -99,8 +100,7 @@ ASSESSMENTS = {
 
 
 def main() -> None:
-    with sqlite3.connect(DB) as conn:
-        conn.row_factory = sqlite3.Row
+    with connection() as conn:
         profile = conn.execute("SELECT id FROM profiles WHERE name=?", (PROFILE_NAME,)).fetchone()
         if profile:
             profile_id = int(profile["id"])
@@ -110,10 +110,10 @@ def main() -> None:
             )
         else:
             cursor = conn.execute(
-                "INSERT INTO profiles (name, actor_type, active, notes) VALUES (?, 'Persona', 1, ?)",
+                "INSERT INTO profiles (name, actor_type, active, notes) VALUES (?, 'Persona', 1, ?) RETURNING id",
                 (PROFILE_NAME, "Expediente inicial de Felipe Fernando \"Felifer\" Macías para Querétaro. La posible postulación de 2027 está por definir; los puntajes de viabilidad permanecen sin calificar."),
             )
-            profile_id = int(cursor.lastrowid)
+            profile_id = int(cursor.fetchone()[0])
 
         state = conn.execute(
             "SELECT id FROM territories WHERE territory_type='Estado' AND state=?", (STATE,)
@@ -124,11 +124,11 @@ def main() -> None:
         if not state or not municipality:
             raise RuntimeError("No se encontró la base territorial estatal o municipal de Querétaro.")
         conn.execute(
-            "INSERT OR REPLACE INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'cobertura')",
+            "INSERT INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'cobertura') ON CONFLICT(profile_id, territory_id) DO UPDATE SET relationship_type=excluded.relationship_type",
             (profile_id, state["id"]),
         )
         conn.execute(
-            "INSERT OR REPLACE INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'representación')",
+            "INSERT INTO profile_territories (profile_id, territory_id, relationship_type) VALUES (?, ?, 'representación') ON CONFLICT(profile_id, territory_id) DO UPDATE SET relationship_type=excluded.relationship_type",
             (profile_id, municipality["id"]),
         )
 

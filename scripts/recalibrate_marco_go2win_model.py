@@ -6,16 +6,17 @@ mantiene un índice ampliado de 20 variables, explícitamente preliminar.
 
 from __future__ import annotations
 
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 
-DB = Path(__file__).resolve().parents[1] / "data" / "pulso_ciudadano_local.db"
 PROFILE_ID = 4
 
 
 def main() -> None:
-    with sqlite3.connect(DB) as conn:
+    with connection() as conn:
         conn.execute(
             """UPDATE viability_electoral_scores
                SET score=?, notes=?, updated_at=CURRENT_TIMESTAMP

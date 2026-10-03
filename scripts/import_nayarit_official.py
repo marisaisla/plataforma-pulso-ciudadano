@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import json
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 import pandas as pd
 import py7zr
@@ -13,7 +15,6 @@ from pyproj import CRS, Transformer
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "data" / "nayarit_fuentes_oficiales"
 OUT = SRC / "ine_bgd_nayarit_diciembre_2025"
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 MUN_BOOK = SRC / "IEEN_Nayarit_2024_Presidencias_Sindicaturas.xlsx"
 DIS_BOOK = SRC / "IEEN_Nayarit_2024_Diputaciones.xlsx"
 MUN_URL = "https://ieenayarit.org/PDF/elecciones/2024/PyS24.xlsx"
@@ -175,7 +176,7 @@ def main():
         "distritos": convert_shape("DISTRITO_LOCAL.shp", ROOT / "data" / "nayarit_distritos_locales_2025.geojson"),
         "secciones": convert_shape("SECCION.shp", ROOT / "data" / "nayarit_secciones_electorales_2025.geojson"),
     }
-    with sqlite3.connect(DB) as conn:
+    with connection() as conn:
         results = load_database(conn)
         conn.commit()
     print(json.dumps({"geometrias":geometries,"resultados":results},ensure_ascii=False))

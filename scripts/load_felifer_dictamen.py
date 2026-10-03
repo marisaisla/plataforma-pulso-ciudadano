@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 PDF = ROOT / "output" / "pdf" / "Dictamen_Viabilidad_Electoral_Felipe_Fernando_Macias_Queretaro_2027.pdf"
 PROFILE = "Felipe Fernando Macías Olvera"
 EL_PAIS = "https://elpais.com/mexico/2026-09-19/defensores-de-la-patria-el-pan-copia-la-estrategia-de-morena-en-un-intento-de-mantener-el-pulso-de-2027.html"
@@ -20,8 +21,7 @@ POLIGRAMA = "https://www.publimetro.com.mx/queretaro/2026/09/16/felifer-macias-e
 def main() -> None:
     if not PDF.exists():
         raise FileNotFoundError(f"No se encontró el PDF: {PDF}")
-    with sqlite3.connect(DB) as conn:
-        conn.row_factory = sqlite3.Row
+    with connection() as conn:
         row = conn.execute("SELECT id FROM profiles WHERE name=?", (PROFILE,)).fetchone()
         if not row:
             raise RuntimeError("Primero ejecuta configure_felifer_macias_queretaro.py")
