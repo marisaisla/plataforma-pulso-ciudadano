@@ -1,16 +1,31 @@
-"""Base SQLite local de la primera etapa de Plataforma Pulso Ciudadano."""
+"""Conexión central: PostgreSQL compartido o SQLite local según DB_BACKEND."""
 
 from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+import psycopg
+from services.settings import get_setting
+
+DATABASE_ERRORS = (sqlite3.Error, psycopg.Error)
+INTEGRITY_ERRORS = (sqlite3.IntegrityError, psycopg.IntegrityError)
+
+
+def is_postgresql():
+    backend = get_setting('DB_BACKEND').strip().lower() or 'sqlite'
+    if backend not in ('sqlite', 'postgresql'):
+        raise ValueError('DB_BACKEND debe ser sqlite o postgresql.')
+    return backend == 'postgresql'
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DB_PATH = BASE_DIR / "data" / "pulso_ciudadano_local.db"
 
 
-def connection() -> sqlite3.Connection:
+def connection():
+    if is_postgresql():
+        from services.postgres_backend import Connection
+        return Connection()
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -18,7 +33,25 @@ def connection() -> sqlite3.Connection:
     return conn
 
 
+def table_exists(conn, name):
+    if is_postgresql():
+        return conn.execute("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=?", (name,)).fetchone() is not None
+    return conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone() is not None
+
+
+def create_profile(name, actor_type, notes):
+    with connection() as conn:
+        profile_id = conn.execute('INSERT INTO profiles (name,actor_type,notes) VALUES (?,?,?) RETURNING id',
+                                  (name, actor_type, notes)).fetchone()[0]
+        conn.execute('INSERT INTO profile_keywords (profile_id,keyword) VALUES (?,?)', (profile_id, name))
+        return profile_id
+
+
 def initialize_database() -> None:
+    if is_postgresql():
+        from services.postgres_backend import validate_schema
+        validate_schema()
+        return
     with connection() as conn:
         conn.executescript(
             """

@@ -3,17 +3,22 @@ import hashlib
 import hmac
 import re
 import secrets
-import sqlite3
 import time
 from contextlib import closing
 
-from services.database import connection
+from services.database import connection, is_postgresql, table_exists, INTEGRITY_ERRORS
 from services import development_access as development
 
 SESSION_SECONDS = 8 * 60 * 60
 
 
 def initialize_auth():
+    if is_postgresql():
+        from services.postgres_backend import validate_schema
+        validate_schema()
+        # Another computer's development sessions belong to that process.
+        # Expired sessions are cleaned during login; never revoke them at startup.
+        return
     with closing(connection()) as conn, conn:
         conn.executescript('''
             CREATE TABLE IF NOT EXISTS web_accounts (
@@ -137,7 +142,9 @@ def login(username, password):
         if not row or not row['active'] or not valid:
             failures = (attempt['failures'] if attempt and now-attempt['updated_at'] < 900 else 0) + 1
             lock = now + 300 if failures >= 5 else 0
-            conn.execute('INSERT OR REPLACE INTO web_login_attempts VALUES (?,?,?,?)',
+            conn.execute('INSERT INTO web_login_attempts VALUES (?,?,?,?) '
+                         'ON CONFLICT(login_hash) DO UPDATE SET failures=excluded.failures, '
+                         'locked_until=excluded.locked_until, updated_at=excluded.updated_at',
                          (key, 0 if lock else failures, lock, now))
             return None
         conn.execute('DELETE FROM web_login_attempts WHERE login_hash=? OR updated_at<?', (key, now-86400))
@@ -168,8 +175,8 @@ def bootstrap_admin(name, username, password):
         conn.execute('BEGIN IMMEDIATE')
         if conn.execute('SELECT 1 FROM web_accounts LIMIT 1').fetchone():
             raise ValueError('El primer acceso ya fue configurado. Usa una cuenta administradora.')
-        wid = conn.execute("INSERT INTO field_workers (name,team,active,created_at,role_key) VALUES (?,'',1,?,'administrator')",
-                           (name.strip(), int(time.time()))).lastrowid
+        wid = conn.execute("INSERT INTO field_workers (name,team,active,created_at,role_key) VALUES (?,'',1,?,'administrator') RETURNING id",
+                           (name.strip(), int(time.time()))).fetchone()[0]
         conn.execute('INSERT INTO web_accounts VALUES (?,?,?,0)', (wid, username, hashed))
         return wid
 
@@ -186,7 +193,7 @@ def set_account(token, worker_id, username, password):
             conn.execute('''INSERT INTO web_accounts VALUES (?,?,?,1) ON CONFLICT(worker_id)
                 DO UPDATE SET username=excluded.username,password_hash=excluded.password_hash,must_change=1''',
                          (worker_id, username, hashed))
-        except sqlite3.IntegrityError:
+        except INTEGRITY_ERRORS:
             raise ValueError('Ese nombre de usuario ya está en uso.') from None
         conn.execute('DELETE FROM web_sessions WHERE worker_id=?', (worker_id,))
         conn.execute('DELETE FROM web_login_attempts WHERE login_hash=?', (token_hash(username),))
@@ -209,7 +216,7 @@ def change_password(token, old_password, new_password):
 
 
 def protect_last_admin(conn, worker_id, *, role=None, active=None):
-    if not conn.execute("SELECT 1 FROM sqlite_master WHERE name='web_accounts'").fetchone():
+    if not table_exists(conn, 'web_accounts'):
         return
     row = conn.execute('SELECT w.* FROM field_workers w JOIN web_accounts a ON a.worker_id=w.id WHERE w.id=?', (worker_id,)).fetchone()
     if row and row['active'] and row['role_key'] == 'administrator' and (role not in {None,'administrator'} or active is False):
@@ -220,5 +227,5 @@ def protect_last_admin(conn, worker_id, *, role=None, active=None):
 
 
 def revoke_worker_sessions(conn, worker_id):
-    if conn.execute("SELECT 1 FROM sqlite_master WHERE name='web_sessions'").fetchone():
+    if table_exists(conn, 'web_sessions'):
         conn.execute('DELETE FROM web_sessions WHERE worker_id=?', (worker_id,))

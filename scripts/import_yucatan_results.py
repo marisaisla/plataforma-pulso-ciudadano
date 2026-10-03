@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import json
-import sqlite3
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.database import connection
 import unicodedata
 from collections import defaultdict
-from pathlib import Path
 
 import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "pulso_ciudadano_local.db"
 RAW = ROOT / "data" / "raw" / "yucatan"
 MUNICIPAL_MAP = ROOT / "data" / "yucatan_municipios_inegi.geojson"
 STATE = "Yucatán"
@@ -93,7 +94,7 @@ def aggregate(items: list[dict]) -> dict:
 def main() -> None:
     municipalities = json.loads(MUNICIPAL_MAP.read_text(encoding="utf-8"))["features"]
     by_name = {normalize(feature["properties"].get("nom_agem", "")): feature["properties"] for feature in municipalities}
-    with sqlite3.connect(DB) as conn:
+    with connection() as conn:
         conn.execute("DELETE FROM territorial_election_results WHERE state=?", (STATE,))
         conn.execute("DELETE FROM territorial_district_results WHERE state=?", (STATE,))
         conn.execute("DELETE FROM territorial_section_results WHERE state=?", (STATE,))

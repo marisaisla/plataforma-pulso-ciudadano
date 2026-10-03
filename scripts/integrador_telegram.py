@@ -1,7 +1,6 @@
 """Piloto local: activación de trabajadores. Ejecutar desde cualquier directorio."""
 import sys
 import time
-import sqlite3
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -9,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts import prueba_bot_telegram as transport
 from services.field_staff import initialize_staff, telegram_reply, telegram_callback
 from services.settings import get_setting
+from services.database import DATABASE_ERRORS
 
 
 def process_update(update):
@@ -61,8 +61,8 @@ def main():
         except transport.TelegramError as exc:
             print(f'{exc} Se reintentará en 5 segundos.')
             time.sleep(5)
-        except sqlite3.Error:
-            print('No se pudo completar el registro local. Se reintentará en 5 segundos.')
+        except DATABASE_ERRORS:
+            print('No se pudo completar el registro en la base de datos. Se reintentará en 5 segundos.')
             time.sleep(5)
 
 

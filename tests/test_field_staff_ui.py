@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import tempfile
 import unittest
@@ -21,7 +22,7 @@ class StaffUiTests(unittest.TestCase):
                 conn.execute("INSERT INTO profiles VALUES (1, 'Campaña de prueba')")
                 conn.execute('CREATE TABLE territories (state TEXT, municipality TEXT)')
                 conn.execute("INSERT INTO territories VALUES ('Sonora', 'Hermosillo')")
-            with patch.object(database, 'DB_PATH', path):
+            with patch.dict(os.environ, {'DB_BACKEND': 'sqlite'}), patch.object(database, 'DB_PATH', path):
                 initialize_staff()
                 worker = create_worker('Persona de prueba', 'Equipo A')
                 token = admin_session()
