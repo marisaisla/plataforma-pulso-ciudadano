@@ -7,6 +7,12 @@ El 42.5% del PMD se carga aparte como avance agregado reportado en el Primer
 Informe de Trabajo; no se distribuye artificialmente entre los 72 indicadores.
 """
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 from pathlib import Path
 
 from services.database import execute, initialize_database, query
@@ -18,8 +24,8 @@ STATE = "Yucatán"
 MUNICIPALITY = "Mérida"
 SED_URL = "https://www.merida.gob.mx/copladem/content/documents/monitoreo/2024-2027/matrizIndicadoresDesemp2025-4toTri.pdf"
 REPORT_URL = "https://www.merida.gob.mx/municipio/portal/gobierno/informes/2024-2027/1erInforme/1erInforme.pdf"
-SED_FILE = Path("data/reference_documents/merida_sed_2025_4t.pdf")
-REPORT_FILE = Path("data/reference_documents/merida_primer_informe_2025.pdf")
+SED_FILE = storage_path("data/reference_documents/merida_sed_2025_4t.pdf")
+REPORT_FILE = storage_path("data/reference_documents/merida_primer_informe_2025.pdf")
 
 
 def main() -> None:

@@ -1,5 +1,16 @@
 .env
 .venv/
 __pycache__/
-data/*.db
-data/backups/
+# Datos, documentos y entregables se distribuyen por carpeta compartida.
+/data/
+/output/
+/assets/go2win_video/
+/.build/
+/tmp/
+*.dump
+*.db
+*.db-wal
+*.db-shm
+*.log
+.env.*
+!.env.example

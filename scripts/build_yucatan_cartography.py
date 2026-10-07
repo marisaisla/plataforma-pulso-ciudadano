@@ -7,6 +7,12 @@ en tiempo de consulta desde la base local.
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import re
 import unicodedata
@@ -15,9 +21,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUT = ROOT / "data" / "raw" / "iepac_yucatan_distritos.kml"
-SECTIONS_OUTPUT = ROOT / "data" / "yucatan_secciones_electorales_iepac.geojson"
-DISTRICTS_OUTPUT = ROOT / "data" / "yucatan_distritos_locales_iepac.geojson"
+INPUT = storage_path("data") / "raw" / "iepac_yucatan_distritos.kml"
+SECTIONS_OUTPUT = storage_path("data") / "yucatan_secciones_electorales_iepac.geojson"
+DISTRICTS_OUTPUT = storage_path("data") / "yucatan_distritos_locales_iepac.geojson"
 SOURCE = "IEPAC · Distritación Local 2022"
 
 
