@@ -18,6 +18,10 @@ ROLE_LABELS = {
     'administrator': 'Administrador',
 }
 PERMISSION_LABELS = {
+    'needs.submit': 'Registrar necesidades territoriales',
+    'needs.view': 'Consultar necesidades territoriales',
+    'supporters.submit': 'Registrar simpatizantes',
+    'supporters.view': 'Consultar catálogo de simpatizantes',
     'tasks.view': 'Consultar tareas',
     'tasks.confirm': 'Confirmar recepción',
     'reports.submit': 'Enviar avances',
@@ -32,13 +36,13 @@ PERMISSION_LABELS = {
     'roles.manage': 'Administrar roles y alcances',
     'settings.manage': 'Administrar configuración',
 }
-OWN = {p: 'own' for p in ('tasks.view', 'tasks.confirm', 'reports.submit', 'reports.view', 'evidence.submit', 'incidents.submit')}
+OWN = {p: 'own' for p in ('tasks.view', 'tasks.confirm', 'reports.submit', 'reports.view', 'evidence.submit', 'incidents.submit', 'supporters.submit', 'supporters.view')}
 ROLE_GRANTS = {
-    'field': OWN,
-    'supervisor': {**OWN, 'tasks.view': 'team', 'reports.view': 'team', 'reports.review': 'team', 'incidents.manage': 'team'},
+    'field': {**OWN, 'needs.submit': 'own', 'needs.view': 'own'},
+    'supervisor': {**OWN, 'supporters.view': 'team', 'tasks.view': 'team', 'reports.view': 'team', 'reports.review': 'team', 'incidents.manage': 'team'},
     'coordinator': {**OWN, 'tasks.view': 'team', 'reports.view': 'team', 'reports.review': 'team',
-                    'tasks.assign': 'team', 'incidents.manage': 'team'},
-    'director': {'tasks.view': 'campaign', 'reports.view': 'campaign', 'priorities.manage': 'campaign'},
+                    'tasks.assign': 'team', 'incidents.manage': 'team', 'supporters.view': 'team', 'needs.view': 'campaign'},
+    'director': {'tasks.view': 'campaign', 'reports.view': 'campaign', 'priorities.manage': 'campaign', 'supporters.view': 'campaign', 'needs.view': 'campaign'},
     'administrator': {p: 'all' for p in PERMISSION_LABELS},
 }
 SCOPE_LABELS = {'own': 'Propias', 'team': 'Equipo a cargo', 'campaign': 'Campaña autorizada', 'all': 'Toda la operación'}
@@ -194,7 +198,7 @@ Preparada para el servicio de tareas; no sustituye autenticación ni filtra SQL 
             return worker['role_key'] == 'coordinator' and permission == 'tasks.view'
         if assigned_worker_id == worker_id:
             # Nadie valida su propio reporte, aunque pueda consultar su tarea.
-            return permission in {'tasks.view', 'reports.view', 'tasks.assign', 'incidents.manage'}
+            return permission in {'tasks.view', 'reports.view', 'tasks.assign', 'incidents.manage', 'supporters.view', 'supporters.submit'}
         owner = conn.execute('SELECT * FROM field_workers WHERE id = ? AND active = 1', (assigned_worker_id,)).fetchone()
         if (owner is None or not worker['team'].strip()
                 or worker['team'].strip().casefold() != owner['team'].strip().casefold()

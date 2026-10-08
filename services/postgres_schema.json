@@ -1,4 +1,9 @@
 {
+  "field_needs": ["id","profile_id","worker_id","state","municipality","electoral_section","description","origin","source_chat_id","source_message_id","created_at"],
+  "field_need_sessions": ["worker_id","profile_id","started_at","expires_at"],
+  "supporters": ["id","profile_id","worker_id","name","phone","voter_key","state","municipality","electoral_section","registration_consent","messaging_consent","source_chat_id","source_message_id","created_at"],
+  "supporter_sessions": ["worker_id","profile_id","started_at","expires_at"],
+  "field_report_photos": ["report_id", "file_id", "file_unique_id", "content_base64"],
   "analyses": [
     "id",
     "publication_id",

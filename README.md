@@ -56,8 +56,15 @@ La etapa 1 funciona localmente. No requiere Supabase ni otro servicio de infraes
 
 ## Prueba de Telegram
 
-Para registrar trabajadores y activar su acceso real, consulta [Vinculación de personal con Telegram](TELEGRAM_INTEGRADOR.md). Ejecuta `scripts/integrador_telegram.py` en lugar del script de demostración. Ya permite consultar tareas asignadas, confirmar recepción, enviar reportes de texto con folio y consultar su revisión. Las evidencias fotográficas siguen pendientes.
+Para registrar trabajadores y activar su acceso real, consulta [Vinculación de personal con Telegram](TELEGRAM_INTEGRADOR.md). Ejecuta `scripts/integrador_telegram.py` en lugar del script de demostración. Permite consultar tareas asignadas, confirmar recepción, enviar reportes de texto o una foto con descripción y folio, y consultar su revisión. Para PostgreSQL aplica primero `scripts/agregar_evidencias_postgresql.sql`.
 
 Los cinco roles y sus alcances por campaña y territorio se administran en **Personal y Telegram**. Consulta [Roles y permisos](ROLES_Y_PERMISOS.md) para configurarlos y conocer el alcance del control de acceso actual.
+
+El comando `/simpatizante` registra nombre, teléfono, territorio, sección opcional, clave de elector y autorizaciones en un catálogo consultable por rol y alcance. Para PostgreSQL aplica también `scripts/agregar_simpatizantes_postgresql.sql`. El envío de información a simpatizantes queda pendiente.
+
+`/necesidad` permite a campo registrar necesidades detectadas o comentadas por estado,
+municipio y sección, sin depender de una tarea. Coordinadores y directores consultan
+**Mi espacio Go2Win → Necesidades** dentro de su campaña y territorio autorizado.
+La tabla es `field_needs`; PostgreSQL requiere `scripts/agregar_necesidades_postgresql.sql`.
 
 El script `scripts/prueba_bot_telegram.py` permite ejecutar la demostración del bot desde este proyecto. Consulta [la guía de Telegram](TELEGRAM_PRUEBA.md) para configurar el token en PowerShell y probar los comandos. Esta prueba todavía no consulta ni guarda datos en Go2Win.

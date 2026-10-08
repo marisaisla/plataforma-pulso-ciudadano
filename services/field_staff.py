@@ -5,6 +5,8 @@ import time
 from contextlib import closing
 
 from services.database import connection, is_postgresql
+from services import supporters
+from services import field_needs
 from services.field_permissions import initialize_permissions, describe_access, audit
 from services.field_tasks import initialize_tasks, task_page, task_detail, confirm_task
 from services.field_reports import (
@@ -40,6 +42,8 @@ def initialize_staff():
         initialize_permissions(conn)
         initialize_tasks(conn)
         initialize_reports(conn)
+        supporters.initialize_supporters(conn)
+        field_needs.initialize_needs(conn)
 
 
 def create_worker(name, team=''):
@@ -82,6 +86,8 @@ def set_worker_active(worker_id, active):
         conn.execute('UPDATE field_workers SET active = ? WHERE id = ?', (int(active), worker_id))
         conn.execute('DELETE FROM field_activation_codes WHERE worker_id = ?', (worker_id,))
         conn.execute('DELETE FROM field_report_sessions WHERE worker_id = ?', (worker_id,))
+        conn.execute('DELETE FROM supporter_sessions WHERE worker_id = ?', (worker_id,))
+        conn.execute('DELETE FROM field_need_sessions WHERE worker_id = ?', (worker_id,))
         audit(conn, worker_id, 'active_changed', {'active': bool(active)})
 
 
@@ -91,10 +97,12 @@ def unlink_worker(worker_id):
                      'linked_at = NULL WHERE id = ?', (worker_id,))
         conn.execute('DELETE FROM field_activation_codes WHERE worker_id = ?', (worker_id,))
         conn.execute('DELETE FROM field_report_sessions WHERE worker_id = ?', (worker_id,))
+        conn.execute('DELETE FROM supporter_sessions WHERE worker_id = ?', (worker_id,))
+        conn.execute('DELETE FROM field_need_sessions WHERE worker_id = ?', (worker_id,))
         audit(conn, worker_id, 'telegram_unlinked', {})
 
 
-def telegram_reply(message):
+def telegram_reply(message, photo_loader=None):
     """Activa identidades, consulta tareas y guarda reportes de texto."""
     chat, sender = message.get('chat', {}), message.get('from', {})
     if (chat.get('type') != 'private' or not isinstance(sender.get('id'), int)
@@ -126,37 +134,71 @@ def telegram_reply(message):
             return 'Acceso activado en Go2Win. Tu cuenta de Telegram quedó vinculada. '
         if not worker:
             return 'Solicita tu código a coordinación y envía /start CODIGO para activar tu acceso.'
-        duplicate = saved_message(conn, worker['id'], message)
+        duplicate = (saved_message(conn, worker['id'], message) or supporters.saved_message(conn, worker['id'], message)
+                     or field_needs.saved_message(conn, worker['id'], message))
         if duplicate:
             return duplicate
-        if command == '/reportar':
+        if command == '/necesidad':
             conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker['id'],))
-            return report_menu(conn, worker['id'])
+            conn.execute('DELETE FROM supporter_sessions WHERE worker_id=?', (worker['id'],))
+            conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+            if len(parts) == 2 and parts[1].isascii() and parts[1].isdigit() and len(parts[1]) <= 18:
+                return field_needs.select_campaign(conn, worker['id'], int(parts[1]))
+            return field_needs.menu(conn, worker['id'])
+        if command == '/simpatizante':
+            conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+            conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker['id'],))
+            if len(parts) == 2 and parts[1].isascii() and parts[1].isdigit() and len(parts[1]) <= 18:
+                return supporters.select_campaign(conn, worker['id'], int(parts[1]))
+            return supporters.menu(conn, worker['id'])
+        if command in {'/reportar', '/incidencia'}:
+            conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+            conn.execute('DELETE FROM supporter_sessions WHERE worker_id=?', (worker['id'],))
+            conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker['id'],))
+            return report_menu(conn, worker['id'], incident=command == '/incidencia')
         if command == '/mis_reportes':
             return my_reports(conn, worker['id'])
-        if command == '/mi_perfil':
+        if command in {'/mi_perfil', '/perfil'}:
             return describe_access(conn, worker)[:4000]
         if command == '/mis_tareas':
             return task_page(conn, worker['id'])
+        if command == '/evidencia':
+            return ('Para guardar una fotografía usa /reportar, selecciona la tarea y envía '
+                    'una foto con descripción. Para un problema usa /incidencia. '
+                    'Este comando no inició una captura ni guardó una imagen.')
         if command == '/tarea':
             if len(parts) == 2 and parts[1].isascii() and parts[1].isdigit() and len(parts[1]) <= 18:
                 return task_detail(conn, worker['id'], int(parts[1]))
             return 'Envía /tarea seguido del folio, por ejemplo /tarea 12.'
         if command in {'/start', '/ayuda'}:
             return ('Tu cuenta de Telegram ya está vinculada a Go2Win. '
-                    'Usa /mi_perfil para consultar tu rol y alcance. '
+                    'Usa /perfil o /mi_perfil para consultar tu rol y alcance. '
                     'Usa /mis_tareas para consultar tus actividades y confirmar recepción. '
                     'Usa /reportar para registrar un avance y /mis_reportes para consultar su revisión. '
-                    'Las fotografías siguen pendientes.')
+                    'Puedes enviar una fotografía con descripción al capturar un reporte. '
+                    'Usa /simpatizante para registrar personas con su autorización. '
+                    'Usa /incidencia para registrar un problema en una tarea. '
+                    'Usa /necesidad para registrar necesidades del territorio.')
         if command == '/cancelar':
+            conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+            conn.execute('DELETE FROM supporter_sessions WHERE worker_id=?', (worker['id'],))
             conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker['id'],))
-            return 'Captura cancelada. No se guardó ningún reporte nuevo.'
+            return 'Captura cancelada. No se guardó ningún reporte nuevo, simpatizante ni necesidad.'
         if not command.startswith('/'):
-            result = capture_report(conn, worker['id'], message)
+            result = field_needs.capture(conn, worker['id'], message)
             if result:
                 return result
-        return ('Usa /reportar para enviar un avance de texto, /mis_reportes para revisar su estado '
-                'o /cancelar para salir de una captura. No se guardó ningún reporte ni archivo.')
+            result = supporters.capture(conn, worker['id'], message)
+            if result:
+                return result
+            result = capture_report(conn, worker['id'], message, photo_loader)
+            if result:
+                return result
+        if command.startswith('/'):
+            return ('Comando no reconocido. Usa /perfil, /mis_tareas, /reportar, /incidencia, '
+                    '/simpatizante, /necesidad, /mis_reportes o /ayuda. /cancelar descarta una captura pendiente.')
+        return ('No hay una captura activa. Usa /reportar para un avance, /incidencia para un problema, '
+                '/necesidad para una necesidad territorial o /simpatizante para registrar una persona. No se guardó ningún reporte ni archivo.')
 
 
 def telegram_callback(callback):
@@ -175,14 +217,30 @@ def telegram_callback(callback):
         parts = str(callback.get('data', '')).split(':')
         if len(parts) >= 2 and parts[1].isascii() and parts[1].isdigit() and len(parts[1]) <= 18:
             tid = int(parts[1])
+            if len(parts) == 2 and parts[0] == 'needcampaign':
+                conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker['id'],))
+                conn.execute('DELETE FROM supporter_sessions WHERE worker_id=?', (worker['id'],))
+                return field_needs.select_campaign(conn, worker['id'], tid)
+            if len(parts) == 2 and parts[0] == 'supportcampaign':
+                conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+                conn.execute('DELETE FROM field_report_sessions WHERE worker_id=?', (worker['id'],))
+                return supporters.select_campaign(conn, worker['id'], tid)
             if len(parts) == 2 and parts[0] == 'taskpage':
                 return task_page(conn, worker['id'], tid)
             if len(parts) == 2 and parts[0] == 'reportpage':
                 return report_menu(conn, worker['id'], tid)
+            if len(parts) == 2 and parts[0] == 'incidentpage':
+                return report_menu(conn, worker['id'], tid, incident=True)
             if len(parts) == 2 and parts[0] == 'reporthistory':
                 return my_reports(conn, worker['id'], tid)
             if len(parts) == 3 and parts[0] == 'reportselect':
+                conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+                conn.execute('DELETE FROM supporter_sessions WHERE worker_id=?', (worker['id'],))
                 return select_report_task(conn, worker['id'], tid, parts[2], callback.get('id'))
+            if len(parts) == 3 and parts[0] == 'incidentselect':
+                conn.execute('DELETE FROM field_need_sessions WHERE worker_id=?', (worker['id'],))
+                conn.execute('DELETE FROM supporter_sessions WHERE worker_id=?', (worker['id'],))
+                return select_report_task(conn, worker['id'], tid, parts[2], callback.get('id'), incident=True)
             if len(parts) == 3 and parts[0] == 'taskconfirm':
                 return confirm_task(conn, worker['id'], tid, parts[2])
             if (len(parts) == 3 and parts[0] == 'taskdetail' and parts[2].isascii()

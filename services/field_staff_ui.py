@@ -20,6 +20,12 @@ def query(sql, parameters=()):
 def render_field_staff():
     require_admin()
     initialize_staff()
+    with st.expander('Necesidades territoriales'):
+        from services.field_needs_ui import render_needs
+        render_needs()
+    with st.expander('Catálogo de simpatizantes'):
+        from services.supporters_ui import render_supporters
+        render_supporters()
     st.caption('Registra al personal, configura su acceso y vincula Telegram. Asigna sus actividades desde Planes de acción.')
     st.info('Administración de usuarios. Los roles y alcances se aplican al panel operativo y a Telegram.')
     with st.expander('Consultar roles y permisos'):

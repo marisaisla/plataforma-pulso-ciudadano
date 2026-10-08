@@ -28,6 +28,19 @@ Los cambios de rol, equipo, supervisor, alcance, activación y desvinculación q
 
 ## Consultar desde Telegram
 
+`needs.submit` permite a campo registrar necesidades territoriales con `/necesidad`.
+`needs.view` permite a campo consultar sus registros y a coordinadores y directores
+consultar todos los registros de su campaña y territorio autorizado. Administración
+dispone de ambos permisos para toda la operación. No se exige el mismo equipo
+entre el autor y el coordinador para esta consulta territorial.
+
+El catálogo de simpatizantes incorpora `supporters.submit` (campo, supervisor,
+coordinador y administrador) y `supporters.view`. Campo consulta sus registros;
+supervisor y coordinador consultan su equipo con alcance autorizado; director
+consulta su campaña y territorio; administrador consulta toda la operación.
+El bot usa `/simpatizante` para la captura y conserva por separado la autorización
+para registrar datos y para recibir información. Consulta `TELEGRAM_INTEGRADOR.md`.
+
 Reinicia `scripts/integrador_telegram.py` para cargar la nueva versión y envía `/mi_perfil` en el chat privado del bot. Muestra el rol, equipo, alcances y permisos del usuario vinculado. Puedes escribir el comando aunque no esté en el menú de BotFather. `/ayuda` también lo menciona.
 
 ## Alcance de la implementación
