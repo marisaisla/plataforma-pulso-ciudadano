@@ -6,6 +6,12 @@ elección de diputaciones locales, ambas desagregadas a nivel casilla.
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import sys
 from pathlib import Path
@@ -18,10 +24,10 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "data" / "raw" / "ieeq_2024" / "IEEQ_RESULTADOS_QRO"
+RAW = storage_path("data") / "raw" / "ieeq_2024" / "IEEQ_RESULTADOS_QRO"
 AYUNTAMIENTO_FILE = RAW / "IEEQ_AYUN_QRO" / "QRO_AYUN_RESULTADOS_2024.csv"
 DIPUTACION_FILE = RAW / "IEEQ_DIP_QRO" / "QRO_DIP_LOC_RESULTADOS_2024.csv"
-CATALOG_FILE = ROOT / "data" / "raw" / "JSON_CATALOGO.json"
+CATALOG_FILE = storage_path("data") / "raw" / "JSON_CATALOGO.json"
 SOURCE_URL = "https://ieeq.mx/contenido/elecciones/2023_2024/resultados/"
 STATE = "Querétaro"
 YEAR = 2024

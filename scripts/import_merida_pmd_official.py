@@ -7,6 +7,12 @@ escenarios meta en avances reales: éstos quedan vacíos hasta contar con eviden
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import re
 import unicodedata
 from difflib import get_close_matches
@@ -20,7 +26,7 @@ from services.database import execute, initialize_database, query
 PROFILE_NAME = "Cecilia Anunciación Patrón Laviada"
 PLAN_TITLE = "Plan Municipal de Desarrollo de Mérida 2024-2027"
 PMD_URL = "https://merida.gob.mx/pmd/"
-PDF_FOLDER = Path("data/reference_documents/merida_pmd")
+PDF_FOLDER = storage_path("data/reference_documents/merida_pmd")
 
 AXIS_ORDER = {
     "Inclusión, bienestar y desarrollo social": 1,

@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import sys
 from pathlib import Path
@@ -14,7 +20,7 @@ from services.settings import get_setting
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MAP = ROOT / "data" / "yucatan_municipios_inegi.geojson"
+MAP = storage_path("data") / "yucatan_municipios_inegi.geojson"
 STATE = "Yucatán"
 
 

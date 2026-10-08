@@ -1,5 +1,11 @@
 """Build the local Go2Win commercial video from approved project assets."""
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -7,8 +13,8 @@ from moviepy import AudioFileClip, ColorClip, CompositeVideoClip, ImageClip, con
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-ASSETS = BASE_DIR / "assets" / "go2win_video"
-OUTPUT = BASE_DIR / "output" / "videos" / "go2win_comercial_con_voz.mp4"
+ASSETS = storage_path("assets/go2win_video")
+OUTPUT = storage_path("output") / "videos" / "go2win_comercial_con_voz.mp4"
 SLIDES_DIR = ASSETS / "slides"
 # HD ligero: se reproduce bien en pantalla y permite una exportación ágil.
 WIDTH, HEIGHT = 1280, 720

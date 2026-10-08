@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from services.storage import storage_path, files_root, PROJECT_ROOT
 
 
 APP_DIR = Path(__file__).resolve().parents[1]
@@ -23,7 +24,7 @@ SOURCE_DATASET = Path(
     r"C:\Users\jorge\Documents\Codex\2026-08-17\me\outputs"
     r"\gis-resultados-diputados-locales\chihuahua_municipios_resultados_2024.geojson"
 )
-LOCAL_DATASET = APP_DIR / "data" / "chihuahua_municipios_contexto.geojson"
+LOCAL_DATASET = storage_path("data") / "chihuahua_municipios_contexto.geojson"
 REMOTE_STATE_LAYERS = {
     "Sonora": "https://raw.githubusercontent.com/MacWilliXD/INEGI-geojson/main/"
     "geojson_descargas/AGEM_26.geojson",
@@ -33,10 +34,10 @@ REMOTE_STATE_LAYERS = {
     "geojson_descargas/AGEM_15.geojson",
 }
 LOCAL_STATE_DATASETS = {
-    "Chihuahua": APP_DIR / "data" / "chihuahua_municipios_contexto.geojson",
-    "Nayarit": APP_DIR / "data" / "nayarit_municipios_2025.geojson",
-    "Querétaro": APP_DIR / "data" / "queretaro_municipios_inegi.geojson",
-    "Yucatán": APP_DIR / "data" / "yucatan_municipios_inegi.geojson",
+    "Chihuahua": storage_path("data") / "chihuahua_municipios_contexto.geojson",
+    "Nayarit": storage_path("data") / "nayarit_municipios_2025.geojson",
+    "Querétaro": storage_path("data") / "queretaro_municipios_inegi.geojson",
+    "Yucatán": storage_path("data") / "yucatan_municipios_inegi.geojson",
 }
 STATE_NAME_ALIASES = {
     "Estado de Mexico": "Estado de México",
@@ -44,17 +45,17 @@ STATE_NAME_ALIASES = {
     "Edo. Méx.": "Estado de México",
 }
 LOCAL_DISTRICT_DATASETS = {
-    "Chihuahua": APP_DIR / "data" / "chihuahua_distritos_resultados_2024.geojson",
-    "Estado de México": APP_DIR / "data" / "edomex_distritos_locales_2025.geojson",
-    "Nayarit": APP_DIR / "data" / "nayarit_distritos_locales_2025.geojson",
-    "Querétaro": APP_DIR / "data" / "queretaro_distritos_locales_ine.geojson",
-    "Yucatán": APP_DIR / "data" / "yucatan_distritos_locales_iepac.geojson",
+    "Chihuahua": storage_path("data") / "chihuahua_distritos_resultados_2024.geojson",
+    "Estado de México": storage_path("data") / "edomex_distritos_locales_2025.geojson",
+    "Nayarit": storage_path("data") / "nayarit_distritos_locales_2025.geojson",
+    "Querétaro": storage_path("data") / "queretaro_distritos_locales_ine.geojson",
+    "Yucatán": storage_path("data") / "yucatan_distritos_locales_iepac.geojson",
 }
 LOCAL_SECTION_DATASETS = {
-    "Chihuahua": APP_DIR / "data" / "chihuahua_secciones_resultados_2024.geojson",
-    "Estado de México": APP_DIR / "data" / "edomex_secciones_electorales_2025.geojson",
-    "Nayarit": APP_DIR / "data" / "nayarit_secciones_electorales_2025.geojson",
-    "Yucatán": APP_DIR / "data" / "yucatan_secciones_electorales_iepac.geojson",
+    "Chihuahua": storage_path("data") / "chihuahua_secciones_resultados_2024.geojson",
+    "Estado de México": storage_path("data") / "edomex_secciones_electorales_2025.geojson",
+    "Nayarit": storage_path("data") / "nayarit_secciones_electorales_2025.geojson",
+    "Yucatán": storage_path("data") / "yucatan_secciones_electorales_iepac.geojson",
 }
 SONORA_LOCAL_DISTRICTS_KML_URL = (
     "https://www.ieesonora.org.mx/documentos/estadistica_cartografia/"
@@ -253,7 +254,7 @@ def dataset_path(state: str | None = None) -> Path | None:
         return local_state_path
     if state and state.casefold() != "chihuahua":
         return None
-    for candidate in (LOCAL_DATASET, SOURCE_DATASET):
+    for candidate in ((LOCAL_DATASET, SOURCE_DATASET) if files_root() == PROJECT_ROOT else (LOCAL_DATASET,)):
         if candidate.exists():
             return candidate
     return None

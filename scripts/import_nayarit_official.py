@@ -1,6 +1,12 @@
 """Import official 2024 Nayarit cartography and election results."""
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import sys
 from pathlib import Path
@@ -13,7 +19,7 @@ import shapefile
 from pyproj import CRS, Transformer
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "data" / "nayarit_fuentes_oficiales"
+SRC = storage_path("data") / "nayarit_fuentes_oficiales"
 OUT = SRC / "ine_bgd_nayarit_diciembre_2025"
 MUN_BOOK = SRC / "IEEN_Nayarit_2024_Presidencias_Sindicaturas.xlsx"
 DIS_BOOK = SRC / "IEEN_Nayarit_2024_Diputaciones.xlsx"
@@ -172,9 +178,9 @@ def load_database(conn):
 def main():
     extract()
     geometries = {
-        "municipios": convert_shape("MUNICIPIO.shp", ROOT / "data" / "nayarit_municipios_2025.geojson"),
-        "distritos": convert_shape("DISTRITO_LOCAL.shp", ROOT / "data" / "nayarit_distritos_locales_2025.geojson"),
-        "secciones": convert_shape("SECCION.shp", ROOT / "data" / "nayarit_secciones_electorales_2025.geojson"),
+        "municipios": convert_shape("MUNICIPIO.shp", storage_path("data") / "nayarit_municipios_2025.geojson"),
+        "distritos": convert_shape("DISTRITO_LOCAL.shp", storage_path("data") / "nayarit_distritos_locales_2025.geojson"),
+        "secciones": convert_shape("SECCION.shp", storage_path("data") / "nayarit_secciones_electorales_2025.geojson"),
     }
     with connection() as conn:
         results = load_database(conn)

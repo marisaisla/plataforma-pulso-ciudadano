@@ -1,6 +1,12 @@
 """Load Nayarit INEGI indicators and structure Geraldine Ponce's dictamen."""
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import sys
 from pathlib import Path
@@ -11,9 +17,9 @@ from services.inegi import CORE_INDICATORS, collect_municipal_indicator
 from services.settings import get_setting
 
 ROOT = Path(__file__).resolve().parents[1]
-GEOJSON = ROOT / "data" / "nayarit_municipios_2025.geojson"
+GEOJSON = storage_path("data") / "nayarit_municipios_2025.geojson"
 PROFILE_ID = 7
-DICTAMEN_PATH = ROOT / "data" / "reference_documents" / "Dictamen_Viabilidad_Electoral_Maria_Geraldine_Ponce_Mendez_Nayarit_2027.pdf"
+DICTAMEN_PATH = storage_path("data") / "reference_documents" / "Dictamen_Viabilidad_Electoral_Maria_Geraldine_Ponce_Mendez_Nayarit_2027.pdf"
 
 VARIABLES = {
     "perfil": ("Documentada", "Presidenta municipal de Tepic 2024-2027; previamente diputada federal y titular del ayuntamiento iniciado en 2021.", "Trayectoria política documentada", 1, 1, "perfil"),

@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 from pathlib import Path
 
 from reportlab.lib import colors
@@ -23,7 +29,7 @@ from reportlab.platypus import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "output" / "pdf" / "Dictamen_Preliminar_Viabilidad_Felipe_Fernando_Macias_Queretaro_2027.pdf"
+OUTPUT = storage_path("output") / "pdf" / "Dictamen_Preliminar_Viabilidad_Felipe_Fernando_Macias_Queretaro_2027.pdf"
 
 NAVY = colors.HexColor("#10243E")
 BLUE = colors.HexColor("#155E99")

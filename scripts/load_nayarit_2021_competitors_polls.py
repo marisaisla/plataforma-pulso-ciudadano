@@ -1,6 +1,12 @@
 """Load the 2021 Nayarit governor result and dictamen competitors/polls."""
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import sys
 from pathlib import Path
@@ -10,7 +16,7 @@ from services.database import connection
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-BOOK = ROOT / "data" / "nayarit_fuentes_oficiales" / "IEEN_Nayarit_2021_Gubernatura.xlsx"
+BOOK = storage_path("data") / "nayarit_fuentes_oficiales" / "IEEN_Nayarit_2021_Gubernatura.xlsx"
 SOURCE_URL = "https://ieenayarit.org/PDF/elecciones/2021/Gob21.xlsx"
 PROFILE_ID = 7
 
