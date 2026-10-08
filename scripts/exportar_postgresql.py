@@ -30,6 +30,8 @@ def literal(value):
 
 
 CHECKS = {
+    'field_needs': ['length(description) BETWEEN 1 AND 3000', "origin IN ('detectada','comentada')"],
+    'supporters': ['registration_consent = 1', 'messaging_consent IN (0,1)'],
     'viability_electoral_scores': ['score >= 0 AND score <= 100'],
     'field_role_permissions': ["scope IN ('own','team','campaign','all')"],
     'field_worker_scopes': ["municipality = '' OR state != ''"],

@@ -7,6 +7,12 @@ conexión detiene la operación y **no cambia automáticamente a SQLite**.
 
 ## Configurar cada computadora
 
+Para los reportes con fotografía, el administrador debe aplicar primero
+`scripts/agregar_evidencias_postgresql.sql` y
+`scripts/agregar_simpatizantes_postgresql.sql` en la base compartida y después
+reiniciar Go2Win y el integrador. Las evidencias se almacenan en la base y
+se incluyen en sus respaldos. Consulta `TELEGRAM_INTEGRADOR.md`.
+
 Instalar las dependencias del proyecto:
 
 ```powershell

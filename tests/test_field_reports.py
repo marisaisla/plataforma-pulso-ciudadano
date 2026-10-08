@@ -1,4 +1,6 @@
 import time
+import io
+from PIL import Image
 import unittest
 from unittest.mock import patch
 
@@ -30,6 +32,99 @@ class ReportTests(unittest.TestCase):
     def submit(self, mid=10):
         self.select('select' + str(mid))
         return staff.telegram_reply(self.text(mid=mid))
+
+    def select_incident(self):
+        staff.telegram_callback(self.callback())
+        menu = staff.telegram_reply(self.message(101, '/incidencia'))
+        cb = self.callback()
+        cb['id'] = 'incident-selection'
+        cb['data'] = menu['reply_markup']['inline_keyboard'][0][0]['callback_data']
+        self.assertIn('Describe la incidencia', staff.telegram_callback(cb))
+        return cb
+
+    def test_profile_alias_during_report_and_supporter_capture(self):
+        expected = staff.telegram_reply(self.message(101, '/mi_perfil'))
+        self.assertIn('Rol:', expected)
+        self.select()
+        self.assertEqual(staff.telegram_reply(self.message(101, '/perfil')), expected)
+        self.assertEqual(staff.telegram_reply(self.message(101, '/perfil@Go2WinBot')), expected)
+        self.assertIn('guardado', staff.telegram_reply(self.text()))
+        staff.telegram_reply(self.message(101, '/simpatizante 1'))
+        self.assertEqual(staff.telegram_reply(self.message(101, '/perfil')), expected)
+        self.assertEqual(self.sql('SELECT COUNT(*) FROM supporter_sessions')[0][0], 1)
+        self.assertIn('Comando no reconocido', staff.telegram_reply(self.message(101, '/noexiste')))
+
+    def test_incident_text_persists_restart_and_retry(self):
+        cb = self.select_incident()
+        staff.initialize_staff()
+        self.assertIn('Incidencia R-000001', staff.telegram_reply(self.text('Falta material')))
+        row = reports.list_task_reports(1)[0]
+        self.assertEqual(row['body'], '[INCIDENCIA]\nFalta material')
+        self.assertIn('Incidencia R-000001', staff.telegram_reply(self.text('Falta material')))
+        self.assertEqual(len(reports.list_task_reports(1)), 1)
+        self.assertIn('ya fue atendida', staff.telegram_callback(cb))
+        self.assertIn('[INCIDENCIA]', staff.telegram_reply(self.message(101, '/mis_reportes'))['text'])
+
+    def test_incident_photo_and_permission_revocation(self):
+        self.select_incident()
+        reply = staff.telegram_reply(self.photo(), lambda _: self.jpeg())
+        self.assertIn('Incidencia', reply)
+        self.assertEqual(self.sql('SELECT COUNT(*) FROM field_report_photos')[0][0], 1)
+        staff.telegram_reply(self.message(101, '/incidencia'))
+        cb = self.callback()
+        cb['id'] = 'incident2'
+        cb['data'] = cb['data'].replace('taskconfirm:', 'incidentselect:')
+        staff.telegram_callback(cb)
+        self.sql("DELETE FROM field_role_permissions WHERE role_key='field' AND permission_key='incidents.submit'")
+        self.assertIn('No se guardó', staff.telegram_reply(self.text('Problema nuevo', mid=11)))
+        self.assertEqual(len(reports.list_task_reports(1)), 1)
+
+    def photo(self):
+        return {**self.text(''), 'caption': 'Recorrido completado',
+                'photo': [{'file_id': 'photo1', 'file_unique_id': 'unique1', 'width': 10, 'height': 10}]}
+
+    def jpeg(self):
+        output = io.BytesIO()
+        Image.new('RGB', (10, 10), 'blue').save(output, format='JPEG')
+        return output.getvalue()
+
+    def test_photo_saved_atomically_retry_and_authorized_view(self):
+        from web_test_helpers import admin_session
+        self.select()
+        loader = unittest.mock.Mock(return_value=self.jpeg())
+        reply = staff.telegram_reply(self.photo(), loader)
+        self.assertIn('R-000001', reply)
+        self.assertEqual(reply, staff.telegram_reply(self.photo(), loader))
+        loader.assert_called_once_with('photo1')
+        self.assertEqual(reports.list_task_reports(1)[0]['body'], 'Recorrido completado')
+        self.assertEqual(reports.report_photo(1, admin_session()), self.jpeg())
+        with self.assertRaises(PermissionError):
+            reports.report_photo(1, 'invalid-session')
+        self.assertEqual(self.sql('SELECT COUNT(*) FROM field_report_photos')[0][0], 1)
+
+    def test_photo_failure_keeps_capture_and_no_partial_report(self):
+        self.select()
+        with patch.object(bot.transport, 'download_photo', side_effect=bot.transport.TelegramError('Network')):
+            with self.assertRaises(bot.transport.TelegramError):
+                bot.process_update({'message': self.photo()})
+        self.assertFalse(reports.list_task_reports(1))
+        self.assertEqual(self.sql('SELECT COUNT(*) FROM field_report_sessions')[0][0], 1)
+        self.assertIn('JPEG válido', staff.telegram_reply(self.photo(), lambda _: b'invalid'))
+        with patch.object(bot.transport, 'download_photo', return_value=self.jpeg()), patch.object(bot.transport, 'api'):
+            bot.process_update({'message': self.photo()})
+        self.assertEqual(len(reports.list_task_reports(1)), 1)
+
+    def test_photo_permissions_caption_album_and_size(self):
+        self.select()
+        loader = unittest.mock.Mock(return_value=self.jpeg())
+        self.assertIn('Espero un mensaje', staff.telegram_reply({**self.photo(), 'caption': ''}, loader))
+        self.assertIn('no un álbum', staff.telegram_reply({**self.photo(), 'media_group_id': 'album'}, loader))
+        msg = self.photo()
+        msg['photo'][0]['file_size'] = reports.MAX_PHOTO_BYTES + 1
+        self.assertIn('supera 10 MB', staff.telegram_reply(msg, loader))
+        access.remove_scope(self.worker, 1, 'Sonora', 'Hermosillo')
+        self.assertIn('No se guardó', staff.telegram_reply(self.photo(), loader))
+        loader.assert_not_called()
 
     def test_requires_received_task_and_own_assignment(self):
         response = staff.telegram_reply(self.message(101, '/reportar'))

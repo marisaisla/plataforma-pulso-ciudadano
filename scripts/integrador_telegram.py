@@ -25,7 +25,7 @@ def process_update(update):
         message = update.get('message')
         if not message:
             return
-        response = telegram_reply(message)
+        response = telegram_reply(message, photo_loader=transport.download_photo)
         chat = message.get('chat', {})
     if response is not None:
         payload = response if isinstance(response, dict) else {'text': response}
@@ -46,7 +46,7 @@ def main():
         print(exc)
         return 1
     initialize_staff()
-    print('Integrador activo: personal, tareas, recepción y reportes de texto. Ctrl+C para detener.')
+    print('Integrador activo: personal, tareas, recepción y reportes con fotografías. Ctrl+C para detener.')
     print('Detén el script de prueba y cualquier otro receptor del mismo bot.')
     offset = None
     while True:

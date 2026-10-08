@@ -122,4 +122,4 @@ def _validate_schema(target):
         missing = [f'{table}.{column}' for table, columns in expected.items()
                    for column in columns if column not in actual.get(table, set())]
         if missing:
-            raise RuntimeError('El esquema PostgreSQL no corresponde a la migración v3. Faltan: ' + ', '.join(missing[:15]))
+            raise RuntimeError('El esquema PostgreSQL requiere actualización. Ejecuta scripts/aplicar_actualizacion_telegram.py. Faltan: ' + ', '.join(missing[:15]))

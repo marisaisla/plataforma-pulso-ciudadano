@@ -26,6 +26,7 @@ class StaffTests(unittest.TestCase):
         self.addCleanup(self.patch.stop)
         staff.initialize_staff()
         with closing(sqlite3.connect(self.path)) as conn, conn:
+            conn.execute('CREATE TABLE profiles (id INTEGER PRIMARY KEY, name TEXT)')
             conn.execute('CREATE TABLE territorial_action_plans (id INTEGER PRIMARY KEY, status TEXT)')
         self.worker = staff.create_worker('Persona de prueba', 'Equipo A')
 

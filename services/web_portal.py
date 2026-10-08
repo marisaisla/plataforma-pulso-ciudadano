@@ -6,7 +6,8 @@ from services.web_auth import require_user
 from services.web_auth_ui import session_token
 from services.field_permissions import can_access
 from services.field_tasks import context, eligible_workers, assign_task_locally
-from services.field_reports import review_report, STATUS_LABELS, folio
+from services.field_reports import review_report, STATUS_LABELS, folio, INCIDENT_PREFIX
+from services.field_reports_ui import render_report_photo
 
 
 def portal_data(token):
@@ -51,7 +52,13 @@ def render_portal():
                        'Ambos deben tener autorizada la campaña y el territorio de la tarea.')
         else:
             st.caption(f"Equipo: {user['team']}. Abre una tarea para elegir responsable y asignarla.")
-    task_tab, report_tab = st.tabs(['Tareas', 'Reportes'])
+    task_tab, report_tab, supporters_tab, needs_tab = st.tabs(['Tareas', 'Reportes', 'Simpatizantes', 'Necesidades'])
+    with needs_tab:
+        from services.field_needs_ui import render_needs
+        render_needs()
+    with supporters_tab:
+        from services.supporters_ui import render_supporters
+        render_supporters()
     with task_tab:
         if not tasks:
             st.info('No hay tareas visibles. Solicita al administrador revisar tu asignación y alcance.')
@@ -84,8 +91,10 @@ def render_portal():
         if not reports:
             st.info('No hay reportes visibles en tu ámbito.')
         for report in reports:
-            with st.expander(f"{folio(report['id'])} · tarea #{report['task_id']} · {STATUS_LABELS[report['status']]}"):
+            kind = 'Incidencia · ' if report['body'].startswith(INCIDENT_PREFIX) else ''
+            with st.expander(f"{kind}{folio(report['id'])} · tarea #{report['task_id']} · {STATUS_LABELS[report['status']]}"):
                 st.text(report['body'])
+                render_report_photo(report['id'])
                 st.caption(f"Enviado: {report['created_at']} UTC")
                 st.text(report['note'] or 'Sin observaciones de revisión')
                 allowed = (report['worker_id'] != user['id'] and can_access(user['id'], 'reports.review',

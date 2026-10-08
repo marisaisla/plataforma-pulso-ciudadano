@@ -4,6 +4,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+import re
 
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
@@ -11,6 +12,24 @@ TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 
 class TelegramError(Exception):
     pass
+
+
+def download_photo(file_id):
+    """Descarga acotada; nunca expone la URL que contiene el token."""
+    limit = 10 * 1024 * 1024
+    info = api('getFile', file_id=file_id)
+    path = info.get('file_path', '')
+    if (not re.fullmatch(r'[A-Za-z0-9_/-]+\.[A-Za-z0-9]+', path)
+            or '..' in path or path.startswith('/') or info.get('file_size', 0) > limit):
+        raise ValueError('Archivo inválido o demasiado grande')
+    try:
+        with urllib.request.urlopen(f'https://api.telegram.org/file/bot{TOKEN}/{path}', timeout=40) as response:
+            content = response.read(limit + 1)
+    except (urllib.error.URLError, TimeoutError, OSError):
+        raise TelegramError('No se pudo descargar la fotografía. Se reintentará.') from None
+    if len(content) > limit:
+        raise ValueError('Fotografía demasiado grande')
+    return content
 
 
 def api(method, **params):
