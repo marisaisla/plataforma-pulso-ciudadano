@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -9,7 +15,7 @@ from services.database import connection
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PDF = ROOT / "output" / "pdf" / "Dictamen_Viabilidad_Electoral_Felipe_Fernando_Macias_Queretaro_2027.pdf"
+PDF = storage_path("output") / "pdf" / "Dictamen_Viabilidad_Electoral_Felipe_Fernando_Macias_Queretaro_2027.pdf"
 PROFILE = "Felipe Fernando Macías Olvera"
 EL_PAIS = "https://elpais.com/mexico/2026-09-19/defensores-de-la-patria-el-pan-copia-la-estrategia-de-morena-en-un-intento-de-mantener-el-pulso-de-2027.html"
 IEEQ = "https://ieeq.mx/comunicacion/boletines/3094"

@@ -7,6 +7,12 @@ plataforma permanece identificada como Marco Geográfico Electoral del INE.
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 import sys
 from pathlib import Path
@@ -18,7 +24,7 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_FILE = ROOT / "data" / "raw" / "queretaro_2021_ayuntamiento.xlsx"
+SOURCE_FILE = storage_path("data") / "raw" / "queretaro_2021_ayuntamiento.xlsx"
 SOURCE_URL = "https://ieeq.mx/contenido/elecciones/2020_2021/resultados/2021_Ayuntamiento.xlsx"
 STATE = "Querétaro"
 YEAR = 2021

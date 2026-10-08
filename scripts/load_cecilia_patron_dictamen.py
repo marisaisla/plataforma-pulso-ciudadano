@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -9,7 +15,7 @@ from services.database import connection
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCUMENT = ROOT / "data" / "reference_documents" / "Dictamen_Viabilidad_Electoral_Cecilia_Patron_Laviada_Merida_2027.pdf"
+DOCUMENT = storage_path("data") / "reference_documents" / "Dictamen_Viabilidad_Electoral_Cecilia_Patron_Laviada_Merida_2027.pdf"
 PROFILE_NAME = "Cecilia Anunciación Patrón Laviada"
 STATE = "Yucatán"
 

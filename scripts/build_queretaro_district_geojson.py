@@ -7,6 +7,12 @@ local district, validate the response, and retain the local-district polygon.
 
 from __future__ import annotations
 
+import sys as _storage_sys
+from pathlib import Path as _StoragePath
+_storage_sys.path.insert(0, str(_StoragePath(__file__).resolve().parents[1]))
+from services.storage import storage_path
+
+
 import json
 from pathlib import Path
 from urllib.parse import urlencode
@@ -14,7 +20,7 @@ from urllib.request import urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_PATH = ROOT / "data" / "queretaro_distritos_locales_ine.geojson"
+OUTPUT_PATH = storage_path("data") / "queretaro_distritos_locales_ine.geojson"
 API = "https://cartografia.ine.mx/sige8/api/getConoceTuNuevoDistrito"
 
 

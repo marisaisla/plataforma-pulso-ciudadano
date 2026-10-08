@@ -36,6 +36,7 @@ from services.capture import (
     run_prompt_query,
 )
 from services.settings import get_setting, import_private_setting, save_settings
+from services.storage import resolve_document_path
 from services.gis import (
     LAYER_INDICATOR_GROUPS,
     PED_SONORA_REGIONS,
@@ -5019,7 +5020,7 @@ def manage_inegi_indicators(context_state: str, geojson: dict | None) -> None:
 @st.cache_data(show_spinner=False)
 def extract_dictamen_sections(file_path: str) -> list[dict]:
     """Obtiene los capítulos numerados de un PDF de dictamen para lectura interna."""
-    reader = PdfReader(file_path)
+    reader = PdfReader(str(resolve_document_path(file_path)))
     pages = [page.extract_text() or "" for page in reader.pages]
     document_text = "\f".join(pages)
     pattern = re.compile(r"(?m)^(\d{1,2})\.\s+([^\n]+)$")
@@ -5051,7 +5052,7 @@ def extract_dictamen_sections(file_path: str) -> list[dict]:
 @st.cache_data(show_spinner=False)
 def render_dictamen_pages(file_path: str, first_page: int, last_page: int) -> list[bytes]:
     """Renderiza las páginas originales para conservar el diseño del dictamen."""
-    document = pymupdf.open(file_path)
+    document = pymupdf.open(str(resolve_document_path(file_path)))
     try:
         pages = []
         for page_number in range(first_page - 1, min(last_page, len(document))):
@@ -5086,7 +5087,7 @@ def render_dictamen_reader() -> None:
     )
     pdf_documents = [
         row for row in documents
-        if row["file_path"] and Path(row["file_path"]).suffix.lower() == ".pdf" and Path(row["file_path"]).exists()
+        if row["file_path"] and resolve_document_path(row["file_path"]).suffix.lower() == ".pdf" and resolve_document_path(row["file_path"]).exists()
     ]
     if not pdf_documents:
         st.info("Aún no hay dictámenes PDF cargados para recorrer por secciones.")
@@ -5119,11 +5120,11 @@ def render_dictamen_reader() -> None:
             key=f"dictamen_reader_section_{document['id']}",
             label_visibility="collapsed",
         )
-        with open(document["file_path"], "rb") as source_file:
+        with open(resolve_document_path(document["file_path"]), "rb") as source_file:
             st.download_button(
                 "Descargar dictamen PDF",
                 data=source_file.read(),
-                file_name=Path(document["file_path"]).name,
+                file_name=resolve_document_path(document["file_path"]).name,
                 mime="application/pdf",
                 key=f"download_dictamen_{document['id']}",
             )
@@ -5134,7 +5135,7 @@ def render_dictamen_reader() -> None:
     if next_page < selected_section["page"]:
         next_page = selected_section["page"]
     if not next_page:
-        with pymupdf.open(document["file_path"]) as pdf_document:
+        with pymupdf.open(str(resolve_document_path(document["file_path"]))) as pdf_document:
             next_page = len(pdf_document)
     page_images = render_dictamen_pages(document["file_path"], selected_section["page"], next_page)
     with right:
@@ -5418,7 +5419,7 @@ def render_viability_opinion() -> None:
         if dictamen_documents:
             st.markdown("#### Dictámenes incorporados")
             for document in dictamen_documents:
-                document_path = Path(document["file_path"])
+                document_path = resolve_document_path(document["file_path"])
                 if document_path.exists():
                     st.download_button(
                         f"Descargar: {document['title']}",
@@ -6370,7 +6371,7 @@ elif page == "Perfil territorial":
     if reference_documents:
         st.dataframe(pd.DataFrame(reference_documents), use_container_width=True, hide_index=True)
         for document in reference_documents:
-            document_path = Path(document["archivo"])
+            document_path = resolve_document_path(document["archivo"])
             if document_path.exists():
                 st.download_button(
                     f"Descargar: {document['title']}",
@@ -6452,7 +6453,7 @@ elif page == "Planeación":
         "Documento de planeación", document_labels, key="planning_document"
     )
     selected_document = planning_documents[document_labels.index(selected_document_label)]
-    planning_path = Path(selected_document["file_path"])
+    planning_path = resolve_document_path(selected_document["file_path"])
     st.markdown(f"### {selected_document['title']}")
     st.caption(
         f"Tipo: {selected_document['document_type']} · Estado: {selected_document['state'] or 'No especificado'} · "
