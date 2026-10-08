@@ -70,7 +70,13 @@ Las rutas antiguas de BD que contienen `data/...` u `output/...` se resuelven co
 
 El archivo compartido no reemplaza PostgreSQL. Los registros concurrentes de usuarios siguen en la BD. No ejecutar dos importadores o generadores contra el mismo archivo de destino simultáneamente. Usar nombres de salida distintos para cada ejecución.
 
-Los importadores de cartografía y documentos y los generadores de dictámenes adaptados usan `GO2WIN_FILES_ROOT`. Algunos scripts audiovisuales históricos conservan fuentes personales de OneDrive/Downloads y están pensados para la computadora de producción original; no son requisitos de ejecución de Streamlit. No ejecutarlos en otra máquina sin revisar sus fuentes.
+Los importadores, generadores de documentos y scripts audiovisuales usan `GO2WIN_FILES_ROOT`. Los generadores de video comparten las rutas de sus módulos base; las variantes v3 a v6 heredan esa configuración. Los narradores y el exportador de PowerPoint leen la misma variable mediante `scripts/shared_files.ps1`, independientemente del directorio desde el que se ejecuten.
+
+Los cinco insumos antes ubicados en Descargas/OneDrive se centralizan en `assets/go2win_video/fuentes`: el PDF `Tablero de Mnado Go2Win.pdf`, los tres videos de recorrido y la presentación `Arquitectura_Integracion_Telegram_Go2Win_Tres_Flujos_Operativos.pptx`. Los fotogramas, narraciones, diapositivas e imágenes intermedias mantienen sus subcarpetas existentes bajo `output` y `assets/go2win_video`.
+
+Los entregables nuevos se guardan en `output` de MARISA: `pdf`, `html`, `documentos`, `mapas` y `videos`. Para nuevos scripts utilizar `services.storage.storage_path`; los temporales de revisión pueden permanecer en `.build` o `tmp`, pero el resultado final debe copiarse y verificarse en la carpeta compartida. Esta regla también está registrada en `AGENTS.md`.
+
+Compartir los archivos no instala programas: cada equipo que genere videos necesita sus dependencias Python y FFmpeg; la narración requiere Windows con la voz Microsoft Sabina Desktop y la exportación de diapositivas requiere PowerPoint. No ejecutar dos versiones contra el mismo destino a la vez. Los archivos locales históricos se conservan y no son sincronizados automáticamente.
 
 ## Git y transición
 

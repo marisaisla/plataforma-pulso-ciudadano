@@ -8,7 +8,7 @@ import build_go2win_visual_video as visual
 base = visual.base
 OUT = base.OUT
 WORK = OUT / 'recorrido_v10'
-SOURCE = base.Path('C:/Users/jorge/OneDrive/Documentos/Presentaciones/Go2Win_Recorrido_Con_Introduccion_y_Voz_Corregido.mp4')
+SOURCE = base.ROOT/'assets/go2win_video/fuentes/Go2Win_Recorrido_Con_Introduccion_y_Voz_Corregido.mp4'
 # Seconds reviewed in the user's recording: maps, scenarios, diagnosis,
 # prioritization and strategy. Other scenes retain their approved visuals.
 SEGMENTS = {2: 48, 4: 112, 6: 224, 8: 48, 9: 91, 10: 69,

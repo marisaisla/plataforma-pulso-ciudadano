@@ -4,13 +4,17 @@ import json, subprocess, wave, sys
 from PIL import Image, ImageDraw, ImageFont
 import imageio_ffmpeg
 
-ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.storage import files_root
+
+ROOT=files_root()
 OUT=ROOT/'output/videos/tablero_pdf'
-SOURCE_PDF=Path('C:/Users/jorge/Downloads/01_Proyectos/Electoral_2027/Go2Win/Tablero de Mnado Go2Win.pdf')
+SOURCES=ROOT/'assets/go2win_video/fuentes'
+SOURCE_PDF=SOURCES/'Tablero de Mnado Go2Win.pdf'
 VIDEOS={
- 'recorrido':Path('C:/Users/jorge/OneDrive/Documentos/Presentaciones/Go2Win_Recorrido_Con_Introduccion_y_Voz_Corregido.mp4'),
- 'integral':Path('C:/Users/jorge/OneDrive/Documentos/ChatGPT/New project/output/video/Go2Win_Recorrido_Integral_Con_Tablero_de_Mando_con_Voz.mp4'),
- 'dictamen':Path('C:/Users/jorge/OneDrive/Documentos/ChatGPT/New project/output/video/Go2Win_Recorrido_Dictamen_de_Viabilidad_con_Voz.mp4'),
+ 'recorrido':SOURCES/'Go2Win_Recorrido_Con_Introduccion_y_Voz_Corregido.mp4',
+ 'integral':SOURCES/'Go2Win_Recorrido_Integral_Con_Tablero_de_Mando_con_Voz.mp4',
+ 'dictamen':SOURCES/'Go2Win_Recorrido_Dictamen_de_Viabilidad_con_Voz.mp4',
 }
 # Each source interval was visually reviewed; the source soundtrack is omitted.
 SCENES=[

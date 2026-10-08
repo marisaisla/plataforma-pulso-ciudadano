@@ -7,7 +7,10 @@ import sys
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import imageio_ffmpeg
 
-ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.storage import files_root
+
+ROOT = files_root()
 OUT = ROOT / 'output/videos/movilizacion_html'
 SCENES = [
 ('DEL ANÁLISIS A LA EJECUCIÓN', 'Sistema de\nmovilización electoral', ['Evidencia', 'Territorio', 'Seguimiento'], 'Go to win presenta un sistema de inteligencia, movilización y control territorial. Su propuesta conecta evidencia, territorio, objetivos y seguimiento. Este recorrido explica el contenido del diagrama: ocho etapas relacionadas, desde el expediente de candidatura hasta el tablero de control.'),

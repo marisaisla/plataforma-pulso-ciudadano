@@ -3,7 +3,10 @@ from pathlib import Path
 import json, math, subprocess, sys, wave
 import imageio_ffmpeg
 
-ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from services.storage import files_root
+
+ROOT = files_root()
 OUT = ROOT / 'output/videos/presentacion_ejecutiva'
 SLIDES = ROOT / 'output/html/go2win_ejecutiva'
 NARRATION = [
