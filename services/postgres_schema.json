@@ -662,5 +662,36 @@
     "worker_id",
     "expires_at",
     "development_instance"
+  ],
+  "field_questionnaires": [
+    "id",
+    "task_id",
+    "title",
+    "description",
+    "definition",
+    "mode",
+    "status",
+    "created_by",
+    "created_at"
+  ],
+  "field_task_surveys": [
+    "task_id",
+    "questionnaire_id",
+    "generation",
+    "target"
+  ],
+  "field_survey_responses": [
+    "id",
+    "task_id",
+    "questionnaire_id",
+    "worker_id",
+    "assignment_generation",
+    "survey_generation",
+    "submission_key",
+    "answers",
+    "profile_id",
+    "state",
+    "municipality",
+    "created_at"
   ]
 }

@@ -15,7 +15,8 @@ class OperationTests(unittest.TestCase):
         test_admin.AdminTests.setUp(self)
         raw=self.conn.raw
         tables=['territorial_strategies','territorial_action_plans','field_task_assignments','field_task_events',
-                'field_reports','field_report_reviews','field_report_photos','supporters','field_needs','territories','profile_territories','profile_positions']
+                'field_reports','field_report_reviews','field_report_photos','supporters','field_needs','territories','profile_territories','profile_positions',
+                'field_questionnaires','field_task_surveys','field_survey_responses']
         for table in tables:
             raw.execute(f'CREATE TEMP TABLE {table} (LIKE public.{table} INCLUDING ALL) ON COMMIT DROP')
         for table in ('territorial_action_plans','field_task_events','field_reports'):

@@ -42,6 +42,8 @@ def initialize_staff():
         initialize_permissions(conn)
         initialize_tasks(conn)
         initialize_reports(conn)
+        from services.field_survey_schema import initialize_surveys
+        initialize_surveys(conn)
         supporters.initialize_supporters(conn)
         field_needs.initialize_needs(conn)
 

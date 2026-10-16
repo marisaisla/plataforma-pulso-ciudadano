@@ -21,7 +21,7 @@ def main():
         conn.raw.execute('SELECT pg_advisory_xact_lock(720260928)')
         conn.raw.execute('SET LOCAL search_path=public')
         conn.raw.execute("SET LOCAL lock_timeout = '10s'")
-        for name in ('agregar_evidencias_postgresql.sql', 'agregar_simpatizantes_postgresql.sql', 'agregar_necesidades_postgresql.sql'):
+        for name in ('agregar_evidencias_postgresql.sql', 'agregar_simpatizantes_postgresql.sql', 'agregar_necesidades_postgresql.sql', 'agregar_cuestionarios_postgresql.sql'):
             lines = (ROOT / 'scripts' / name).read_text(encoding='utf-8').splitlines()
             body = '\n'.join(line for line in lines if line.strip().upper() not in {'BEGIN;', 'COMMIT;'})
             conn.raw.execute(body)

@@ -15,6 +15,8 @@ def render_task_assignment(task):
     else:
         st.caption('Sin trabajador asignado en Telegram. El nombre libre del responsable no vincula una cuenta automáticamente.')
     if not task_is_open(task):
+        from services.field_surveys_ui import render_task_surveys
+        render_task_surveys(task['id'])
         st.info('Las actividades concluidas o canceladas no aparecen en /mis_tareas y no admiten nuevas asignaciones.')
         return
     candidates = eligible_workers(task['id'])
@@ -45,3 +47,5 @@ def render_task_assignment(task):
     if not candidates:
         st.info('Configura el trabajador y su alcance en Administración de usuarios para poder asignarlo.')
     st.caption('La asignación estará disponible cuando el trabajador envíe /mis_tareas. No se envía aviso automático en esta etapa.')
+    from services.field_surveys_ui import render_task_surveys
+    render_task_surveys(task['id'])

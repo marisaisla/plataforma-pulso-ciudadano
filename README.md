@@ -68,3 +68,52 @@ municipio y sección, sin depender de una tarea. Coordinadores y directores cons
 La tabla es `field_needs`; PostgreSQL requiere `scripts/agregar_necesidades_postgresql.sql`.
 
 El script `scripts/prueba_bot_telegram.py` permite ejecutar la demostración del bot desde este proyecto. Consulta [la guía de Telegram](TELEGRAM_PRUEBA.md) para configurar el token en PowerShell y probar los comandos. Esta prueba todavía no consulta ni guarda datos en Go2Win.
+
+## Cuestionarios de campo
+
+El administrador abre **Cuestionarios de campo** desde la barra lateral o desde la
+asignación de una actividad. Coordinación lo encuentra en **Mi espacio Go2Win →
+Cuestionarios**, para actividades asignadas a su equipo dentro de su alcance.
+
+1. Seleccionar una actividad y abrir **Crear o editar cuestionario**.
+2. Capturar nombre, instrucciones, modalidad (una respuesta por actividad o varias
+   entrevistas) y hasta 30 preguntas de texto, número o una opción. Configurar
+   preguntas obligatorias, límites numéricos e indicadores de conteo, suma o promedio.
+3. Probar **Mostrar vista previa**, guardar borrador o publicar. Las versiones
+   publicadas son inmutables; al seleccionarlas en el editor se crea una copia.
+4. Seleccionar el cuestionario publicado y la meta en **Asignar cuestionario a la
+   actividad**. Se pueden reutilizar cuestionarios de actividades autorizadas de la
+   misma campaña. En modalidad de una respuesta la meta debe ser 1.
+5. Campo abre **Responder cuestionario** en `/mis_tareas` o `/tarea FOLIO`, inicia
+   sesión con su cuenta web y envía sus respuestas. También puede responder desde
+   la pestaña Cuestionarios de su espacio web.
+
+El configurador, la captura y los indicadores utilizan la API por HTTP mediante
+`services/field_surveys.py`; las reglas y el acceso a PostgreSQL residen en
+`backend/surveys.py`. No se consulta SQL como alternativa si la API falla.
+
+Configurar `GO2WIN_PUBLIC_URL=https://direccion-del-sistema` en la configuración
+privada del **servidor FastAPI**. Debe ser la dirección real de la pantalla web de
+Go2Win accesible desde los celulares, distinta de `API_BASE_URL`. Sin una dirección HTTPS configurada el bot no
+presenta el botón web. Esta opción no publica el servidor ni configura un túnel.
+Crear las cuentas web del personal en **Administración de usuarios**. Actualizar y
+reiniciar FastAPI, Streamlit y el receptor `python -m backend.telegram_polling`.
+No ejecutar simultáneamente el integrador anterior. La asignación se consulta con `/mis_tareas`; no
+se envía una notificación automática.
+
+Las respuestas guardan folio, trabajador, fecha UTC, territorio y versión. El envío
+es definitivo; una segunda entrega del mismo formulario no duplica el registro.
+Las tareas cerradas, cambios de responsable, cambios de cuestionario y revocaciones
+de alcance invalidan el acceso correspondiente. El enlace no sustituye la sesión
+web ni permite capturar por otro trabajador.
+
+En **Indicadores y respuestas** se calculan el total de capturas, avance de meta y
+los indicadores configurados por pregunta. Se contabilizan al enviar, sin revisión
+previa. Conteo excluye respuestas vacías y promedio usa solo números respondidos.
+Los indicadores son operativos por actividad y versión; no sobrescriben indicadores
+oficiales INEGI ni metas PMD. Las versiones anteriores conservan su historial.
+
+SQLite crea estas tablas al iniciar. En PostgreSQL ejecutar antes de iniciar la
+versión nueva: `.\.venv\Scripts\python.exe scripts\aplicar_actualizacion_telegram.py`.
+El script incluye `scripts/agregar_cuestionarios_postgresql.sql` y solo admite la
+base `go2win_desarrollo`. Para otras bases, administrar esa migración explícitamente.

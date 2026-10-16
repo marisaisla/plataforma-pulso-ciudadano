@@ -73,6 +73,11 @@ def command_buttons(conn, telegram_user_id, parts):
         buttons = [[{'text': f"Confirmar recepción #{t['id']}",
                      'callback_data': f"taskconfirm:{t['id']}:{t['generation']}"}]
                    for t in tasks if not t['received_at'] and can_confirm(conn, telegram_user_id, t)]
+        from backend.surveys import questionnaire_button
+        for task in tasks:
+            button = questionnaire_button(conn, telegram_user_id, task)
+            if button:
+                buttons.append([button])
         return {'inline_keyboard': buttons} if buttons else None
     except HTTPException:
         return None
