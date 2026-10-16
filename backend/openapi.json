@@ -1,0 +1,3198 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Go2Win API",
+    "description": "API de Go2Win: perfiles, usuarios, operación Telegram y Planes de acción. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.",
+    "version": "0.13.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/database": {
+      "get": {
+        "summary": "Database Health",
+        "operationId": "database_health_api_v1_health_database_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/workers/{worker_id}/telegram/activation-codes": {
+      "post": {
+        "summary": "Activation Code",
+        "operationId": "activation_code_api_v1_workers__worker_id__telegram_activation_codes_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "worker_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Worker Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/telegram/updates": {
+      "post": {
+        "summary": "Procesar comandos y botones de Telegram",
+        "description": "Procesa un evento del receptor confiable de Telegram o una simulación de Postman.\n\n**Comandos:** `/start CODIGO`, `/perfil`, `/mi_perfil`, `/mis_tareas`, `/tarea FOLIO`, `/reportar`, `/incidencia`, `/simpatizante`, `/necesidad` y `/cancelar`.\n\n**Incidencias:** `/incidencia` muestra tareas recibidas disponibles con permiso\nincidents.submit. Selección `incidentselect:FOLIO:GENERATION`, paginación\n`incidentpage:ULTIMO_FOLIO`. Captura de 30 minutos, texto o una foto con descripción.\nGuarda en field_reports con prefijo [INCIDENCIA], estado pending y folio R-...;\nmáximo 3987 caracteres de descripción para incluir el prefijo en el límite de 4000.\nEstado de respuesta reports. Validar el registro no significa resolver el problema.\n\n**Perfil:** `/perfil` y `/mi_perfil` son equivalentes. Consultan rol, equipo,\ncampañas, territorios y permisos vigentes de la identidad Telegram vinculada.\nDevuelven status=profile; no eliminan, renuevan ni guardan capturas pendientes.\nIdentidad no vinculada o inactiva devuelve status=rejected.\n\n**Ayuda:** `/ayuda` devuelve status=help con los comandos autorizados por los\npermisos vigentes del rol y la captura activa con su tiempo restante.\nNo modifica ni renueva capturas. No vinculados reciben orientación /start CODIGO;\ninactivos reciben orientación a coordinación. Comandos desconocidos muestran la ayuda.\n\n**Historial de reportes:** `/mis_reportes` muestra reportes propios con estado y\nobservaciones de revisión, filtrados por permiso reports.view y territorio vigente.\n`reporthistory:ULTIMO_FOLIO` pagina el historial. Conserva capturas pendientes.\n`/evidencia` orienta al flujo de /reportar, sin abrir otra captura.\n\n**Necesidades:** `/necesidad` muestra campañas autorizadas; seleccionar con\n`needcampaign:FOLIO` o `/necesidad FOLIO_CAMPAÑA`. Enviar Estado, Municipio,\nSección positiva de hasta 6 dígitos, Origen: detectada/comentada y Necesidad al final\n(hasta 3000 caracteres, admite varias líneas). Captura por 30 minutos, folio N-...,\npermiso needs.submit y alcance territorial; no requiere tarea ni recepción.\n\n**Simpatizantes:** `/simpatizante` muestra campañas autorizadas. Elegir con callback\n`supportcampaign:FOLIO` o `/simpatizante FOLIO_CAMPAÑA`, luego enviar un texto con\nNombre, Teléfono, Estado, Municipio, Sección opcional, Clave de elector, Registro: SI\ny Mensajes: SI o NO, un campo por línea separado por dos puntos. Captura de 30 minutos,\nmáximo 2000 caracteres, folio S-..., permiso supporters.submit y alcance territorial.\nNo se envían mensajes al simpatizante ni se verifica la identidad ante el INE.\n\n**Confirmación:** callback `taskconfirm:FOLIO:GENERATION`. Guarda recepción sin concluir la tarea.\n\n**Reportar texto:**\n1. Enviar un `message` con `text=/reportar`: devuelve tareas recibidas y botones en `reply_markup`.\n2. Enviar `callback_query` con `data=reportselect:FOLIO:GENERATION`: abre captura por 30 minutos.\n3. Enviar un nuevo `message` con el avance (1–4000 caracteres) y `date` Unix actual:\n   guarda el reporte por validar y devuelve un folio `R-...`.\n4. `/cancelar` descarta la captura. `reportpage:ULTIMO_FOLIO` pagina el menú.\n\nSustituir los IDs, GENERATION y fechas de los ejemplos por valores reales.\nSe revalidan usuario activo, asignación, recepción, permisos y alcance al guardar.\nRepetir el mismo chat/mensaje no duplica el reporte. No cambia el estado de la tarea.\nAlternativamente enviar `photo` (tamaños de Telegram) y `caption` con el avance.\nSe admite una fotografía JPEG por reporte: hasta 10 MB y 25 millones de píxeles;\nno álbumes ni documentos. API descarga mediante getFile y guarda imagen/reporte\njuntos en PostgreSQL. Fallos transitorios devuelven 503 para reintentar.\n\nRequiere `X-Telegram-Bot-Api-Secret-Token`. Devuelve `status`, `reply` y, cuando aplica,\n`reply_markup`. Los rechazos de negocio llegan con HTTP 200 y su explicación;\nautenticación inválida: 401; estructura inválida: 422; fallo de PostgreSQL: 503.\nLa API devuelve JSON; el receptor polling envía el texto y botones a Telegram.",
+        "operationId": "telegram_update_api_v1_integrations_telegram_updates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Update"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/integrations/telegram/users/{telegram_user_id}/tasks": {
+      "get": {
+        "summary": "Assigned Tasks",
+        "operationId": "assigned_tasks_api_v1_integrations_telegram_users__telegram_user_id__tasks_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "telegram_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 4503599627370495,
+              "exclusiveMinimum": 0,
+              "title": "Telegram User Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 3,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/telegram/users/{telegram_user_id}/tasks/{task_id}": {
+      "get": {
+        "summary": "Assigned Task",
+        "operationId": "assigned_task_api_v1_integrations_telegram_users__telegram_user_id__tasks__task_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "telegram_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 4503599627370495,
+              "exclusiveMinimum": 0,
+              "title": "Telegram User Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Login",
+        "description": "Acceso con credenciales existentes. Cinco fallos bloquean el usuario cinco minutos.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/password": {
+      "post": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Change Password",
+        "operationId": "change_password_api_v1_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Users",
+        "operationId": "users_api_v1_users_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserOut"
+                  },
+                  "title": "Response Users Api V1 Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Create User",
+        "operationId": "create_user_api_v1_users_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}": {
+      "get": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Get User",
+        "operationId": "get_user_api_v1_users__wid__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Edit User",
+        "operationId": "edit_user_api_v1_users__wid__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rename"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}/access": {
+      "put": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Access",
+        "operationId": "access_api_v1_users__wid__access_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Access"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}/active": {
+      "put": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Active",
+        "operationId": "active_api_v1_users__wid__active_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Active"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}/scopes": {
+      "get": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Scopes",
+        "operationId": "scopes_api_v1_users__wid__scopes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Add Scope",
+        "operationId": "add_scope_api_v1_users__wid__scopes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Remove Scope",
+        "operationId": "remove_scope_api_v1_users__wid__scopes_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}/account": {
+      "put": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Account",
+        "operationId": "account_api_v1_users__wid__account_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Account"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}/telegram": {
+      "delete": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Unlink",
+        "operationId": "unlink_api_v1_users__wid__telegram_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{wid}/telegram/activation-codes": {
+      "post": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Activation",
+        "operationId": "activation_api_v1_users__wid__telegram_activation_codes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "tags": [
+          "Usuarios y acceso"
+        ],
+        "summary": "Roles",
+        "operationId": "roles_api_v1_roles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles/options": {
+      "get": {
+        "tags": [
+          "Perfiles y elección"
+        ],
+        "summary": "Tipos de perfil y condiciones",
+        "operationId": "options_api_v1_profiles_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles": {
+      "get": {
+        "tags": [
+          "Perfiles y elección"
+        ],
+        "summary": "Consultar candidatos",
+        "description": "Devuelve perfiles con sus campos completos; conserva id/name para clientes anteriores.",
+        "operationId": "profiles_api_v1_profiles_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Active Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileOut"
+                  },
+                  "title": "Response Profiles Api V1 Profiles Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Perfiles y elección"
+        ],
+        "summary": "Guardar perfil",
+        "description": "Guarda perfil y palabra clave inicial juntos, conforme al comportamiento existente.",
+        "operationId": "create_profile_api_v1_profiles_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{profile_id}/active": {
+      "put": {
+        "tags": [
+          "Perfiles y elección"
+        ],
+        "summary": "Activar o desactivar perfil",
+        "description": "Cambia solo active; conserva trayectorias, palabras clave y demás registros relacionados.",
+        "operationId": "set_profile_active_api_v1_profiles__profile_id__active_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileActive"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile-positions": {
+      "get": {
+        "tags": [
+          "Perfiles y elección"
+        ],
+        "summary": "Consultar cargos y candidaturas",
+        "operationId": "positions_api_v1_profile_positions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PositionOut"
+                  },
+                  "title": "Response Positions Api V1 Profile Positions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{profile_id}/positions": {
+      "post": {
+        "tags": [
+          "Perfiles y elección"
+        ],
+        "summary": "Guardar cargo o candidatura",
+        "operationId": "create_position_api_v1_profiles__profile_id__positions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PositionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/territory-options": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Territory Options",
+        "operationId": "territory_options_api_v1_territory_options_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{pid}/states": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Profile States",
+        "operationId": "profile_states_api_v1_profiles__pid__states_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/action-strategies": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Strategies",
+        "operationId": "strategies_api_v1_action_strategies_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Activities",
+        "operationId": "activities_api_v1_activities_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "strategy_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Strategy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Create Activity",
+        "operationId": "create_activity_api_v1_activities_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivityCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}": {
+      "patch": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Progress",
+        "operationId": "progress_api_v1_activities__tid__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Progress"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/assignment": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Assignment",
+        "operationId": "assignment_api_v1_activities__tid__assignment_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Assign",
+        "operationId": "assign_api_v1_activities__tid__assignment_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Assignment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/candidates": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Eligible Workers",
+        "operationId": "eligible_workers_api_v1_activities__tid__candidates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/reports": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Reports",
+        "operationId": "reports_api_v1_activities__tid__reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{rid}/photo": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Photo",
+        "operationId": "photo_api_v1_reports__rid__photo_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{rid}/review": {
+      "put": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Review",
+        "operationId": "review_api_v1_reports__rid__review_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Review"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supporters": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Supporter Catalog",
+        "operationId": "supporter_catalog_api_v1_supporters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/needs": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Needs Catalog",
+        "operationId": "needs_catalog_api_v1_needs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/field/portal": {
+      "get": {
+        "tags": [
+          "Operación de campo"
+        ],
+        "summary": "Portal",
+        "operationId": "portal_api_v1_field_portal_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Access": {
+        "properties": {
+          "role_key": {
+            "type": "string",
+            "enum": [
+              "field",
+              "supervisor",
+              "coordinator",
+              "director",
+              "administrator"
+            ],
+            "title": "Role Key"
+          },
+          "team": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Team",
+            "default": ""
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_key"
+        ],
+        "title": "Access"
+      },
+      "Account": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "title": "Username"
+          },
+          "temporary_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "format": "password",
+            "title": "Temporary Password",
+            "writeOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "temporary_password"
+        ],
+        "title": "Account"
+      },
+      "Active": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active"
+        ],
+        "title": "Active"
+      },
+      "ActivityCreate": {
+        "properties": {
+          "strategy_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Strategy Id"
+          },
+          "activity_name": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Activity Name"
+          },
+          "activity_description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Description"
+          },
+          "responsible": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsible"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date"
+          },
+          "priority_level": {
+            "type": "string",
+            "enum": [
+              "Alta",
+              "Media",
+              "Baja"
+            ],
+            "title": "Priority Level",
+            "default": "Media"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "electoral_section": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Electoral Section"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strategy_id",
+          "activity_name",
+          "due_date"
+        ],
+        "title": "ActivityCreate"
+      },
+      "Assignment": {
+        "properties": {
+          "worker_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Id"
+          }
+        },
+        "type": "object",
+        "title": "Assignment"
+      },
+      "Callback": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "from": {
+            "$ref": "#/components/schemas/Sender"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Message"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Data",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "from"
+        ],
+        "title": "Callback"
+      },
+      "Chat": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "maximum": 4503599627370495.0,
+            "minimum": -4503599627370495.0,
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "private",
+              "group",
+              "supergroup",
+              "channel"
+            ],
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "title": "Chat"
+      },
+      "CodeResult": {
+        "properties": {
+          "worker_id": {
+            "type": "integer",
+            "title": "Worker Id"
+          },
+          "activation_code": {
+            "type": "string",
+            "title": "Activation Code"
+          },
+          "command": {
+            "type": "string",
+            "title": "Command"
+          },
+          "expires_at": {
+            "type": "integer",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "worker_id",
+          "activation_code",
+          "command",
+          "expires_at"
+        ],
+        "title": "CodeResult"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Login": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "format": "password",
+            "title": "Password",
+            "writeOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Login"
+      },
+      "LoginOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_at": {
+            "type": "integer",
+            "title": "Expires At"
+          },
+          "must_change_password": {
+            "type": "boolean",
+            "title": "Must Change Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_at",
+          "must_change_password"
+        ],
+        "title": "LoginOut"
+      },
+      "Message": {
+        "properties": {
+          "message_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Message Id"
+          },
+          "from": {
+            "$ref": "#/components/schemas/Sender"
+          },
+          "chat": {
+            "$ref": "#/components/schemas/Chat"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "photo": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Photo"
+                },
+                "type": "array",
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "media_group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Group Id"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "message_id",
+          "from",
+          "chat"
+        ],
+        "title": "Message"
+      },
+      "PasswordChange": {
+        "properties": {
+          "old_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "format": "password",
+            "title": "Old Password",
+            "writeOnly": true
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "format": "password",
+            "title": "New Password",
+            "writeOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_password",
+          "new_password"
+        ],
+        "title": "PasswordChange"
+      },
+      "Photo": {
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "File Id"
+          },
+          "file_unique_id": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "File Unique Id"
+          },
+          "width": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Height"
+          },
+          "file_size": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_id",
+          "file_unique_id",
+          "width",
+          "height"
+        ],
+        "title": "Photo"
+      },
+      "PositionCreate": {
+        "properties": {
+          "office": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Office"
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "Candidato/a",
+              "En funciones",
+              "Exfuncionario/a",
+              "Otro"
+            ],
+            "title": "Condition"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "party_or_coalition": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Party Or Coalition",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "office",
+          "condition",
+          "starts_at"
+        ],
+        "title": "PositionCreate"
+      },
+      "PositionOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "profile_id": {
+            "type": "integer",
+            "title": "Profile Id"
+          },
+          "profile_name": {
+            "type": "string",
+            "title": "Profile Name"
+          },
+          "office": {
+            "type": "string",
+            "title": "Office"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "party_or_coalition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Or Coalition"
+          },
+          "is_current": {
+            "type": "integer",
+            "title": "Is Current"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profile_id",
+          "profile_name",
+          "office",
+          "condition",
+          "starts_at",
+          "ends_at",
+          "party_or_coalition",
+          "is_current"
+        ],
+        "title": "PositionOut"
+      },
+      "ProfileActive": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active"
+        ],
+        "title": "ProfileActive"
+      },
+      "ProfileCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "actor_type": {
+            "type": "string",
+            "enum": [
+              "Persona",
+              "Partido político",
+              "Institución pública",
+              "Tema sin actor"
+            ],
+            "title": "Actor Type"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "actor_type"
+        ],
+        "title": "ProfileCreate"
+      },
+      "ProfileOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "actor_type": {
+            "type": "string",
+            "title": "Actor Type"
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "actor_type",
+          "active",
+          "notes"
+        ],
+        "title": "ProfileOut"
+      },
+      "Progress": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "Pendiente",
+              "En curso",
+              "Concluida",
+              "Cancelada"
+            ],
+            "title": "Status"
+          },
+          "evidence_note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "Progress"
+      },
+      "Rename": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "Rename"
+      },
+      "Review": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "correction"
+            ],
+            "title": "Decision"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "Review"
+      },
+      "Scope": {
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Id"
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "State",
+            "default": ""
+          },
+          "municipality": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Municipality",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile_id"
+        ],
+        "title": "Scope"
+      },
+      "Sender": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "maximum": 4503599627370495.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Id"
+          },
+          "is_bot": {
+            "type": "boolean",
+            "title": "Is Bot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "is_bot"
+        ],
+        "title": "Sender"
+      },
+      "TaskPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskResult"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "TaskPage"
+      },
+      "TaskResult": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "profile_id": {
+            "type": "integer",
+            "title": "Profile Id"
+          },
+          "activity_name": {
+            "type": "string",
+            "title": "Activity Name"
+          },
+          "activity_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Description"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "municipality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "generation": {
+            "type": "string",
+            "title": "Generation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profile_id",
+          "activity_name",
+          "activity_description",
+          "state",
+          "municipality",
+          "due_date",
+          "status",
+          "received_at",
+          "generation"
+        ],
+        "title": "TaskResult"
+      },
+      "Update": {
+        "properties": {
+          "update_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Update Id"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Message"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "callback_query": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Callback"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "update_id"
+        ],
+        "title": "Update",
+        "examples": [
+          {
+            "message": {
+              "chat": {
+                "id": 123456789,
+                "type": "private"
+              },
+              "date": 1791800000,
+              "from": {
+                "id": 123456789,
+                "is_bot": false
+              },
+              "message_id": 100,
+              "text": "/reportar"
+            },
+            "update_id": 20001
+          },
+          {
+            "callback_query": {
+              "data": "reportselect:1:GENERATION",
+              "from": {
+                "id": 123456789,
+                "is_bot": false
+              },
+              "id": "seleccion-unica-1",
+              "message": {
+                "chat": {
+                  "id": 123456789,
+                  "type": "private"
+                },
+                "from": {
+                  "id": 999,
+                  "is_bot": true
+                },
+                "message_id": 101
+              }
+            },
+            "update_id": 20002
+          },
+          {
+            "message": {
+              "chat": {
+                "id": 123456789,
+                "type": "private"
+              },
+              "date": 1791800001,
+              "from": {
+                "id": 123456789,
+                "is_bot": false
+              },
+              "message_id": 102,
+              "text": "Avance de la actividad."
+            },
+            "update_id": 20003
+          }
+        ]
+      },
+      "UpdateResult": {
+        "properties": {
+          "update_id": {
+            "type": "integer",
+            "title": "Update Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ignored",
+              "unsupported",
+              "rejected",
+              "already_linked",
+              "linked",
+              "tasks",
+              "received",
+              "reports",
+              "supporters",
+              "needs",
+              "profile",
+              "help"
+            ],
+            "title": "Status"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          },
+          "reply_markup": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply Markup"
+          }
+        },
+        "type": "object",
+        "required": [
+          "update_id",
+          "status",
+          "reply"
+        ],
+        "title": "UpdateResult"
+      },
+      "UserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "team": {
+            "type": "string",
+            "title": "Team"
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          },
+          "role_key": {
+            "type": "string",
+            "title": "Role Key"
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id"
+          },
+          "telegram_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram User Id"
+          },
+          "telegram_chat_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Chat Id"
+          },
+          "linked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked At"
+          },
+          "created_at": {
+            "type": "integer",
+            "title": "Created At"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "must_change": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Must Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "team",
+          "active",
+          "role_key",
+          "supervisor_id",
+          "telegram_user_id",
+          "telegram_chat_id",
+          "linked_at",
+          "created_at",
+          "username",
+          "must_change"
+        ],
+        "title": "UserOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkerCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "team": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Team",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WorkerCreate"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Telegram-Bot-Api-Secret-Token"
+      },
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -1,0 +1,906 @@
+{
+  "info": {
+    "name": "Go2Win API - Administración de usuarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "new_name",
+      "value": "Usuario de prueba API"
+    },
+    {
+      "key": "team",
+      "value": ""
+    },
+    {
+      "key": "role_key",
+      "value": "field"
+    },
+    {
+      "key": "supervisor_id",
+      "value": "null"
+    },
+    {
+      "key": "account_username",
+      "value": ""
+    },
+    {
+      "key": "temporary_password",
+      "value": ""
+    },
+    {
+      "key": "old_password",
+      "value": ""
+    },
+    {
+      "key": "new_password",
+      "value": ""
+    },
+    {
+      "key": "campaign_id",
+      "value": ""
+    },
+    {
+      "key": "state",
+      "value": ""
+    },
+    {
+      "key": "municipality",
+      "value": ""
+    },
+    {
+      "key": "profile_id",
+      "value": ""
+    },
+    {
+      "key": "profile_name",
+      "value": "Perfil de prueba API"
+    },
+    {
+      "key": "actor_type",
+      "value": "Persona"
+    },
+    {
+      "key": "profile_notes",
+      "value": ""
+    },
+    {
+      "key": "position_office",
+      "value": "Presidencia municipal"
+    },
+    {
+      "key": "position_condition",
+      "value": "Candidato/a"
+    },
+    {
+      "key": "position_start",
+      "value": "2026-10-15"
+    },
+    {
+      "key": "position_end",
+      "value": ""
+    },
+    {
+      "key": "position_party",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Login",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"username\": \"{{username}}\", \"password\": \"{{password}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===200) pm.collectionVariables.set('access_token',pm.response.json().access_token); else pm.collectionVariables.set('access_token','');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Mi sesión",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/auth/me",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "03 Cambiar mi contraseña (cierra sesiones)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/auth/password",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"old_password\": \"{{old_password}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"old_password\": \"{{old_password}}\", \"new_password\": \"{{new_password}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===204) pm.collectionVariables.set('access_token','');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Listar usuarios",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/users?after=0&limit=50",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "05 Crear trabajador de prueba",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/users",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{new_name}}\",\n  \"team\": \"{{team}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"name\": \"{{new_name}}\", \"team\": \"{{team}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===201) pm.collectionVariables.set('user_id',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Consultar usuario",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "07 Cambiar nombre",
+      "request": {
+        "method": "PATCH",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{new_name}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"name\": \"{{new_name}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Consultar roles y permisos",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/roles",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "09 Cambiar rol equipo y supervisor",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/access",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role_key\": \"{{role_key}}\",\n  \"team\": \"{{team}}\",\n  \"supervisor_id\": \"{{supervisor_id}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"role_key\": \"{{role_key}}\", \"team\": \"{{team}}\", \"supervisor_id\": \"{{supervisor_id}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Desactivar usuario",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/active",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"active\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"active\": false};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Reactivar usuario",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/active",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"active\": true};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Crear o restablecer cuenta",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/account",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{account_username}}\",\n  \"temporary_password\": \"{{temporary_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"username\": \"{{account_username}}\", \"temporary_password\": \"{{temporary_password}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Consultar candidatos",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/profiles",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "14 Consultar territorios",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/scopes",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "15 Agregar territorio",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/scopes",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"profile_id\": \"{{campaign_id}}\",\n  \"state\": \"{{state}}\",\n  \"municipality\": \"{{municipality}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"profile_id\": \"{{campaign_id}}\", \"state\": \"{{state}}\", \"municipality\": \"{{municipality}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Retirar territorio",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/scopes",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"profile_id\": \"{{campaign_id}}\",\n  \"state\": \"{{state}}\",\n  \"municipality\": \"{{municipality}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const value = {\"profile_id\": \"{{campaign_id}}\", \"state\": \"{{state}}\", \"municipality\": \"{{municipality}}\"};",
+              "function resolve(v) { if (typeof v === 'string' && /^\\{\\{\\w+\\}\\}$/.test(v)) { const key=v.slice(2,-2); const raw=pm.collectionVariables.get(key); if (key==='supervisor_id') return raw && raw!=='null' ? Number(raw) : null; if (key==='campaign_id') return Number(raw); return raw; } if (v && typeof v==='object') for (const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(value)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Generar código Telegram",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/telegram/activation-codes",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "18 Desvincular Telegram",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/v1/users/{{user_id}}/telegram",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "19 Cerrar sesión",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/auth/logout",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===204) pm.collectionVariables.set('access_token','');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Tipos de perfil y condiciones",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/profiles/options",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": []
+      }
+    },
+    {
+      "name": "21 Crear perfil de prueba",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/profiles",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{profile_name}}\",\n  \"actor_type\": \"{{actor_type}}\",\n  \"notes\": \"{{profile_notes}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"name\": \"{{profile_name}}\", \"actor_type\": \"{{actor_type}}\", \"notes\": \"{{profile_notes}}\"};for (const k of Object.keys(body)) { const v=body[k]; if (typeof v==='string' && v.startsWith('{{')) body[k]=pm.collectionVariables.get(v.slice(2,-2)); } if ('ends_at' in body && !body.ends_at) body.ends_at=null; pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===201) pm.collectionVariables.set('profile_id',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Consultar trayectorias",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/profile-positions",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": []
+      }
+    },
+    {
+      "name": "23 Guardar trayectoria",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/profiles/{{profile_id}}/positions",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"office\": \"{{position_office}}\",\n  \"condition\": \"{{position_condition}}\",\n  \"starts_at\": \"{{position_start}}\",\n  \"ends_at\": \"{{position_end}}\",\n  \"party_or_coalition\": \"{{position_party}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"office\": \"{{position_office}}\", \"condition\": \"{{position_condition}}\", \"starts_at\": \"{{position_start}}\", \"ends_at\": \"{{position_end}}\", \"party_or_coalition\": \"{{position_party}}\"};for (const k of Object.keys(body)) { const v=body[k]; if (typeof v==='string' && v.startsWith('{{')) body[k]=pm.collectionVariables.get(v.slice(2,-2)); } if ('ends_at' in body && !body.ends_at) body.ends_at=null; pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Desactivar perfil",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/profiles/{{profile_id}}/active",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"active\": false}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

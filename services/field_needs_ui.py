@@ -1,6 +1,6 @@
 """Consulta de necesidades con filtros y autorización de backend."""
 import streamlit as st
-from services.field_needs import catalog
+from services.field_api import needs_catalog as catalog
 from services.web_auth_ui import session_token
 
 
@@ -10,7 +10,7 @@ def render_needs():
     st.button('Actualizar necesidades', key='refresh_needs')
     try:
         rows = catalog(session_token())
-    except PermissionError as exc:
+    except (ValueError,PermissionError) as exc:
         st.error(str(exc))
         return
     for key,label in [('campaign','Campaña'),('state','Estado'),('municipality','Municipio'),('electoral_section','Sección')]:

@@ -1,8 +1,8 @@
 """Asignación de actividades desde la consola local de coordinación."""
 import streamlit as st
 
-from services.field_tasks import assign_task_locally, eligible_workers, get_assignment, task_is_open
-from services.web_auth_ui import require_admin, session_token
+from services.field_api import assign_task_locally, eligible_workers, get_assignment, task_is_open, require_admin
+from services.web_auth_ui import session_token
 
 
 def render_task_assignment(task):
@@ -43,5 +43,5 @@ def render_task_assignment(task):
             except (ValueError, PermissionError) as exc:
                 st.error(str(exc))
     if not candidates:
-        st.info('Configura el trabajador y su alcance en Personal y Telegram para poder asignarlo.')
+        st.info('Configura el trabajador y su alcance en Administración de usuarios para poder asignarlo.')
     st.caption('La asignación estará disponible cuando el trabajador envíe /mis_tareas. No se envía aviso automático en esta etapa.')

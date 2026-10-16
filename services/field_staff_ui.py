@@ -1,37 +1,27 @@
-"""Pantalla local de coordinación para el piloto de Telegram."""
+"""Administración de usuarios, roles, territorios y acceso al sistema."""
 import streamlit as st
-from contextlib import closing
-from services.field_staff import (
-    initialize_staff, create_worker, list_workers, issue_code, set_worker_active, unlink_worker,
+from services.field_api import (
+    create_worker, list_workers, set_worker_active,
+    require_admin,save_access,list_scopes,add_scope,remove_scope,profile_list,territories,roles,
 )
-from services.database import connection
-from services.web_auth_ui import require_admin, render_web_account
+from services.web_auth_ui import render_web_account
 from services.field_permissions import (
-    ROLE_LABELS, ROLE_GRANTS, PERMISSION_LABELS, SCOPE_LABELS,
-    save_access, list_scopes, add_scope, remove_scope,
+    ROLE_LABELS, PERMISSION_LABELS, SCOPE_LABELS,
 )
 
 
-def query(sql, parameters=()):
-    with closing(connection()) as conn:
-        return [dict(row) for row in conn.execute(sql, parameters)]
-
-
-def render_field_staff():
+def _render_user_administration():
     require_admin()
-    initialize_staff()
-    with st.expander('Necesidades territoriales'):
-        from services.field_needs_ui import render_needs
-        render_needs()
-    with st.expander('Catálogo de simpatizantes'):
-        from services.supporters_ui import render_supporters
-        render_supporters()
-    st.caption('Registra al personal, configura su acceso y vincula Telegram. Asigna sus actividades desde Planes de acción.')
+    st.caption('Registra al personal y configura roles, equipos, territorios y acceso al sistema. La vinculación y las capturas del bot se encuentran en Operación de Telegram.')
     st.info('Administración de usuarios. Los roles y alcances se aplican al panel operativo y a Telegram.')
     with st.expander('Consultar roles y permisos'):
+        role_grants={role:{} for role in ROLE_LABELS}
+        for grant in roles():
+            if grant['permission_key']:
+                role_grants.setdefault(grant['key'],{})[grant['permission_key']]=grant['scope']
         st.dataframe([{'Permiso': label, **{ROLE_LABELS[role]: SCOPE_LABELS.get(grants.get(key), 'Sin permiso')
-                      for role, grants in ROLE_GRANTS.items()}} for key, label in PERMISSION_LABELS.items()],
-                     hide_index=True, use_container_width=True)
+                      for role, grants in role_grants.items()}} for key, label in PERMISSION_LABELS.items()],
+                     hide_index=True, width='stretch')
         st.caption('Supervisor: personal de campo asignado directamente y del mismo equipo. '
                    'Coordinador: personal y supervisores de su equipo. Ambos necesitan alcance territorial. '
                    'Director: campañas y territorios autorizados. Administrador: toda la operación.')
@@ -41,19 +31,18 @@ def render_field_staff():
         if st.form_submit_button('Registrar trabajador'):
             try:
                 create_worker(name, team)
-                st.success('Trabajador registrado. Selecciónalo abajo para generar su código.')
+                st.success('Trabajador registrado. Selecciónalo abajo para configurar su acceso.')
             except ValueError as exc:
                 st.error(str(exc))
     workers = list_workers()
     if not workers:
-        st.info('Registra al primer trabajador para iniciar la vinculación.')
+        st.info('Registra al primer trabajador para configurar su acceso.')
         return
-    st.button('Actualizar estado de vinculación')
+    st.button('Actualizar usuarios')
     st.dataframe([{'Folio': w['id'], 'Nombre': w['name'], 'Equipo': w['team'],
                    'Rol': ROLE_LABELS.get(w['role_key'], 'Sin rol válido'),
-                   'Acceso': 'Activo' if w['active'] else 'Desactivado',
-                   'Telegram': 'Vinculado' if w['telegram_user_id'] is not None else 'Sin vincular'}
-                  for w in workers], hide_index=True, use_container_width=True)
+                   'Acceso': 'Activo' if w['active'] else 'Desactivado'}
+                  for w in workers], hide_index=True, width='stretch')
     selected = st.selectbox('Trabajador', [w['id'] for w in workers],
                             format_func=lambda wid: next(f"{w['name']} · #{wid}" for w in workers if w['id'] == wid))
     worker = next(w for w in workers if w['id'] == selected)
@@ -78,7 +67,7 @@ def render_field_staff():
             except ValueError as exc:
                 st.error(str(exc))
     st.markdown('### Campañas y territorios autorizados')
-    profiles = query('SELECT id, name FROM profiles ORDER BY name')
+    profiles = profile_list()
     profile_names = {p['id']: p['name'] for p in profiles}
     scopes = list_scopes(selected)
     if worker['role_key'] == 'administrator':
@@ -94,11 +83,10 @@ def render_field_staff():
     if profiles:
         scope_profile = st.selectbox('Perfil / campaña', list(profile_names), format_func=profile_names.get,
                                      key=f'scope_profile_{selected}')
-        states = [r['state'] for r in query("SELECT DISTINCT state FROM territories WHERE state IS NOT NULL AND state != '' ORDER BY state")]
+        states = territories()['states']
         scope_state = st.selectbox('Estado autorizado', [''] + states,
                                    format_func=lambda s: s or 'Todos los estados', key=f'scope_state_{selected}')
-        municipalities = [r['municipality'] for r in query("SELECT DISTINCT municipality FROM territories WHERE state = ? "
-                                                           "AND municipality IS NOT NULL AND municipality != '' ORDER BY municipality", (scope_state,))]
+        municipalities = territories(scope_state)['municipalities']
         scope_municipality = st.selectbox('Municipio autorizado', [''] + municipalities,
                                           format_func=lambda m: m or 'Todos los municipios',
                                           key=f'scope_municipality_{selected}_{scope_state}', disabled=not scope_state)
@@ -112,25 +100,20 @@ def render_field_staff():
         st.info('Registra un perfil en Go2Win para asignar un alcance.')
     st.caption('Un alcance para toda la campaña incluye los alcances más específicos. '
                'Retíralo si deseas restringir al usuario a un estado o municipio.')
-    if worker['active'] and worker['telegram_user_id'] is None:
-        if st.button('Generar código de activación'):
-            try:
-                code = issue_code(selected)
-                st.code(f'/start {code}', language=None)
-                st.info('Entrega este comando solo al trabajador seleccionado para que lo envíe al bot en privado. '
-                        'Vence en 30 minutos y se usa una vez. Un código nuevo invalida el anterior. '
-                        'Cópialo ahora: no se mostrará de nuevo al cambiar de pantalla.')
-            except ValueError as exc:
-                st.error(str(exc))
     if st.button('Desactivar acceso' if worker['active'] else 'Reactivar acceso'):
         try:
             set_worker_active(selected, not worker['active'])
             st.rerun()
         except ValueError as exc:
             st.error(str(exc))
-    if worker['telegram_user_id'] is not None:
-        confirm = st.checkbox('Quiero retirar el vínculo con la cuenta actual', key=f'unlink_{selected}')
-        if st.button('Desvincular Telegram', disabled=not confirm):
-            unlink_worker(selected)
-            st.rerun()
     render_web_account(worker)
+
+
+# Compatibilidad con herramientas que importan el render anterior.
+def render_user_administration():
+    from services.field_api import APIError
+    try: _render_user_administration()
+    except APIError as exc: st.error(str(exc))
+
+
+render_field_staff = render_user_administration

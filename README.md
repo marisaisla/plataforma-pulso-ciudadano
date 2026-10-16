@@ -58,7 +58,7 @@ La etapa 1 funciona localmente. No requiere Supabase ni otro servicio de infraes
 
 Para registrar trabajadores y activar su acceso real, consulta [Vinculación de personal con Telegram](TELEGRAM_INTEGRADOR.md). Ejecuta `scripts/integrador_telegram.py` en lugar del script de demostración. Permite consultar tareas asignadas, confirmar recepción, enviar reportes de texto o una foto con descripción y folio, y consultar su revisión. Para PostgreSQL aplica primero `scripts/agregar_evidencias_postgresql.sql`.
 
-Los cinco roles y sus alcances por campaña y territorio se administran en **Personal y Telegram**. Consulta [Roles y permisos](ROLES_Y_PERMISOS.md) para configurarlos y conocer el alcance del control de acceso actual.
+Los cinco roles y sus alcances por campaña y territorio se administran en **Administración de usuarios**. Consulta [Roles y permisos](ROLES_Y_PERMISOS.md) para configurarlos y conocer el alcance del control de acceso actual.
 
 El comando `/simpatizante` registra nombre, teléfono, territorio, sección opcional, clave de elector y autorizaciones en un catálogo consultable por rol y alcance. Para PostgreSQL aplica también `scripts/agregar_simpatizantes_postgresql.sql`. El envío de información a simpatizantes queda pendiente.
 

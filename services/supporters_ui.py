@@ -1,6 +1,6 @@
 """Catálogo filtrado por sesión, rol y territorio."""
 import streamlit as st
-from services.supporters import catalog
+from services.field_api import supporter_catalog as catalog
 from services.web_auth_ui import session_token
 
 
@@ -9,7 +9,7 @@ def render_supporters():
     st.caption('Registrados desde /simpatizante. La autorización para recibir información se conserva por separado.')
     try:
         rows = catalog(session_token())
-    except PermissionError as exc:
+    except (ValueError,PermissionError) as exc:
         st.error(str(exc))
         return
     search = st.text_input('Buscar por nombre, teléfono o clave de elector', key='supporter_search').strip().casefold()

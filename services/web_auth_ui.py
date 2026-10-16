@@ -125,7 +125,8 @@ def render_web_account(worker):
             try:
                 if password != confirmation:
                     raise ValueError('Las contraseñas no coinciden.')
-                auth.set_account(session_token(), worker['id'], username, password)
+                from services.field_api import set_account
+                set_account(session_token(), worker['id'], username, password)
                 st.success('Acceso guardado. Entrega las credenciales a esa persona por un canal privado.')
             except (ValueError, PermissionError) as exc:
                 st.error(str(exc))

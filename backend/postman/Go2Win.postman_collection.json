@@ -1,0 +1,849 @@
+{
+  "info": {
+    "name": "Go2Win API - Vinculación Telegram",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "admin_key",
+      "value": ""
+    },
+    {
+      "key": "telegram_secret",
+      "value": ""
+    },
+    {
+      "key": "worker_id",
+      "value": ""
+    },
+    {
+      "key": "telegram_user_id",
+      "value": "123456789"
+    },
+    {
+      "key": "activation_code",
+      "value": ""
+    },
+    {
+      "key": "task_id",
+      "value": ""
+    },
+    {
+      "key": "task_generation",
+      "value": ""
+    },
+    {
+      "key": "report_body",
+      "value": "Avance de prueba"
+    },
+    {
+      "key": "callback_id",
+      "value": "postman-report-1"
+    },
+    {
+      "key": "report_message_id",
+      "value": "100"
+    },
+    {
+      "key": "photo_file_id",
+      "value": ""
+    },
+    {
+      "key": "photo_unique_id",
+      "value": ""
+    },
+    {
+      "key": "campaign_id",
+      "value": ""
+    },
+    {
+      "key": "supporter_message_id",
+      "value": "300"
+    },
+    {
+      "key": "supporter_body",
+      "value": "Nombre: Persona de prueba\nTeléfono: 5512345678\nEstado: Sonora\nMunicipio: Hermosillo\nSección: 123\nClave de elector: ABCDEF123456789012\nRegistro: SI\nMensajes: NO"
+    },
+    {
+      "key": "need_message_id",
+      "value": "500"
+    },
+    {
+      "key": "need_body",
+      "value": "Estado: Sonora\nMunicipio: Hermosillo\nSección: 123\nOrigen: comentada\nNecesidad: Falta alumbrado en dos calles."
+    }
+  ],
+  "item": [
+    {
+      "name": "Salud",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/health"
+      }
+    },
+    {
+      "name": "PostgreSQL",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{admin_key}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/health/database"
+      }
+    },
+    {
+      "name": "Generar código",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{admin_key}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/workers/{{worker_id}}/telegram/activation-codes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Código creado', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set('activation_code', pm.response.json().activation_code);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vincular",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"update_id\": 10001,\n  \"message\": {\n    \"message_id\": 15,\n    \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false},\n    \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"},\n    \"text\": \"/start {{activation_code}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Vinculación o reintento', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.be.oneOf(['linked', 'already_linked']); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Código inválido",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\":10002,\"message\":{\"message_id\":16,\"from\":{\"id\":987654321,\"is_bot\":false},\"chat\":{\"id\":987654321,\"type\":\"private\"},\"text\":\"/start INVALIDO\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rechazado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('rejected'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Listar tareas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/integrations/telegram/users/{{telegram_user_id}}/tasks?after=0&limit=3"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200 && pm.response.json().items.length) pm.collectionVariables.set('task_id', pm.response.json().items[0].id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Detalle tarea",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/integrations/telegram/users/{{telegram_user_id}}/tasks/{{task_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) pm.collectionVariables.set('task_generation', pm.response.json().generation);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot mis tareas",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 10003, \"message\": {\"message_id\": 20, \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false}, \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"}, \"text\": \"/mis_tareas\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Bot confirmar recepción",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 10004, \"callback_query\": {\"id\": \"postman-callback\", \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false}, \"message\": {\"message_id\": 21, \"from\": {\"id\": 999, \"is_bot\": true}, \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"}}, \"data\": \"taskconfirm:{{task_id}}:{{task_generation}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Bot reportar",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20001, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"/reportar\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot seleccionar reporte",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20002, \"callback_query\": {\"id\": \"{{callback_id}}\", \"from\": {\"id\": 123456789, \"is_bot\": false}, \"message\": {\"message_id\": 21, \"from\": {\"id\": 999, \"is_bot\": true}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}}, \"data\": \"reportselect:{{task_id}}:{{task_generation}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot enviar reporte",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"{{report_body}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot cancelar reporte",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20004, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"/cancelar\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot enviar foto",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"caption\": \"{{report_body}}\", \"photo\": [{\"file_id\": \"{{photo_file_id}}\", \"file_unique_id\": \"{{photo_unique_id}}\", \"width\": 1, \"height\": 1}]}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.caption = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot simpatizante",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"/simpatizante {{campaign_id}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const uid=Number(pm.collectionVariables.get('telegram_user_id')); pm.request.body.update(JSON.stringify({update_id:30001,message:{message_id:299,date:Math.floor(Date.now()/1000),from:{id:uid,is_bot:false},chat:{id:uid,type:'private'},text:'/simpatizante '+pm.collectionVariables.get('campaign_id')}}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot guardar simpatizante",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"{{report_body}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('supporter_message_id')); body.message.text = pm.collectionVariables.get('supporter_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot necesidad",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"/simpatizante {{campaign_id}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const uid=Number(pm.collectionVariables.get('telegram_user_id')); pm.request.body.update(JSON.stringify({update_id:40001,message:{message_id:499,date:Math.floor(Date.now()/1000),from:{id:uid,is_bot:false},chat:{id:uid,type:'private'},text:'/necesidad '+pm.collectionVariables.get('campaign_id')}}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot guardar necesidad",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"{{report_body}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/reportar' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('need_message_id')); body.message.text = pm.collectionVariables.get('need_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot perfil",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 10003, \"message\": {\"message_id\": 20, \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false}, \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"}, \"text\": \"/perfil\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Bot mi perfil",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 10003, \"message\": {\"message_id\": 20, \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false}, \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"}, \"text\": \"/mi_perfil\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Bot incidencia",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20001, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"/incidencia\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/incidencia' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot seleccionar incidencia",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20002, \"callback_query\": {\"id\": \"{{callback_id}}\", \"from\": {\"id\": 123456789, \"is_bot\": false}, \"message\": {\"message_id\": 21, \"from\": {\"id\": 999, \"is_bot\": true}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}}, \"data\": \"incidentselect:{{task_id}}:{{task_generation}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/incidencia' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot enviar incidencia",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 20003, \"message\": {\"message_id\": 100, \"date\": 1111111111, \"from\": {\"id\": 123456789, \"is_bot\": false}, \"chat\": {\"id\": 123456789, \"type\": \"private\"}, \"text\": \"{{report_body}}\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let body = JSON.parse(pm.request.body.raw); function walk(v) { if (typeof v === 'string') return pm.variables.replaceIn(v); if (v && typeof v === 'object') for (const k of Object.keys(v)) v[k] = walk(v[k]); return v; } body = walk(body); const uid = Number(pm.collectionVariables.get('telegram_user_id')); if (body.message) { body.message.from.id = uid; body.message.chat.id = uid; body.message.date = Math.floor(Date.now()/1000); if (body.message.text !== '/incidencia' && body.message.text !== '/cancelar') { body.message.message_id = Number(pm.collectionVariables.get('report_message_id')); body.message.text = pm.collectionVariables.get('report_body'); } } if (body.callback_query) { body.callback_query.from.id = uid; body.callback_query.message.chat.id = uid; } pm.request.body.update(JSON.stringify(body));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bot ayuda",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 10003, \"message\": {\"message_id\": 20, \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false}, \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"}, \"text\": \"/ayuda\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Bot comando desconocido",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/integrations/telegram/updates",
+        "header": [
+          {
+            "key": "X-Telegram-Bot-Api-Secret-Token",
+            "value": "{{telegram_secret}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"update_id\": 10003, \"message\": {\"message_id\": 20, \"from\": {\"id\": {{telegram_user_id}}, \"is_bot\": false}, \"chat\": {\"id\": {{telegram_user_id}}, \"type\": \"private\"}, \"text\": \"/comando_inexistente\"}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

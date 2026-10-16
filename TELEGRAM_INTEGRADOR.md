@@ -1,6 +1,6 @@
 # Vincular personal con Telegram
 
-Los roles, equipos y territorios ya se configuran desde **Personal y Telegram**. Consulta [Roles y permisos](ROLES_Y_PERMISOS.md). El comando `/mi_perfil` muestra el acceso del usuario vinculado; reinicia el integrador después de actualizar su código.
+Los roles, equipos y territorios ya se configuran desde **Administración de usuarios**. Consulta [Roles y permisos](ROLES_Y_PERMISOS.md). El comando `/mi_perfil` muestra el acceso del usuario vinculado; reinicia el integrador después de actualizar su código.
 
 Esta etapa registra trabajadores reales en la base de Go2Win y vincula una cuenta de Telegram con cada trabajador. El piloto utiliza un solo bot para esta base. Conecta las actividades asignadas, su recepción y los reportes de texto o con fotografía y revisión. Las incidencias siguen pendientes.
 
@@ -80,7 +80,7 @@ Campos: nombre, teléfono, estado, municipio, sección electoral opcional, clave
 
 `Registro: SI` declara que la persona autorizó guardar sus datos como simpatizante en esa campaña. `Mensajes: SI` o `Mensajes: NO` conserva por separado su decisión sobre recibir información. Se registra quién capturó los datos y cuándo; esto es una declaración del trabajador, no una confirmación enviada por el simpatizante. No se envían mensajes en esta versión. El teléfono y la clave de elector no pueden repetirse dentro de la misma campaña; un registro existente no se sobrescribe. Si Telegram reentrega el mensaje, el bot devuelve el mismo folio `S-000001` sin duplicarlo ni repetir los datos personales en la respuesta.
 
-El catálogo se encuentra en **Personal y Telegram → Catálogo de simpatizantes** para administradores y en **Mi espacio Go2Win → Simpatizantes** para los demás roles. Campo consulta sus propios registros; supervisores y coordinadores consultan su equipo y alcance; directores consultan su campaña autorizada. El catálogo permite buscar y filtrar por autorización para recibir información. Una cuenta de Telegram del trabajador y un teléfono del simpatizante son datos distintos: el teléfono por sí solo no permite enviarle mensajes mediante el bot; el futuro canal de envío y vinculación debe implementarse aparte.
+El catálogo se encuentra en **Operación de Telegram → Simpatizantes** para administradores y en **Mi espacio Go2Win → Simpatizantes** para los demás roles. Campo consulta sus propios registros; supervisores y coordinadores consultan su equipo y alcance; directores consultan su campaña autorizada. El catálogo permite buscar y filtrar por autorización para recibir información. Una cuenta de Telegram del trabajador y un teléfono del simpatizante son datos distintos: el teléfono por sí solo no permite enviarle mensajes mediante el bot; el futuro canal de envío y vinculación debe implementarse aparte.
 
 **PostgreSQL:** aplica también `scripts/agregar_simpatizantes_postgresql.sql` como administrador de la base antes de reiniciar. Crea las tablas `supporters` y `supporter_sessions` y sus permisos. En SQLite la inicialización crea el catálogo automáticamente. Prueba local: `py -m unittest discover -s tests -p "test_supporters.py"`.
 
@@ -103,7 +103,7 @@ Tablas añadidas: `field_reports` guarda el texto, folio numérico, autor, tarea
 ## Consultar y recibir una tarea
 
 1. Reinicia Go2Win y el integrador para cargar esta versión. Go2Win: `.\.venv\Scripts\python.exe -m streamlit run app.py`. Integrador, en otra terminal con el token: `.\.venv\Scripts\python.exe scripts/integrador_telegram.py`.
-2. En **Personal y Telegram**, verifica el rol, la vinculación y el alcance del trabajador para la campaña y territorio de la tarea.
+2. En **Administración de usuarios**, verifica el rol y el alcance del trabajador; comprueba su vinculación en **Operación de Telegram** para la campaña y territorio de la tarea.
 3. En **Planes de acción**, selecciona perfil, estado, estrategia y la actividad en **Actualizar una actividad**.
 4. En **Asignación a Telegram**, selecciona el trabajador registrado y pulsa **Guardar asignación de Telegram**. El campo libre **Responsable** conserva el dato anterior; por sí solo no vincula cuentas.
 5. Desde el chat privado del trabajador, envía `/mis_tareas`. Verás actividades pendientes o en curso asignadas a esa persona, con paginación. `/tarea FOLIO` muestra la descripción completa, por páginas si es extensa.
@@ -117,8 +117,8 @@ Las tablas nuevas son `field_task_assignments` (responsable registrado y recepci
 ## Activar al primer trabajador
 
 1. Abre Go2Win como de costumbre. Si estaba abierto, recarga la página.
-2. En **Configuración y apoyo → Personal y Telegram**, registra nombre y, opcionalmente, equipo.
-3. Selecciona al trabajador y pulsa **Generar código de activación**. Copia el comando mostrado; vence en 30 minutos, se utiliza una vez y un código nuevo invalida el anterior.
+2. En **Configuración y apoyo → Administración de usuarios**, registra nombre y, opcionalmente, equipo.
+3. Abre **Operación de Telegram → Vinculación de Telegram**, selecciona al trabajador y pulsa **Generar código de activación**. Copia el comando mostrado; vence en 30 minutos, se utiliza una vez y un código nuevo invalida el anterior.
 4. Detén `prueba_bot_telegram.py` con `Ctrl+C`. No ejecutes ambos programas ni otro receptor del mismo bot simultáneamente.
 5. En PowerShell, desde el proyecto y con el token configurado, ejecuta:
 

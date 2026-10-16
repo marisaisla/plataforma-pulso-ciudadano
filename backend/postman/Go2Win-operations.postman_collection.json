@@ -1,0 +1,512 @@
+{
+  "info": {
+    "name": "Go2Win API - Operación de Telegram y planes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "profile_id",
+      "value": ""
+    },
+    {
+      "key": "state",
+      "value": ""
+    },
+    {
+      "key": "strategy_id",
+      "value": ""
+    },
+    {
+      "key": "activity_id",
+      "value": ""
+    },
+    {
+      "key": "assignment_worker_id",
+      "value": ""
+    },
+    {
+      "key": "report_id",
+      "value": ""
+    },
+    {
+      "key": "activity_name",
+      "value": "Actividad de prueba API"
+    },
+    {
+      "key": "due_date",
+      "value": "2026-10-15"
+    },
+    {
+      "key": "evidence_note",
+      "value": "Avance de prueba"
+    },
+    {
+      "key": "review_note",
+      "value": ""
+    },
+    {
+      "key": "review_decision",
+      "value": "accepted"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Login",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"username\": \"{{username}}\", \"password\": \"{{password}}\"};function resolve(v) { if(typeof v==='string' && v.startsWith('{{')) { const key=v.slice(2,-2), raw=pm.collectionVariables.get(key); if(key==='assignment_worker_id') { if(raw==='null') return null; if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura assignment_worker_id con un ID o null explícito.'); return Number(raw); } if(key==='strategy_id') { if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura strategy_id.'); return Number(raw); } return raw; } if(v && typeof v==='object') for(const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(body)));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===200) pm.collectionVariables.set('access_token',pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Consultar candidatos",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/profiles?active_only=true",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "03 Consultar territorios",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/territory-options?state={{state}}",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "04 Estados del perfil",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/profiles/{{profile_id}}/states",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "05 Estrategias del plan",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/action-strategies?profile_id={{profile_id}}&state={{state}}",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "06 Actividades",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/activities?strategy_id={{strategy_id}}",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "07 Crear actividad de prueba",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/activities",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"strategy_id\": \"{{strategy_id}}\",\n  \"activity_name\": \"{{activity_name}}\",\n  \"due_date\": \"{{due_date}}\",\n  \"priority_level\": \"Media\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"strategy_id\": \"{{strategy_id}}\", \"activity_name\": \"{{activity_name}}\", \"due_date\": \"{{due_date}}\", \"priority_level\": \"Media\"};function resolve(v) { if(typeof v==='string' && v.startsWith('{{')) { const key=v.slice(2,-2), raw=pm.collectionVariables.get(key); if(key==='assignment_worker_id') { if(raw==='null') return null; if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura assignment_worker_id con un ID o null explícito.'); return Number(raw); } if(key==='strategy_id') { if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura strategy_id.'); return Number(raw); } return raw; } if(v && typeof v==='object') for(const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(body)));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===201) pm.collectionVariables.set('activity_id',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Avance de actividad",
+      "request": {
+        "method": "PATCH",
+        "url": "{{base_url}}/api/v1/activities/{{activity_id}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"En curso\",\n  \"evidence_note\": \"{{evidence_note}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"status\": \"En curso\", \"evidence_note\": \"{{evidence_note}}\"};function resolve(v) { if(typeof v==='string' && v.startsWith('{{')) { const key=v.slice(2,-2), raw=pm.collectionVariables.get(key); if(key==='assignment_worker_id') { if(raw==='null') return null; if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura assignment_worker_id con un ID o null explícito.'); return Number(raw); } if(key==='strategy_id') { if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura strategy_id.'); return Number(raw); } return raw; } if(v && typeof v==='object') for(const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(body)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Asignación actual",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/activities/{{activity_id}}/assignment",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "10 Responsables elegibles",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/activities/{{activity_id}}/candidates",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "11 Asignar trabajador",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/activities/{{activity_id}}/assignment",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"worker_id\": \"{{assignment_worker_id}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"worker_id\": \"{{assignment_worker_id}}\"};function resolve(v) { if(typeof v==='string' && v.startsWith('{{')) { const key=v.slice(2,-2), raw=pm.collectionVariables.get(key); if(key==='assignment_worker_id') { if(raw==='null') return null; if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura assignment_worker_id con un ID o null explícito.'); return Number(raw); } if(key==='strategy_id') { if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura strategy_id.'); return Number(raw); } return raw; } if(v && typeof v==='object') for(const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(body)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Reportes de actividad",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/activities/{{activity_id}}/reports",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "13 Fotografía del reporte",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/reports/{{report_id}}/photo",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "14 Revisar reporte",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/v1/reports/{{report_id}}/review",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"decision\": \"{{review_decision}}\",\n  \"note\": \"{{review_note}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body={\"decision\": \"{{review_decision}}\", \"note\": \"{{review_note}}\"};function resolve(v) { if(typeof v==='string' && v.startsWith('{{')) { const key=v.slice(2,-2), raw=pm.collectionVariables.get(key); if(key==='assignment_worker_id') { if(raw==='null') return null; if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura assignment_worker_id con un ID o null explícito.'); return Number(raw); } if(key==='strategy_id') { if(!raw || !Number.isInteger(Number(raw)) || Number(raw)<=0) throw new Error('Configura strategy_id.'); return Number(raw); } return raw; } if(v && typeof v==='object') for(const k of Object.keys(v)) v[k]=resolve(v[k]); return v; } pm.request.body.update(JSON.stringify(resolve(body)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Simpatizantes autorizados",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/supporters",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "16 Necesidades autorizadas",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/needs",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "17 Panel operativo",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/field/portal",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
