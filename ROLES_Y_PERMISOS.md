@@ -16,7 +16,7 @@ Los supervisores y coordinadores requieren el mismo equipo que el responsable de
 
 ## Configurar un usuario
 
-1. Abre **Configuración y apoyo → Personal y Telegram**.
+1. Abre **Configuración y apoyo → Administración de usuarios**.
 2. Selecciona el trabajador. En **Rol y equipo**, elige el rol y equipo; opcionalmente asigna un supervisor o coordinador activo del mismo equipo. Pulsa **Guardar rol y equipo**.
 3. En **Campañas y territorios autorizados**, selecciona el perfil/campaña, estado y municipio y pulsa **Agregar alcance**.
 4. Para autorizar una campaña completa, selecciona todos los estados y municipios. Para limitarla, selecciona el territorio específico. Puedes agregar varios alcances.

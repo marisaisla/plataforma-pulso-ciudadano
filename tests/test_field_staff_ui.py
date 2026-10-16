@@ -18,18 +18,22 @@ class StaffUiTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'ui.db'
             with closing(sqlite3.connect(path)) as conn, conn:
-                conn.execute('CREATE TABLE profiles (id INTEGER PRIMARY KEY, name TEXT)')
-                conn.execute("INSERT INTO profiles VALUES (1, 'Campaña de prueba')")
+                conn.execute("CREATE TABLE profiles (id INTEGER PRIMARY KEY, name TEXT,actor_type TEXT DEFAULT 'Persona',active INTEGER DEFAULT 1,notes TEXT DEFAULT '')")
+                conn.execute("INSERT INTO profiles (id,name) VALUES (1, 'Campaña de prueba')")
                 conn.execute('CREATE TABLE territories (state TEXT, municipality TEXT)')
                 conn.execute("INSERT INTO territories VALUES ('Sonora', 'Hermosillo')")
             with patch.dict(os.environ, {'DB_BACKEND': 'sqlite'}), patch.object(database, 'DB_PATH', path):
                 initialize_staff()
                 worker = create_worker('Persona de prueba', 'Equipo A')
                 token = admin_session()
+                from http_api_helpers import use_test_api
+                use_test_api(self)
                 app = AppTest.from_string('from services.field_staff_ui import render_field_staff\nrender_field_staff()')
                 app.session_state['_web_token'] = token
                 app.run()
                 self.assertFalse(app.exception)
+                self.assertNotIn('Generar código de activación',[b.label for b in app.button])
+                self.assertNotIn('Buscar por nombre, teléfono o clave de elector',[t.label for t in app.text_input])
                 next(s for s in app.selectbox if s.label == 'Rol').select('supervisor')
                 next(b for b in app.button if b.label == 'Guardar rol y equipo').click().run()
                 self.assertFalse(app.exception)

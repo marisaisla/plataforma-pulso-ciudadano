@@ -43,6 +43,8 @@ class TaskTests(unittest.TestCase):
             code = staff.issue_code(wid)
             staff.telegram_reply(self.message(uid, '/start ' + code))
         tasks.assign_task_locally(1, self.worker)
+        from http_api_helpers import use_test_api
+        use_test_api(self)
 
     def message(self, uid, text):
         return {'chat': {'id': uid, 'type': 'private'}, 'from': {'id': uid}, 'text': text}

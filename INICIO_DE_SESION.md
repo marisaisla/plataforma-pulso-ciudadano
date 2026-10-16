@@ -24,7 +24,7 @@ Si el navegador ya estaba abierto, recarga la página e inicia sesión. El integ
 ## Dar acceso al personal
 
 1. Inicia sesión con el administrador.
-2. Abre **Personal y Telegram** y selecciona un trabajador.
+2. Abre **Administración de usuarios** y selecciona un trabajador.
 3. En **Acceso a Go2Win**, escribe su usuario y una contraseña temporal, repítela y pulsa **Crear o restablecer acceso web**.
 4. Entrega las credenciales a esa persona por un canal privado.
 5. Al ingresar, deberá cambiar la contraseña temporal antes de acceder a sus datos.
@@ -45,7 +45,7 @@ Las pantallas analíticas anteriores contienen consultas generales y edición. E
 
 El bloqueo se aplica antes de ejecutar las pantallas generales. Las consultas del panel operativo se filtran en el backend y las asignaciones y revisiones vuelven a verificar la sesión y los permisos al guardar. Alterar una selección de la interfaz no concede permisos.
 
-Para que un coordinador reparta tareas, el administrador debe asignarle un equipo no vacío y colocar al personal de campo o supervisores en ese mismo equipo, desde **Personal y Telegram → Rol y equipo**. Coordinador y destinatario deben tener autorizada la campaña y el territorio de la actividad. En **Mi espacio Go2Win → Tareas**, abre una actividad pendiente o en curso, selecciona **Responsable** y pulsa **Asignar tarea**. Si falta el equipo, el panel muestra el aviso de configuración; las tareas sin asignar del ámbito autorizado siguen visibles.
+Para que un coordinador reparta tareas, el administrador debe asignarle un equipo no vacío y colocar al personal de campo o supervisores en ese mismo equipo, desde **Administración de usuarios → Rol y equipo**. Coordinador y destinatario deben tener autorizada la campaña y el territorio de la actividad. En **Mi espacio Go2Win → Tareas**, abre una actividad pendiente o en curso, selecciona **Responsable** y pulsa **Asignar tarea**. Si falta el equipo, el panel muestra el aviso de configuración; las tareas sin asignar del ámbito autorizado siguen visibles.
 
 ## Sesiones y contraseñas
 

@@ -34,7 +34,7 @@ class PortalTests(unittest.TestCase):
         self.assertEqual(tasks.get_assignment(2)['worker_id'], self.other)
         tasks.assign_task_locally(2, self.worker, session_token=admin)
         self.assertEqual(tasks.get_assignment(2)['worker_id'], self.worker)
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(ValueError):
             portal_data('invented')
 
     def test_live_scope_revocation_and_expired_session_writes(self):

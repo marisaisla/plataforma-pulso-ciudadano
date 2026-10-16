@@ -1,45 +1,22 @@
 """Panel autenticado para roles operativos; no abre pantallas generales sin filtrar."""
-from contextlib import closing
 import streamlit as st
-from services.database import connection
-from services.web_auth import require_user
 from services.web_auth_ui import session_token
-from services.field_permissions import can_access
-from services.field_tasks import context, eligible_workers, assign_task_locally
-from services.field_reports import review_report, STATUS_LABELS, folio, INCIDENT_PREFIX
+from services.field_api import portal_data,eligible_workers,assign_task_locally,review_report,APIError
+from services.field_reports import STATUS_LABELS, folio, INCIDENT_PREFIX
 from services.field_reports_ui import render_report_photo
 
 
-def portal_data(token):
-    with closing(connection()) as conn:
-        user = require_user(token, conn)
-        tasks = [dict(t) for t in conn.execute('''SELECT t.*, a.worker_id, a.received_at, w.name AS worker_name
-            FROM territorial_action_plans t LEFT JOIN field_task_assignments a ON a.task_id=t.id
-            LEFT JOIN field_workers w ON w.id=a.worker_id ORDER BY t.id DESC''')
-            if can_access(user['id'], 'tasks.view', conn=conn, **context(t, t['worker_id']))]
-        reports = [dict(r) for r in conn.execute('''SELECT r.*, t.profile_id, t.state, t.municipality,
-            v.note FROM field_reports r JOIN territorial_action_plans t ON t.id=r.task_id
-            LEFT JOIN field_report_reviews v ON v.report_id=r.id ORDER BY r.id DESC''')
-            if can_access(user['id'], 'reports.view', conn=conn, **context(r, r['worker_id']))]
-        return user, tasks, reports
-
-
 def assignment_candidates(token, task_id):
-    with closing(connection()) as conn:
-        user = require_user(token, conn)
-        task = conn.execute('SELECT * FROM territorial_action_plans WHERE id=?', (task_id,)).fetchone()
-        previous = conn.execute('SELECT worker_id FROM field_task_assignments WHERE task_id=?', (task_id,)).fetchone()
-        if task is None or (previous and not can_access(user['id'], 'tasks.assign', conn=conn,
-                                                       **context(task, previous['worker_id']))):
-            return []
-        return [w for w in eligible_workers(task_id) if can_access(user['id'], 'tasks.assign', conn=conn,
-                                                                  **context(task, w['id']))]
+    try: return eligible_workers(task_id,token=token)
+    except APIError as exc:
+        if exc.status_code!=403: st.error(str(exc))
+        return []
 
 
 def render_portal():
     try:
         user, tasks, reports = portal_data(session_token())
-    except PermissionError as exc:
+    except (ValueError,PermissionError) as exc:
         st.error(str(exc))
         st.stop()
     st.title('Mi espacio Go2Win')
@@ -48,7 +25,7 @@ def render_portal():
     if user['role_key'] == 'coordinator':
         if not user['team'].strip():
             st.warning('Tu equipo aún no está configurado. Para asignar tareas, el administrador debe '
-                       'asignarte el mismo equipo que tu personal en Personal y Telegram → Rol y equipo. '
+                       'asignarte el mismo equipo que tu personal en Administración de usuarios → Rol y equipo. '
                        'Ambos deben tener autorizada la campaña y el territorio de la tarea.')
         else:
             st.caption(f"Equipo: {user['team']}. Abre una tarea para elegir responsable y asignarla.")
@@ -97,8 +74,7 @@ def render_portal():
                 render_report_photo(report['id'])
                 st.caption(f"Enviado: {report['created_at']} UTC")
                 st.text(report['note'] or 'Sin observaciones de revisión')
-                allowed = (report['worker_id'] != user['id'] and can_access(user['id'], 'reports.review',
-                                                                           **context(report, report['worker_id'])))
+                allowed = report['can_review']
                 if allowed and report['status'] == 'pending':
                     with st.form(f"portal_review_{report['id']}"):
                         decision = st.selectbox('Decisión', ['accepted','correction'], format_func=STATUS_LABELS.get)

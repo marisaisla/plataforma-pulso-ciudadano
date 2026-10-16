@@ -1,16 +1,16 @@
 """Revisión de reportes en la consola local de Go2Win."""
 import streamlit as st
-from services.field_reports import list_task_reports, review_report, STATUS_LABELS, folio, INCIDENT_PREFIX
-from services.web_auth_ui import require_admin, session_token
+from services.field_api import list_task_reports,review_report,report_photo,require_admin
+from services.field_reports import STATUS_LABELS, folio, INCIDENT_PREFIX
+from services.web_auth_ui import session_token
 
 
 def render_report_photo(report_id):
-    from services.field_reports import report_photo
     try:
         photo = report_photo(report_id, session_token())
         if photo:
             st.image(photo, caption='Evidencia fotográfica', width='stretch')
-    except PermissionError as exc:
+    except (ValueError,PermissionError) as exc:
         st.error(str(exc))
 
 
