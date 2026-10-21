@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Go2Win API",
-    "description": "API de Go2Win: perfiles, usuarios, operación Telegram y Planes de acción. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.",
-    "version": "0.13.0"
+    "description": "API de Go2Win: perfiles, usuarios, operación Telegram, Planes de acción y cuestionarios de campo con indicadores. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.",
+    "version": "0.14.0"
   },
   "paths": {
     "/api/v1/health": {
@@ -1927,6 +1927,401 @@
           }
         ]
       }
+    },
+    "/api/v1/activities/{tid}/questionnaires": {
+      "get": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Questionnaire Context",
+        "operationId": "questionnaire_context_api_v1_activities__tid__questionnaires_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Create Questionnaire",
+        "operationId": "create_questionnaire_api_v1_activities__tid__questionnaires_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionnaireWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/questionnaires/{qid}": {
+      "put": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Update Questionnaire",
+        "operationId": "update_questionnaire_api_v1_activities__tid__questionnaires__qid__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Qid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionnaireWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/questionnaire": {
+      "put": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Set Questionnaire",
+        "operationId": "set_questionnaire_api_v1_activities__tid__questionnaire_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyAssignment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/questionnaire/capture": {
+      "get": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Get Capture",
+        "operationId": "get_capture_api_v1_activities__tid__questionnaire_capture_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          },
+          {
+            "name": "assignment",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "title": "Assignment"
+            }
+          },
+          {
+            "name": "survey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "title": "Survey"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/questionnaire/responses": {
+      "post": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Create Response",
+        "operationId": "create_response_api_v1_activities__tid__questionnaire_responses_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/{tid}/questionnaire/results": {
+      "get": {
+        "tags": [
+          "Cuestionarios de campo"
+        ],
+        "summary": "Questionnaire Results",
+        "operationId": "questionnaire_results_api_v1_activities__tid__questionnaire_results_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2659,6 +3054,131 @@
         ],
         "title": "Progress"
       },
+      "Question": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "choice"
+            ],
+            "title": "Type"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": false
+          },
+          "options": {
+            "items": {
+              "type": "string",
+              "maxLength": 150
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Options"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "none",
+              "count",
+              "sum",
+              "average"
+            ],
+            "title": "Metric",
+            "default": "none"
+          },
+          "metric_label": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Metric Label",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "type"
+        ],
+        "title": "Question"
+      },
+      "QuestionnaireWrite": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Description",
+            "default": ""
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "single",
+              "multiple"
+            ],
+            "title": "Mode"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Questions"
+          },
+          "publish": {
+            "type": "boolean",
+            "title": "Publish",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "mode",
+          "questions"
+        ],
+        "title": "QuestionnaireWrite"
+      },
       "Rename": {
         "properties": {
           "name": {
@@ -2673,6 +3193,61 @@
           "name"
         ],
         "title": "Rename"
+      },
+      "ResponseWrite": {
+        "properties": {
+          "assignment_generation": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Assignment Generation"
+          },
+          "survey_generation": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Survey Generation"
+          },
+          "submission_key": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Submission Key"
+          },
+          "answers": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "maxProperties": 30,
+            "title": "Answers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assignment_generation",
+          "survey_generation",
+          "submission_key",
+          "answers"
+        ],
+        "title": "ResponseWrite"
       },
       "Review": {
         "properties": {
@@ -2743,6 +3318,29 @@
           "is_bot"
         ],
         "title": "Sender"
+      },
+      "SurveyAssignment": {
+        "properties": {
+          "questionnaire_id": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "exclusiveMinimum": 0.0,
+            "title": "Questionnaire Id"
+          },
+          "target": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": 1.0,
+            "title": "Target",
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "questionnaire_id"
+        ],
+        "title": "SurveyAssignment"
       },
       "TaskPage": {
         "properties": {

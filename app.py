@@ -76,8 +76,33 @@ initialize_database()
 initialize_staff()
 initialize_auth()
 web_user = require_login()
+if 'field_survey' in st.query_params:
+    from services.field_surveys_ui import render_capture
+    try:
+        survey_task_id = int(st.query_params['field_survey'])
+        if not 0 < survey_task_id < 2**63:
+            raise ValueError('Folio fuera de rango')
+        render_capture(survey_task_id, st.query_params.get('assignment', ''), st.query_params.get('survey', ''))
+    except ValueError:
+        st.error('El enlace del cuestionario no es válido. Abre de nuevo la actividad en Telegram.')
+    if st.button('Volver a mi espacio'):
+        st.query_params.clear()
+        st.rerun()
+    st.stop()
 if web_user['role_key'] != 'administrator':
     render_portal()
+    st.stop()
+
+with st.sidebar:
+    if st.button('Cuestionarios de campo'):
+        st.query_params['field_surveys'] = 'manage'
+        st.rerun()
+if st.query_params.get('field_surveys') == 'manage':
+    from services.field_surveys_ui import render_manager
+    render_manager()
+    if st.button('Volver al tablero'):
+        st.query_params.clear()
+        st.rerun()
     st.stop()
 
 st.markdown(

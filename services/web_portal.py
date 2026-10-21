@@ -29,7 +29,10 @@ def render_portal():
                        'Ambos deben tener autorizada la campaña y el territorio de la tarea.')
         else:
             st.caption(f"Equipo: {user['team']}. Abre una tarea para elegir responsable y asignarla.")
-    task_tab, report_tab, supporters_tab, needs_tab = st.tabs(['Tareas', 'Reportes', 'Simpatizantes', 'Necesidades'])
+    task_tab, report_tab, supporters_tab, needs_tab, surveys_tab = st.tabs(['Tareas', 'Reportes', 'Simpatizantes', 'Necesidades', 'Cuestionarios'])
+    with surveys_tab:
+        from services.field_surveys_ui import render_manager
+        render_manager()
     with needs_tab:
         from services.field_needs_ui import render_needs
         render_needs()

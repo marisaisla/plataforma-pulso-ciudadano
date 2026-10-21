@@ -1,6 +1,6 @@
 # Go2Win API — backend
 
-Guía del estado actual **0.13.0**. FastAPI concentra el acceso a PostgreSQL y las reglas de
+Guía del estado actual **0.14.0**. FastAPI concentra el acceso a PostgreSQL y las reglas de
 permisos de las funciones migradas: perfiles y elección, administración de usuarios,
 operación de Telegram, Planes de acción y el portal del trabajador.
 El frontend actual sigue siendo Streamlit; React queda como una siguiente etapa.
@@ -24,6 +24,7 @@ El backend utiliza la misma base PostgreSQL existente y no crea ni migra su esqu
 | Operación de Telegram | `services/telegram_operations_ui.py`: vinculación, simpatizantes y necesidades |
 | Planes de acción | `services/action_plans_ui.py`: actividades, asignaciones, reportes, fotos y revisión |
 | Mi espacio Go2Win | `services/web_portal.py` y `/api/v1/field/portal` |
+| Cuestionarios de campo | `services/field_surveys_ui.py`, cliente HTTP `services/field_surveys.py` y `backend/surveys.py` |
 
 Los componentes de tareas, reportes, simpatizantes y necesidades de estas pantallas también
 usan los clientes HTTP. La migración no abarca todo el sistema: el inicio de sesión general
@@ -40,6 +41,7 @@ incluso si contienen un valor vacío.
 | --- | --- |
 | `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` | Conexión PostgreSQL; todas requeridas |
 | `API_BASE_URL` | Dirección que usan pantallas y receptor; predeterminada `http://127.0.0.1:8000` |
+| `GO2WIN_PUBLIC_URL` | Dirección HTTPS de la pantalla web, leída por FastAPI para el botón de cuestionarios; vacía deshabilita el botón |
 | `API_ADMIN_KEY` | Clave provisional para diagnóstico de BD y generación inicial de códigos |
 | `TELEGRAM_WEBHOOK_SECRET` | Secreto compartido entre receptor y API |
 | `TELEGRAM_BOT_TOKEN` | Token de BotFather para recibir, responder y descargar fotos |
@@ -257,6 +259,61 @@ cambiarlas devuelve 409. La revisión no cambia automáticamente el estado de la
 Las fotos requieren autorización y responden con `Cache-Control: no-store`.
 
 ## Bot real de Telegram
+
+### Cuestionarios por API
+
+Estas rutas usan el prefijo `/api/v1` y la sesión Bearer normal. Las sesiones de
+desarrollo sin contraseña no son válidas. `tasks.assign` permite configurar y
+asignar dentro del alcance del usuario. La captura requiere `reports.submit` y ser
+el responsable actual de la actividad; la consulta aplica `tasks.view` y filtra
+respuestas por `reports.view`, usando el territorio registrado en cada envío.
+
+| Método | Ruta | Función |
+| --- | --- | --- |
+| GET | `/activities/{tid}/questionnaires` | Actividad, cuestionario vigente, plantillas autorizadas y permisos de pantalla |
+| POST | `/activities/{tid}/questionnaires` | Crear borrador o publicar con `publish=true`, 201 |
+| PUT | `/activities/{tid}/questionnaires/{qid}` | Editar o publicar un borrador de la actividad |
+| PUT | `/activities/{tid}/questionnaire` | Asignar `questionnaire_id` y `target`, 204 |
+| GET | `/activities/{tid}/questionnaire/capture` | Obtener formulario; requiere parámetros `assignment` y `survey` |
+| POST | `/activities/{tid}/questionnaire/responses` | Guardar respuestas y devolver folio; repetir el mismo envío devuelve el mismo resultado |
+| GET | `/activities/{tid}/questionnaire/results` | Respuestas e indicadores por versión, dentro del alcance autorizado |
+
+Una definición contiene `title`, `description`, `mode` (`single` o `multiple`),
+`publish` y entre 1 y 30 `questions`. Cada pregunta define `label`, `type` (`text`,
+`number` o `choice`), `required`, `options`, límites opcionales `min`/`max`, `metric`
+(`none`, `count`, `sum`, `average`) y `metric_label`. Suma y promedio requieren número.
+El backend asigna identificadores `q1`, `q2`, etc.; las versiones publicadas no se editan.
+
+El envío incluye `assignment_generation`, `survey_generation`, `submission_key`
+(16 a 128 caracteres, conservar la misma clave al reintentar el mismo envío) y
+`answers`, un objeto indexado por los identificadores de pregunta. Nunca acepta
+`worker_id` como identidad. Reasignación, cambio de versión, cierre de actividad y
+revocación de permisos se verifican nuevamente al guardar. Un envío inválido no
+guarda respuestas parciales. Se usan las mismas tablas de la primera versión local:
+`field_questionnaires`, `field_task_surveys` y `field_survey_responses`.
+
+Los indicadores se calculan en el backend por actividad y versión: conteo de envíos,
+avance respecto a meta, conteo de respuestas no vacías y sumas/promedios numéricos.
+Se conservan las respuestas anteriores. Una nueva versión genera otro grupo de
+resultados. La captura se contabiliza al enviar y no cierra la actividad.
+
+`backend.tasks` incorpora el botón en `/mis_tareas` y `/tarea FOLIO`, dentro de la
+respuesta de `/integrations/telegram/updates`. El receptor existente lo envía a
+Telegram; no requiere acceso directo a PostgreSQL ni un segundo bot. El enlace
+apunta a la pantalla Streamlit y no contiene tokens de sesión ni secretos del bot.
+
+Antes de actualizar los procesos, aplicar `scripts/agregar_cuestionarios_postgresql.sql`
+en la base usada por la API. Para `go2win_desarrollo` se incluye en
+`python scripts/aplicar_actualizacion_telegram.py`; es aditiva y repetible. Si la
+primera versión local ya creó las tablas, se conservan registros y folios. No hay
+migración automática al iniciar FastAPI. Reiniciar API, Streamlit y receptor tras
+actualizar. No ejecutar también `scripts/integrador_telegram.py` con el mismo bot.
+
+Swagger y `backend/openapi.json` documentan los cuerpos completos. Una API inaccesible
+produce error visible en las pantallas, sin recurrir a SQL. La dirección pública
+HTTPS sigue siendo necesaria para abrir el formulario fuera de la red local.
+
+### Receptor y comandos
 
 `backend.telegram_polling` recibe eventos y los envía a `/integrations/telegram/updates`;
 la API valida, consulta o guarda y devuelve `reply` y, cuando corresponde, `reply_markup`.
