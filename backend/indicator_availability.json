@@ -1,0 +1,275 @@
+{
+  "reviewed_on": "2026-10-22",
+  "items": {
+    "IC01": {
+      "availability": "Parcial",
+      "evidence": "3 evidencias name_recognition; mezclan una referencia porcentual, apreciaciones y puntuaciones.",
+      "display": "Referencia del expediente, no porcentaje certificado.",
+      "missing": "Identificar reactivo, universo, fecha y ficha de la medición; extraer el valor sin convertir puntuaciones en porcentajes."
+    },
+    "IC02": {
+      "availability": "Parcial",
+      "evidence": "3 evidencias favorable_opinion; incluyen saldo de opinión y una puntuación de rechazo.",
+      "display": "Referencias con sus limitaciones.",
+      "missing": "Separar opinión favorable, desfavorable, aprobación y saldo; recuperar estudio y pregunta originales."
+    },
+    "IC03": {
+      "availability": "Pendiente",
+      "evidence": "No hay campo estructurado específico de opinión desfavorable en las encuestas inventariadas.",
+      "display": "Sin medición validada.",
+      "missing": "Extraer o incorporar respuestas desfavorables, denominador, pregunta y ficha."
+    },
+    "IC04": {
+      "availability": "Parcial",
+      "evidence": "Una nota de favorable_opinion cita un saldo; no hay componentes homogéneos estructurados.",
+      "display": "Saldo citado como referencia documental, sin recalcularlo.",
+      "missing": "Obtener favorables y desfavorables del mismo estudio; implementar diferencia en puntos."
+    },
+    "IC05": {
+      "availability": "Parcial",
+      "evidence": "37 registros en viability_surveys; 35 con profile_result_pct, pero mezclan aprobación, internas y careos.",
+      "display": "Mediciones individuales correctamente etiquetadas tras clasificación; nunca promedio indiscriminado.",
+      "missing": "Normalizar tipo de pregunta, escenario, universo y fuente; excluir estimaciones sin ficha y referencias no personales."
+    },
+    "IC06": {
+      "availability": "Parcial",
+      "evidence": "Hay cortes marzo/junio/julio para internas y careos; también cambian alianzas y métodos entre registros.",
+      "display": "Serie de mediciones separadas; todavía sin evolución automática.",
+      "missing": "Acreditar pares con misma pregunta, escenario, universo y método; implementar diferencia en puntos."
+    },
+    "IC07": {
+      "availability": "Parcial",
+      "evidence": "Hay porcentajes de indecisión en notes de careos y JSON; 3 evidencias undecided_voters no equivalen a resultados.",
+      "display": "Dato reportado por pregunta, una vez extraído y revisado.",
+      "missing": "Separar no sabe, ninguno e indecisión; estructurar categoría, porcentaje, universo y fuente."
+    },
+    "IC08": {
+      "availability": "Parcial",
+      "evidence": "11 profile_positions; 9 con inicio y 4 con término; expedientes existentes.",
+      "display": "Trayectoria declarada y fechas disponibles.",
+      "missing": "Relacionar cada cargo con evidencia primaria y revisar periodos; exponer listado, no inventar índice."
+    },
+    "IC09": {
+      "availability": "Parcial",
+      "evidence": "4 evidencias electoral_experience y resultados históricos; una evidencia cita declaración de validez.",
+      "display": "Antecedentes documentados de forma individual.",
+      "missing": "Vincular identidad del perfil con candidatura, elección, cargo y resultado; los nombres de columnas no bastan."
+    },
+    "IC10": {
+      "availability": "Parcial",
+      "evidence": "Expedientes y notas de riesgo mencionan elegibilidad; no hay evaluación de requisitos estructurada.",
+      "display": "Pendiente de verificación, mostrando referencias existentes.",
+      "missing": "Registrar requisitos aplicables, fecha, documento y resultado de revisión; no inferir elegibilidad de una puntuación."
+    },
+    "IC11": {
+      "availability": "Parcial",
+      "evidence": "4 evidencias nomination_probability; escenarios y preferencias internas, no acreditación de nominación.",
+      "display": "Escenario o situación por verificar.",
+      "missing": "Vincular acuerdo o resolución de registro y vigencia; no confundir probabilidad o preferencia con nominación."
+    },
+    "IC12": {
+      "availability": "Pendiente",
+      "evidence": "4 notas reputational_risk no acreditan procedimientos ni su estado procesal.",
+      "display": "Sin antecedentes jurídicos verificados; ausencia de dato no significa ausencia de procedimientos.",
+      "missing": "Revisar expediente y estructurar únicamente documentos públicos de procedimientos, fechas y estado."
+    },
+    "IC13": {
+      "availability": "Pendiente",
+      "evidence": "No se identificó registro específico de declaraciones de intereses en el inventario.",
+      "display": "Sin información verificada.",
+      "missing": "Localizar declaraciones en los expedientes o incorporar fuente, fecha y alcance; no duplicar perfiles."
+    },
+    "IC14": {
+      "availability": "Pendiente",
+      "evidence": "Hay documentos de referencia y publicaciones, pero no inventario acreditado de propuestas por perfil.",
+      "display": "Documentos relacionados; sin conteo de compromisos todavía.",
+      "missing": "Extraer propuestas concretas, tema, autor, fecha y enlace; distinguir planes de gobierno de compromisos del perfil."
+    },
+    "IC15": {
+      "availability": "Parcial",
+      "evidence": "818 publicaciones de 7 perfiles, 661 con fecha y 818 con URL; 81 fuentes.",
+      "display": "Conteo del material recopilado, no cobertura total de medios.",
+      "missing": "Delimitar corpus y periodo, deduplicar, clasificar medios/temas y construir agregación API."
+    },
+    "IP01": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; los 82 lotes son legacy_reported.",
+      "display": "Opciones reportadas con etiqueta heredada, no voto oficial por partido.",
+      "missing": "Acreditar atribución party con fuente y reglas; preparar lote conciliado sin sobrescribir originales."
+    },
+    "IP02": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; falta atribución party acreditada y conciliación completa.",
+      "display": "Sin porcentaje partidista calculado.",
+      "missing": "Resolver base partidista y denominador válido/emitido, componentes y cobertura."
+    },
+    "IP03": {
+      "availability": "Bloqueado",
+      "evidence": "Motor comparativo implementado; elecciones 2021/2024 heredadas.",
+      "display": "Sin variación automática.",
+      "missing": "Acreditar fechas, cargo, principio, proceso, misma geografía/cobertura y equivalencia de partido."
+    },
+    "IP04": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; mismas limitaciones de IP03.",
+      "display": "Sin variación porcentual automática.",
+      "missing": "Resolver comparabilidad de IP03 y exigir votos iniciales mayores que cero."
+    },
+    "IP05": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; opciones heredadas sin identidad party acreditada.",
+      "display": "Sin conteo de presencia partidista.",
+      "missing": "Conocer el partido y su votación en todas las unidades; ausente no equivale a cero."
+    },
+    "IP06": {
+      "availability": "Parcial",
+      "evidence": "13 viability_coalition_scenarios y evidencias coalition_alliances; son escenarios, no convenios históricos.",
+      "display": "Escenarios identificados como tales.",
+      "missing": "Relacionar convenios oficiales, integrantes, elección y vigencia; implementar registro consultable."
+    },
+    "IP07": {
+      "availability": "Pendiente",
+      "evidence": "Votos heredados y escenarios de coalición no contienen atribución oficial acreditada.",
+      "display": "Sin votación oficial de coalición.",
+      "missing": "Incorporar convenios, combinaciones y reglas oficiales; desarrollar cálculo sin doble conteo."
+    },
+    "IP08": {
+      "availability": "Pendiente",
+      "evidence": "No se encontró catálogo estructurado de escaños adjudicados.",
+      "display": "Sin información de representación completa.",
+      "missing": "Recuperar acuerdos de asignación, cargo, principio, partido y elección; no deducir de votos."
+    },
+    "IP09": {
+      "availability": "Pendiente",
+      "evidence": "Cargos de perfiles y evidencias aisladas no constituyen universo de gobiernos adjudicados.",
+      "display": "Antecedentes individuales, sin total de gobiernos obtenidos.",
+      "missing": "Estructurar declaraciones de validez y cargos ejecutivos por elección y partido/coalición."
+    },
+    "IP10": {
+      "availability": "Pendiente",
+      "evidence": "No hay serie acreditada de partidos o coaliciones gobernantes.",
+      "display": "Sin alternancia gubernamental calculada.",
+      "missing": "Relacionar gobiernos adjudicados entre periodos y homologar coaliciones; cambio de ganador no basta."
+    },
+    "IP11": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; falta atribución party y cobertura completa.",
+      "display": "Sin distribución partidista acreditada.",
+      "missing": "Resolver IP01 y cobertura; calcular distribución dentro del lote, no porcentaje electoral."
+    },
+    "IP12": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; no hay pares acreditados con partidos homologados.",
+      "display": "Sin volatilidad partidista.",
+      "missing": "Homologar todas las opciones, fechas, geografía, universo y denominador de dos elecciones."
+    },
+    "IP13": {
+      "availability": "Pendiente",
+      "evidence": "El inventario no identifica una pregunta estructurada de identificación partidista.",
+      "display": "Sin medición disponible.",
+      "missing": "Revisar estudios existentes por pregunta específica; preferencia electoral no equivale a identificación."
+    },
+    "IP14": {
+      "availability": "Pendiente",
+      "evidence": "51 viability_structure_records describen operación territorial, no órganos partidistas acreditados.",
+      "display": "Sin estructura institucional partidista verificada.",
+      "missing": "Recuperar dirigencias y órganos oficiales con vigencia; no reutilizar personal de campo como sustituto."
+    },
+    "IP15": {
+      "availability": "Pendiente",
+      "evidence": "viability_resource_records tiene 0 registros; capacidades de campaña tampoco equivalen a financiamiento público.",
+      "display": "Sin monto disponible.",
+      "missing": "Incorporar acuerdos e informes por partido, ejercicio, concepto y moneda; desarrollar consulta."
+    },
+    "IT01": {
+      "availability": "Exploratorio",
+      "evidence": "33.636 de 36.911 resultados normalizados tienen nominal_list.",
+      "display": "Lista nominal reportada por unidad/lote con advertencia heredada.",
+      "missing": "Conservar fecha de corte, fuente y cobertura; impedir totales que dupliquen niveles o elecciones."
+    },
+    "IT02": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; lista nominal histórica disponible parcialmente.",
+      "display": "Sin crecimiento comparable automático.",
+      "missing": "Acreditar cortes y cartografía equivalentes; resolver faltantes y exigir base inicial positiva."
+    },
+    "IT03": {
+      "availability": "Exploratorio",
+      "evidence": "Hay total_votes y nominal_list parcial; no conteo censal de votantes.",
+      "display": "Solo proxy explícito votos emitidos/lista nominal en unidades compatibles.",
+      "missing": "Mostrar etiqueta proxy; para participación en personas incorporar conteo de votantes y corte aplicable."
+    },
+    "IT04": {
+      "availability": "Exploratorio",
+      "evidence": "Depende de IT03 y su mismo universo.",
+      "display": "Solo complemento del proxy, identificado como aproximación.",
+      "missing": "Mantener mismo filtro y denominador; para indicador medido resolver insumos de IT03."
+    },
+    "IT05": {
+      "availability": "Exploratorio",
+      "evidence": "36.911 resultados tienen total_votes y null_votes; validar denominador en cada caso.",
+      "display": "Nulos/emitidos cuando total>0 y nulos estén dentro del universo.",
+      "missing": "Mantener acreditación pendiente y cobertura; no sumar secciones, municipios y distritos entre sí."
+    },
+    "IT06": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; los lotes no tienen base candidacy acreditada.",
+      "display": "Sin margen de candidaturas calculado.",
+      "missing": "Consolidar candidaturas oficiales, al menos dos opciones y componentes conciliados; conservar empates."
+    },
+    "IT07": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; faltan candidaturas y pares acreditados.",
+      "display": "Sin cambio de ganador calculado.",
+      "missing": "Acreditar comparabilidad y equivalencias; distinguir ganador electoral de gobierno obtenido."
+    },
+    "IT08": {
+      "availability": "Bloqueado",
+      "evidence": "Motor implementado; requiere mismos insumos de IP12.",
+      "display": "Sin volatilidad electoral.",
+      "missing": "Preparar partidos homologados y dos universos completos; es misma fórmula que IP12, no evidencia independiente."
+    },
+    "IT09": {
+      "availability": "Bloqueado",
+      "evidence": "Motor HHI implementado; atribución party y composición completa no acreditadas.",
+      "display": "Sin concentración oficial del voto.",
+      "missing": "Conciliar opciones partidistas y válidos; aplicar suma de cuadrados sin mezclar coaliciones y partidos."
+    },
+    "IT10": {
+      "availability": "Parcial",
+      "evidence": "territorial_indicators contiene totales por sexo y algunos grupos de edad (ITER y series locales).",
+      "display": "Valores cargados por municipio, periodo y fuente; cobertura parcial.",
+      "missing": "Mapear códigos, unidades y grupos; no afirmar cruce edad×sexo completo ni repartir municipios entre secciones."
+    },
+    "IT11": {
+      "availability": "Parcial",
+      "evidence": "Existen ITER_GRAPROES, chih_escolaridad_promedio, 1005000038 y analfabetismo.",
+      "display": "Escolaridad promedio u observaciones existentes, con universo explícito.",
+      "missing": "Definir submedidas; una media no es distribución por nivel. Resolver duplicados de fuentes y desarrollar API."
+    },
+    "IT12": {
+      "availability": "Parcial",
+      "evidence": "Hay PEA, población ocupada/desocupada y otras variables; no se identificó serie de pobreza CONEVAL en estas cargas.",
+      "display": "Componentes socioeconómicos disponibles por separado.",
+      "missing": "Definir componentes y universos; incorporar pobreza si se requiere y no inventar un índice compuesto."
+    },
+    "IT13": {
+      "availability": "Parcial",
+      "evidence": "Hay porcentajes y conteos de agua, drenaje, electricidad, internet y vivienda habitada.",
+      "display": "Servicios individuales cuando fuente, unidad y denominador coincidan.",
+      "missing": "Mapear porcentajes vs conteos y denominadores de vivienda/población; sin promedio simple de porcentajes."
+    },
+    "IT14": {
+      "availability": "Pendiente",
+      "evidence": "El inventario municipal no identifica población por tipo/tamaño de localidad; cartografía no basta.",
+      "display": "Sin ruralidad o dispersión calculada.",
+      "missing": "Revisar insumos cartográficos existentes e incorporar población por localidad y clasificación compatible; definir medida."
+    },
+    "IT15": {
+      "availability": "Parcial",
+      "evidence": "22 documentos de cartografía histórica y uno de revisión; existen geographies/units sin medidas de superficie o accesibilidad.",
+      "display": "Versiones y referencias cartográficas, no índice geográfico completo.",
+      "missing": "Verificar capas, vigencia, geometrías, unidades y metodología; vincular a territorios sin convertir referencias en mediciones."
+    }
+  }
+}

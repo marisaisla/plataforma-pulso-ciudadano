@@ -678,11 +678,14 @@ PROFILE_NAVIGATION = {
     "04  Información estratégica del candidato": "Tablero Electoral",
 }
 GIS_NAVIGATION = {
+    "Base histórica electoral": "Base histórica electoral",
     "04  Visor electoral": "Visor electoral",
     "05  Visor territorial": "Dominio territorial",
     "06  Visor regional y PED": "Diagnóstico regional del PED",
 }
 DIAGNOSTIC_NAVIGATION = {
+    "Dashboard de indicadores": "Dashboard de indicadores",
+    "Motor de indicadores": "Motor de indicadores",
     "07  Mercado electoral": "Mercado electoral",
     "08  Diagnóstico territorial": "Diagnóstico territorial",
     "09  Mapa de oportunidad electoral": "Mapa de oportunidad electoral",
@@ -764,7 +767,10 @@ FUTURE_MODULES = {
 
 
 def select_navigation(widget_key: str, items: dict[str, str]) -> None:
-    st.session_state["active_page"] = items[st.session_state[widget_key]]
+    selected_page = items.get(st.session_state.get(widget_key))
+    if selected_page is None:
+        return
+    st.session_state["active_page"] = selected_page
     for key in NAVIGATION_WIDGET_KEYS:
         if key != widget_key:
             st.session_state[key] = None
@@ -5988,6 +5994,18 @@ elif page in FUTURE_MODULES:
         "Cuando se construya, este módulo conservará trazabilidad por territorio y fuente; "
         "no utilizará perfiles individuales de electores."
     )
+
+elif page == "Dashboard de indicadores":
+    from services.indicator_dashboard_ui import render_indicator_dashboard
+    render_indicator_dashboard()
+
+elif page == "Motor de indicadores":
+    from services.indicators_ui import render_indicators
+    render_indicators()
+
+elif page == "Base histórica electoral":
+    from services.history_ui import render_history
+    render_history()
 
 elif page == "Perfiles y trayectorias":
     render_profiles()

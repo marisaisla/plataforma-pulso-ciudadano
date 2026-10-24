@@ -1,0 +1,198 @@
+{
+  "reviewed_on": "2026-10-22",
+  "items": {
+    "f4afb2fa647f0106a4dcc927f66ebe8463a48dcc194a011da33b45104a90f199": {
+      "kind": "hypothetical_matchup",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "907b7e8394aea179871c29f32f9408ef9a569ade9e467ea9149f966443e2d4fe": {
+      "kind": "hypothetical_matchup",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "ee4a0f451e0b397fb57c2946144db65080163f4501fb0a9dd8eae9b0b00c169d": {
+      "kind": "excluded",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "ddd9e1dc24998fabe438c9974b124f9812de7b86d3e41274ed133ed81eab534c": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "51d4beaf318358acdf78c5eb064bb4af2a666347de91ecd0d3d7741a05da7ce4": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "d468e1fbd505ee97b568c9ae48cc4dfcdaa4aca5cfa2ab5c6c7594da576832f0": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "9637dc816aa74e7bb44b2ab1977c81cb8ef89dc98aa9bf0f826919449bf0e277": {
+      "kind": "internal_preference",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "b5fa8a4c42bebeede37caa041773561c53f6b7f0c41975a535513c611e33dc3e": {
+      "kind": "internal_preference",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "02741c3daf0ae5bd32013dbe57aca8ebb1241185da7fd2336459f2db3da90ca9": {
+      "kind": "internal_preference",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "67eb5d7c2cf4b0342684347ffde68295811733053817a698bbd81932337453ca": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "9e80e0650daa946d8352ab692d3d38602da3c777857fecb69b24c520b7ee7ba8": {
+      "kind": "coalition_scenario",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "024bf3eb37b35fe2922aec5828eefaf9b3fe5f00f52dd38b91a4c0d6c0b7b99a": {
+      "kind": "internal_preference",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "ea35e24517fe2f66b2660ff97523f1f516765fd1fa5477ed9966e08b64053769": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "7845801720fc2dfea58712632eae737156b624665fc0bc0678a275477023f049": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 19.4
+    },
+    "15081c7daf4f03a519b7fb7922b5e8eacde6721b80b83094cbee8e0a5f31f26b": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 10.4
+    },
+    "79118a214fa63481ab4485d8eccda37cb9405252f96266515c245e7b51a9faeb": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "93ef1614f1521a68428fd0f14ffbf142d213ec71fc44dacdd6c43ab2b23677b8": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 10.9
+    },
+    "6517381a6f17bdbd2035017e733ab86e1b4b19d5abb5fb82504f70542411455b": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 10.9
+    },
+    "6e216afc259a838adc320cc5eca803424186567b822109244251b50fdf5f63fe": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "44a310b9da63506b9464766a6a3e70bced20f721707e202c591df30b73bf94b8": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 7.7
+    },
+    "e74ced500352981effec5986605743a17ae51b51774387ce708d154ccac0c094": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 7.6
+    },
+    "eb9637c90b6a1cb845588487e4c122e13a6069c9b6d1807742fc37d60af4be9d": {
+      "kind": "approval",
+      "reference_only": false,
+      "note": "Aprobación de gestión; no equivale a opinión favorable ni preferencia electoral."
+    },
+    "83aacd7dd0303bca220914d6ff8d0b2bd7c1ecd7f7f1c4d6c2fb57afa57edfb1": {
+      "kind": "approval",
+      "reference_only": false,
+      "note": "Aprobación de gestión; no equivale a opinión favorable ni preferencia electoral."
+    },
+    "8fd17c27bd416560078c9f0fbec8b3e9a72b17020cafff61e1b8ad1417b2b1d0": {
+      "kind": "approval",
+      "reference_only": false,
+      "note": "Aprobación de gestión; no equivale a opinión favorable ni preferencia electoral."
+    },
+    "7273f3e1ba6d35e974de104d447b5f321a79be999334e454e470194e40379cb5": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "179863904cbab09af082709db42f08510a9a878c52edbb30ce13cc11844c72be": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "cf0477633bd289d4ada4b1e12148499cabceedfc9bc409f092daaedc575e7d57": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "587ca94e2f5a5ae54af322999ed1a3a319b2366edf93bd9a3c09a91baf22317d": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "1fa18144c8e963ab8d6005b2ac8ce0a10db09351dc44968e4298e7475d74e97a": {
+      "kind": "party_preference",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "4e19b3620c3af4b7df0a1087cc327d03584ac0ab53a48fa4216893f99dbe64d7": {
+      "kind": "hypothetical_matchup",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "1e71501b6be736d92df99bcc92b14038d40289d082599fcb11670bd4af76b1c1": {
+      "kind": "context",
+      "reference_only": true,
+      "note": "Referencia con metodología incompleta o no acreditada; no alimentar tarjetas numéricas."
+    },
+    "85d234a580d29bd10eff16fe74ad1695fef4752968afa142dc4b1f1cf8f9bf03": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa. Reactivos del mismo levantamiento; no contar como dos estudios independientes."
+    },
+    "66e0d1ae26d46c8e136ab0758b226a11ba64d0f16c0c2ef5f41e7455419fa3a4": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "283ee27139cb2c867928b8975cbd778f158e84b8030c6b8ea22bb9ce646b856a": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa.",
+      "indecision_pct": 7.7
+    },
+    "2158bbd99dc4c7bb888d2f61c5ecd649880e3ed2e0569c710244afc0fa2099b6": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    },
+    "d7f9003c4a53354f14482cb84b5c73800c894203b78ed41820aee9cbf54c83e2": {
+      "kind": "hypothetical_matchup",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa. Reactivos del mismo levantamiento; no contar como dos estudios independientes.",
+      "indecision_pct": 9.7
+    },
+    "64d5b648582cdac1b731222c2e048dd8f643d8510eedbc1b00331b97ec031266": {
+      "kind": "internal_preference",
+      "reference_only": false,
+      "note": "Clasificación del registro existente por su nombre y notas; conservar escenario, metodología y límites de la fuente. No es validación externa."
+    }
+  }
+}

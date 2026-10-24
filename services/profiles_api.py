@@ -9,11 +9,11 @@ class ProfileAPIError(ValueError):
         self.status_code=status_code
 
 
-def request(method,path,token,payload=None,binary=False):
+def request(method,path,token,payload=None,binary=False,timeout=15):
     base=(get_setting('API_BASE_URL') or 'http://127.0.0.1:8000').rstrip('/')
     try:
         response=requests.request(method,base+'/api/v1'+path,
-                                  headers={'Authorization':'Bearer '+token},json=payload,timeout=15,
+                                  headers={'Authorization':'Bearer '+token},json=payload,timeout=timeout,
                                   allow_redirects=False)
     except requests.RequestException:
         raise ProfileAPIError('No se pudo conectar con la API. Comprueba que FastAPI esté encendido.') from None

@@ -12,7 +12,7 @@ from backend.config import setting
 from backend.database import connect
 from backend.telegram import issue_code, process_message, process_callback
 
-app = FastAPI(title='Go2Win API', version='0.14.0', description='API de Go2Win: perfiles, usuarios, operación Telegram, Planes de acción y cuestionarios de campo con indicadores. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.')
+app = FastAPI(title='Go2Win API', version='0.19.0', description='API de Go2Win: dashboard de 45 variables con INEGI, encuestas y expedientes existentes, motor de indicadores electorales, base histórica con migración trazable de cargas anteriores, perfiles, usuarios, operación Telegram, Planes de acción y cuestionarios de campo. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.')
 admin_header = APIKeyHeader(name='X-API-Key', auto_error=False)
 telegram_header = APIKeyHeader(name='X-Telegram-Bot-Api-Secret-Token', auto_error=False)
 
@@ -249,6 +249,14 @@ from backend.operations import router as operations_router
 app.include_router(operations_router)
 from backend.surveys import router as surveys_router
 app.include_router(surveys_router)
+from backend.history import router as history_router
+app.include_router(history_router)
+from backend.indicators import router as indicators_router
+app.include_router(indicators_router)
+from backend.indicator_dashboard import router as indicator_dashboard_router
+app.include_router(indicator_dashboard_router)
+from backend.dashboard_research import router as dashboard_research_router
+app.include_router(dashboard_research_router)
 
 
 @app.exception_handler(RequestValidationError)
