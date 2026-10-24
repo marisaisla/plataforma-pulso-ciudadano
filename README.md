@@ -1,6 +1,26 @@
 # Plataforma Pulso Ciudadano - Etapa 1 local
 
+El **Dashboard de indicadores** presenta las 45 variables con sus estados, cuatro
+indicadores exploratorios y series INEGI existentes, consultadas por API. Se encuentra
+en el bloque de diagnóstico y requiere administrador. Ver [guía del dashboard](backend/DASHBOARD.md).
+La pestaña **Encuestas y expediente** conecta además las mediciones, cargos, documentos y
+evidencias existentes por perfil, distinguiendo porcentajes reportados de puntuaciones de viabilidad.
+
 Primera base local de la plataforma integrada. No modifica las bases de los Pulsos existentes ni usa servicios de nube.
+
+## Base histórica electoral
+
+La rama de desarrollo incorpora la Fase 1 del modelo de inteligencia electoral: catálogos
+geográficos versionados, elecciones y cargas de resultados con fuente, validación y revisiones.
+La pantalla **Base histórica electoral** utiliza FastAPI y requiere administrador.
+Aplicar `python -m backend.migrate_history` con el entorno del proyecto antes de usarla.
+La instalación crea una base vacía; las cifras oficiales deben obtenerse, revisarse y cargarse.
+Consultar [la guía de base histórica](backend/HISTORY.md) y [el README del backend](backend/README.md).
+
+La **Fase 2 — Motor de indicadores** añade catálogo, fórmulas electorales, controles de calidad,
+comparaciones documentadas, tablas y gráficas por API. Abrir **Motor de indicadores** en el
+bloque de diagnóstico; consultar [INDICATORS.md](backend/INDICATORS.md). No modifica las
+cargas anteriores y las explora únicamente con reconocimiento explícito de su estado.
 
 ## Ejecutar
 

@@ -1,0 +1,532 @@
+{
+  "info": {
+    "name": "Go2Win API - Base histórica electoral",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Fase 1. Requiere migración y administrador. Completar source_json, election_json y CSV UTF-8 según backend/HISTORY.md. Los datos no se descargan ni certifican automáticamente. No ejecutar toda la colección sobre datos reales. Las escrituras persisten en PostgreSQL."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "geography_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "election_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "import_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "geography_version",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "geography_valid_on",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "geography_csv",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "results_csv",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "source_json",
+      "value": "{\n  \"authority\": \"\",\n  \"url\": \"\",\n  \"title\": \"\",\n  \"published_on\": \"\",\n  \"retrieved_on\": \"\",\n  \"cutoff_on\": \"\",\n  \"version\": \"\",\n  \"stage\": \"official_computation\",\n  \"methodology\": \"\"\n}",
+      "type": "string"
+    },
+    {
+      "key": "election_json",
+      "value": "{\n  \"code\": \"\",\n  \"name\": \"\",\n  \"election_date\": \"\",\n  \"jurisdiction\": \"local\",\n  \"office\": \"\",\n  \"principle\": \"MR\",\n  \"process\": \"ordinary\",\n  \"entity_code\": \"\"\n}",
+      "type": "string"
+    },
+    {
+      "key": "level",
+      "value": "section",
+      "type": "string"
+    },
+    {
+      "key": "vote_basis",
+      "value": "candidacy",
+      "type": "string"
+    },
+    {
+      "key": "coverage_note",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "supersedes_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "after",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_run_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_source_table",
+      "value": "territorial_election_results",
+      "type": "string"
+    },
+    {
+      "key": "legacy_source_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_status",
+      "value": "pending",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Login administrador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{{history_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set(\"history_body\", JSON.stringify({username:pm.collectionVariables.get(\"username\"),password:pm.collectionVariables.get(\"password\")}));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if ([200,201].includes(pm.response.code)) pm.collectionVariables.set(\"access_token\", pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Consultar catálogos geográficos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/geographies"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Registrar catálogo geográfico",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/history/geographies",
+        "body": {
+          "mode": "raw",
+          "raw": "{{history_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "const v = k => pm.collectionVariables.get(k);",
+              "const source = JSON.parse(v(\"source_json\")); source.stage = \"geography\";",
+              "pm.variables.set(\"history_body\", JSON.stringify({version:v(\"geography_version\"),valid_on:v(\"geography_valid_on\"),source,csv_content:v(\"geography_csv\")}));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if ([200,201].includes(pm.response.code)) pm.collectionVariables.set(\"geography_id\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Consultar catálogo y fuente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/geographies/{{geography_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Consultar unidades",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/geographies/{{geography_id}}/units?level={{level}}&after={{after}}&limit=100"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Registrar elección",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/history/elections",
+        "body": {
+          "mode": "raw",
+          "raw": "{{history_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "pm.variables.set(\"history_body\", JSON.stringify(JSON.parse(pm.collectionVariables.get(\"election_json\"))));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if ([200,201].includes(pm.response.code)) pm.collectionVariables.set(\"election_id\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Consultar elecciones",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/elections"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Validar resultados sin guardar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/history/imports/preview",
+        "body": {
+          "mode": "raw",
+          "raw": "{{history_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "const v = k => pm.collectionVariables.get(k);",
+              "pm.variables.set(\"history_body\", JSON.stringify({election_id:Number(v(\"election_id\")),geography_id:Number(v(\"geography_id\")),level:v(\"level\"),vote_basis:v(\"vote_basis\"),source:JSON.parse(v(\"source_json\")),coverage_note:v(\"coverage_note\"),supersedes_id:v(\"supersedes_id\") ? Number(v(\"supersedes_id\")) : null,csv_content:v(\"results_csv\")}));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Guardar lote de resultados",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/history/imports",
+        "body": {
+          "mode": "raw",
+          "raw": "{{history_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "const v = k => pm.collectionVariables.get(k);",
+              "pm.variables.set(\"history_body\", JSON.stringify({election_id:Number(v(\"election_id\")),geography_id:Number(v(\"geography_id\")),level:v(\"level\"),vote_basis:v(\"vote_basis\"),source:JSON.parse(v(\"source_json\")),coverage_note:v(\"coverage_note\"),supersedes_id:v(\"supersedes_id\") ? Number(v(\"supersedes_id\")) : null,csv_content:v(\"results_csv\")}));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if ([200,201].includes(pm.response.code)) pm.collectionVariables.set(\"import_id\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Consultar historial de lotes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/imports?election_id={{election_id}}&limit=50"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Consultar lote fuente y CSV",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/imports/{{import_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Consultar resultados del lote",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/imports/{{import_id}}/results?after={{after}}&limit=100"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Respuesta correcta\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Consultar migraciones anteriores",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/legacy/runs"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200 && pm.response.json().length) pm.collectionVariables.set(\"legacy_run_id\", pm.response.json()[0].id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Consultar conciliación de migración",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/legacy/runs/{{legacy_run_id}}"
+      }
+    },
+    {
+      "name": "15 Consultar originales y pendientes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/legacy/runs/{{legacy_run_id}}/records?status={{legacy_status}}&limit=50&after={{after}}"
+      }
+    },
+    {
+      "name": "16 Consultar original completo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/history/legacy/runs/{{legacy_run_id}}/records/{{legacy_source_table}}/{{legacy_source_id}}"
+      }
+    }
+  ]
+}

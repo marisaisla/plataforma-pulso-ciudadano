@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Go2Win API",
-    "description": "API de Go2Win: perfiles, usuarios, operación Telegram, Planes de acción y cuestionarios de campo con indicadores. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.",
-    "version": "0.14.0"
+    "description": "API de Go2Win: dashboard de 45 variables con INEGI, encuestas y expedientes existentes, motor de indicadores electorales, base histórica con migración trazable de cargas anteriores, perfiles, usuarios, operación Telegram, Planes de acción y cuestionarios de campo. Las pantallas consultan y guardan vía HTTP; PostgreSQL y los permisos se administran en el backend.",
+    "version": "0.19.0"
   },
   "paths": {
     "/api/v1/health": {
@@ -2322,6 +2322,1430 @@
           }
         }
       }
+    },
+    "/api/v1/history/geographies": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Geographies",
+        "operationId": "geographies_api_v1_history_geographies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GeographyOut"
+                  },
+                  "type": "array",
+                  "title": "Response Geographies Api V1 History Geographies Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Create Geography",
+        "operationId": "create_geography_api_v1_history_geographies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeographyImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeographySaved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/history/geographies/{geography_id}": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Geography Detail",
+        "operationId": "geography_detail_api_v1_history_geographies__geography_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "geography_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Geography Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeographyDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/geographies/{geography_id}/units": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Units",
+        "operationId": "units_api_v1_history_geographies__geography_id__units_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "geography_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Geography Id"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "entity",
+                    "municipality",
+                    "federal_district",
+                    "local_district",
+                    "section"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "name": "entity_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Code"
+            }
+          },
+          {
+            "name": "municipality_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Municipality Code"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/elections": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Elections",
+        "operationId": "elections_api_v1_history_elections_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ElectionOut"
+                  },
+                  "type": "array",
+                  "title": "Response Elections Api V1 History Elections Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Create Election",
+        "operationId": "create_election_api_v1_history_elections_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/history/imports/preview": {
+      "post": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Preview",
+        "operationId": "preview_api_v1_history_imports_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/history/imports": {
+      "post": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Import Results",
+        "operationId": "import_results_api_v1_history_imports_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportSaved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Imports",
+        "operationId": "imports_api_v1_history_imports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "election_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Election Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportOut"
+                  },
+                  "title": "Response Imports Api V1 History Imports Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/imports/{import_id}": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Import Detail",
+        "operationId": "import_detail_api_v1_history_imports__import_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Import Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/imports/{import_id}/results": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Results",
+        "operationId": "results_api_v1_history_imports__import_id__results_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Import Id"
+            }
+          },
+          {
+            "name": "entity_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Code"
+            }
+          },
+          {
+            "name": "unit_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unit Code"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/legacy/runs": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Legacy Runs",
+        "operationId": "legacy_runs_api_v1_history_legacy_runs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/legacy/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Legacy Run",
+        "operationId": "legacy_run_api_v1_history_legacy_runs__run_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/legacy/runs/{run_id}/records": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Legacy Records",
+        "operationId": "legacy_records_api_v1_history_legacy_runs__run_id__records_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/legacy/runs/{run_id}/records/{source_table}/{source_id}": {
+      "get": {
+        "tags": [
+          "Base histórica electoral"
+        ],
+        "summary": "Legacy Record",
+        "operationId": "legacy_record_api_v1_history_legacy_runs__run_id__records__source_table___source_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "source_table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Table"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/catalog": {
+      "get": {
+        "tags": [
+          "Indicadores electorales"
+        ],
+        "summary": "Definitions",
+        "operationId": "definitions_api_v1_indicators_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/indicators/datasets": {
+      "get": {
+        "tags": [
+          "Indicadores electorales"
+        ],
+        "summary": "Datasets",
+        "operationId": "datasets_api_v1_indicators_datasets_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "election_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Election Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetOut"
+                  },
+                  "title": "Response Datasets Api V1 Indicators Datasets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/datasets/{import_id}/options": {
+      "get": {
+        "tags": [
+          "Indicadores electorales"
+        ],
+        "summary": "Options",
+        "operationId": "options_api_v1_indicators_datasets__import_id__options_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Import Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OptionOut"
+                  },
+                  "title": "Response Options Api V1 Indicators Datasets  Import Id  Options Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/evaluate": {
+      "post": {
+        "tags": [
+          "Indicadores electorales"
+        ],
+        "summary": "Evaluation",
+        "operationId": "evaluation_api_v1_indicators_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Selection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/indicators/compare": {
+      "post": {
+        "tags": [
+          "Indicadores electorales"
+        ],
+        "summary": "Comparison",
+        "operationId": "comparison_api_v1_indicators_compare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Comparison"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/indicators/dashboard/cards": {
+      "get": {
+        "tags": [
+          "Dashboard de indicadores"
+        ],
+        "summary": "Cards",
+        "operationId": "cards_api_v1_indicators_dashboard_cards_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardsOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/indicators/dashboard/inegi/options": {
+      "get": {
+        "tags": [
+          "Dashboard de indicadores"
+        ],
+        "summary": "Options",
+        "operationId": "options_api_v1_indicators_dashboard_inegi_options_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptionsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/dashboard/inegi": {
+      "get": {
+        "tags": [
+          "Dashboard de indicadores"
+        ],
+        "summary": "Observations",
+        "operationId": "observations_api_v1_indicators_dashboard_inegi_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "title": "State"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Period"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "title": "Source"
+            }
+          },
+          {
+            "name": "family",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "IT10",
+                "IT11",
+                "IT12",
+                "IT13"
+              ],
+              "type": "string",
+              "title": "Family"
+            }
+          },
+          {
+            "name": "municipality_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 20
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Municipality Code"
+            }
+          },
+          {
+            "name": "indicator_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Indicator Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/dashboard/research": {
+      "get": {
+        "tags": [
+          "Dashboard de indicadores"
+        ],
+        "summary": "Research",
+        "operationId": "research_api_v1_indicators_dashboard_research_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "exclusiveMinimum": 0,
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2538,6 +3962,116 @@
         ],
         "title": "Callback"
       },
+      "Card": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "family": {
+            "type": "string",
+            "title": "Family"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "availability": {
+            "type": "string",
+            "title": "Availability"
+          },
+          "evidence": {
+            "type": "string",
+            "title": "Evidence"
+          },
+          "display": {
+            "type": "string",
+            "title": "Display"
+          },
+          "missing": {
+            "type": "string",
+            "title": "Missing"
+          },
+          "engine_support": {
+            "type": "string",
+            "title": "Engine Support"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "family",
+          "name",
+          "unit",
+          "formula",
+          "availability",
+          "evidence",
+          "display",
+          "missing",
+          "engine_support"
+        ],
+        "title": "Card"
+      },
+      "CardsOut": {
+        "properties": {
+          "reviewed_on": {
+            "type": "string",
+            "title": "Reviewed On"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reviewed_on",
+          "note",
+          "items"
+        ],
+        "title": "CardsOut"
+      },
+      "CatalogOut": {
+        "properties": {
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "catalog_version": {
+            "type": "string",
+            "title": "Catalog Version"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IndicatorDefinition"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "engine_version",
+          "catalog_version",
+          "items"
+        ],
+        "title": "CatalogOut"
+      },
       "Chat": {
         "properties": {
           "id": {
@@ -2563,6 +4097,73 @@
           "type"
         ],
         "title": "Chat"
+      },
+      "Coalition": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "scenario_name": {
+            "type": "string",
+            "title": "Scenario Name"
+          },
+          "parties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parties"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "scenario_name",
+          "status"
+        ],
+        "title": "Coalition"
       },
       "CodeResult": {
         "properties": {
@@ -2592,6 +4193,757 @@
         ],
         "title": "CodeResult"
       },
+      "Comparison": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/Selection"
+          },
+          "b": {
+            "$ref": "#/components/schemas/Selection"
+          },
+          "coverage_mode": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "intersection"
+            ],
+            "title": "Coverage Mode",
+            "default": "exact"
+          },
+          "option_mapping": {
+            "items": {
+              "$ref": "#/components/schemas/OptionMatch"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Option Mapping"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "a",
+          "b"
+        ],
+        "title": "Comparison"
+      },
+      "ComparisonOut": {
+        "properties": {
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "catalog_version": {
+            "type": "string",
+            "title": "Catalog Version"
+          },
+          "request": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Provenance"
+          },
+          "comparability": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Comparability"
+          },
+          "summary": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "object",
+            "title": "Summary"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UnitComparison"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "engine_version",
+          "catalog_version",
+          "request",
+          "provenance",
+          "comparability",
+          "summary",
+          "items",
+          "next_after"
+        ],
+        "title": "ComparisonOut"
+      },
+      "DatasetOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "election_id": {
+            "type": "integer",
+            "title": "Election Id"
+          },
+          "geography_id": {
+            "type": "integer",
+            "title": "Geography Id"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "vote_basis": {
+            "type": "string",
+            "title": "Vote Basis"
+          },
+          "source_stage": {
+            "type": "string",
+            "title": "Source Stage"
+          },
+          "coverage_note": {
+            "type": "string",
+            "title": "Coverage Note"
+          },
+          "election_name": {
+            "type": "string",
+            "title": "Election Name"
+          },
+          "election_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Election Date"
+          },
+          "legacy_election_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Election Year"
+          },
+          "geography_version": {
+            "type": "string",
+            "title": "Geography Version"
+          },
+          "valid_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid On"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "election_id",
+          "geography_id",
+          "level",
+          "vote_basis",
+          "source_stage",
+          "coverage_note",
+          "election_name",
+          "election_date",
+          "legacy_election_year",
+          "geography_version",
+          "valid_on",
+          "units",
+          "superseded_by"
+        ],
+        "title": "DatasetOut"
+      },
+      "Document": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "imported_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imported At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "document_type"
+        ],
+        "title": "Document"
+      },
+      "ElectionCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "election_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Election Date"
+          },
+          "jurisdiction": {
+            "type": "string",
+            "enum": [
+              "federal",
+              "local"
+            ],
+            "title": "Jurisdiction"
+          },
+          "office": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Office"
+          },
+          "principle": {
+            "type": "string",
+            "enum": [
+              "MR",
+              "RP",
+              "NA"
+            ],
+            "title": "Principle"
+          },
+          "process": {
+            "type": "string",
+            "enum": [
+              "ordinary",
+              "extraordinary"
+            ],
+            "title": "Process"
+          },
+          "entity_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "election_date",
+          "jurisdiction",
+          "office",
+          "principle",
+          "process"
+        ],
+        "title": "ElectionCreate"
+      },
+      "ElectionOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "election_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Election Date"
+          },
+          "jurisdiction": {
+            "type": "string",
+            "title": "Jurisdiction"
+          },
+          "office": {
+            "type": "string",
+            "title": "Office"
+          },
+          "principle": {
+            "type": "string",
+            "title": "Principle"
+          },
+          "process": {
+            "type": "string",
+            "title": "Process"
+          },
+          "entity_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Code"
+          },
+          "legacy_election_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Election Year"
+          },
+          "legacy_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Note"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "election_date",
+          "jurisdiction",
+          "office",
+          "principle",
+          "process",
+          "entity_code",
+          "id",
+          "created_by",
+          "created_at"
+        ],
+        "title": "ElectionOut"
+      },
+      "EvaluationOut": {
+        "properties": {
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "catalog_version": {
+            "type": "string",
+            "title": "Catalog Version"
+          },
+          "request": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Provenance"
+          },
+          "coverage": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Coverage"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "summary": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "object",
+            "title": "Summary"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UnitIndicators"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "engine_version",
+          "catalog_version",
+          "request",
+          "provenance",
+          "coverage",
+          "warnings",
+          "summary",
+          "items",
+          "next_after"
+        ],
+        "title": "EvaluationOut"
+      },
+      "Evidence": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "variable_code": {
+            "type": "string",
+            "title": "Variable Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "evidence_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Note"
+          },
+          "source_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Label"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "reference_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Date"
+          },
+          "related_cards": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Related Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "variable_code",
+          "status",
+          "related_cards"
+        ],
+        "title": "Evidence"
+      },
+      "GeographyDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "valid_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid On"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "content_sha256": {
+            "type": "string",
+            "title": "Content Sha256"
+          },
+          "csv_content": {
+            "type": "string",
+            "title": "Csv Content"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "valid_on",
+          "source",
+          "content_sha256",
+          "csv_content",
+          "created_by",
+          "created_at"
+        ],
+        "title": "GeographyDetail"
+      },
+      "GeographyImport": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Version"
+          },
+          "valid_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid On"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "csv_content": {
+            "type": "string",
+            "maxLength": 5000000,
+            "minLength": 1,
+            "title": "Csv Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "valid_on",
+          "source",
+          "csv_content"
+        ],
+        "title": "GeographyImport"
+      },
+      "GeographyOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "valid_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid On"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "content_sha256": {
+            "type": "string",
+            "title": "Content Sha256"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "valid_on",
+          "source",
+          "content_sha256",
+          "created_at",
+          "units"
+        ],
+        "title": "GeographyOut"
+      },
+      "GeographySaved": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Levels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "duplicate",
+          "units"
+        ],
+        "title": "GeographySaved"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2604,6 +4956,338 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "election_id": {
+            "type": "integer",
+            "title": "Election Id"
+          },
+          "geography_id": {
+            "type": "integer",
+            "title": "Geography Id"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "entity",
+              "municipality",
+              "federal_district",
+              "local_district",
+              "section"
+            ],
+            "title": "Level"
+          },
+          "vote_basis": {
+            "type": "string",
+            "enum": [
+              "party",
+              "candidacy",
+              "ballot_combination",
+              "legacy_reported"
+            ],
+            "title": "Vote Basis"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "content_sha256": {
+            "type": "string",
+            "title": "Content Sha256"
+          },
+          "coverage_note": {
+            "type": "string",
+            "title": "Coverage Note"
+          },
+          "supersedes_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes Id"
+          },
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          },
+          "csv_content": {
+            "type": "string",
+            "title": "Csv Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "election_id",
+          "geography_id",
+          "level",
+          "vote_basis",
+          "source",
+          "content_sha256",
+          "coverage_note",
+          "supersedes_id",
+          "created_by",
+          "created_at",
+          "fingerprint",
+          "csv_content"
+        ],
+        "title": "ImportDetail"
+      },
+      "ImportOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "election_id": {
+            "type": "integer",
+            "title": "Election Id"
+          },
+          "geography_id": {
+            "type": "integer",
+            "title": "Geography Id"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "entity",
+              "municipality",
+              "federal_district",
+              "local_district",
+              "section"
+            ],
+            "title": "Level"
+          },
+          "vote_basis": {
+            "type": "string",
+            "enum": [
+              "party",
+              "candidacy",
+              "ballot_combination",
+              "legacy_reported"
+            ],
+            "title": "Vote Basis"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "content_sha256": {
+            "type": "string",
+            "title": "Content Sha256"
+          },
+          "coverage_note": {
+            "type": "string",
+            "title": "Coverage Note"
+          },
+          "supersedes_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes Id"
+          },
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "election_id",
+          "geography_id",
+          "level",
+          "vote_basis",
+          "source",
+          "content_sha256",
+          "coverage_note",
+          "supersedes_id",
+          "created_by",
+          "created_at"
+        ],
+        "title": "ImportOut"
+      },
+      "ImportSaved": {
+        "properties": {
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "vote_rows": {
+            "type": "integer",
+            "title": "Vote Rows"
+          },
+          "content_sha256": {
+            "type": "string",
+            "title": "Content Sha256"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "duplicate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Id"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "units",
+          "vote_rows",
+          "content_sha256",
+          "warnings",
+          "duplicate_id",
+          "id",
+          "duplicate"
+        ],
+        "title": "ImportSaved"
+      },
+      "IndicatorDefinition": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "family": {
+            "type": "string",
+            "enum": [
+              "IC",
+              "IP",
+              "IT"
+            ],
+            "title": "Family"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "required_inputs": {
+            "type": "string",
+            "title": "Required Inputs"
+          },
+          "engine_support": {
+            "type": "string",
+            "enum": [
+              "single",
+              "comparison",
+              "pending_inputs"
+            ],
+            "title": "Engine Support"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "geographic_levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Geographic Levels"
+          },
+          "periodicity": {
+            "type": "string",
+            "title": "Periodicity"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "family",
+          "name",
+          "definition",
+          "formula",
+          "unit",
+          "required_inputs",
+          "engine_support",
+          "version",
+          "geographic_levels",
+          "periodicity",
+          "source_type"
+        ],
+        "title": "IndicatorDefinition"
       },
       "Login": {
         "properties": {
@@ -2742,6 +5426,348 @@
         ],
         "title": "Message"
       },
+      "Metric": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "computed",
+              "proxy",
+              "unavailable",
+              "blocked",
+              "series"
+            ],
+            "title": "Status"
+          },
+          "numerator": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numerator"
+          },
+          "denominator": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Denominator"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "status"
+        ],
+        "title": "Metric"
+      },
+      "Municipality": {
+        "properties": {
+          "municipality_code": {
+            "type": "string",
+            "title": "Municipality Code"
+          },
+          "municipality": {
+            "type": "string",
+            "title": "Municipality"
+          }
+        },
+        "type": "object",
+        "required": [
+          "municipality_code",
+          "municipality"
+        ],
+        "title": "Municipality"
+      },
+      "Observation": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "family": {
+            "type": "string",
+            "title": "Family"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "municipality_code": {
+            "type": "string",
+            "title": "Municipality Code"
+          },
+          "municipality": {
+            "type": "string",
+            "title": "Municipality"
+          },
+          "indicator_id": {
+            "type": "string",
+            "title": "Indicator Id"
+          },
+          "indicator_name": {
+            "type": "string",
+            "title": "Indicator Name"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "retrieved_at": {
+            "type": "string",
+            "title": "Retrieved At"
+          },
+          "value_status": {
+            "type": "string",
+            "title": "Value Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "family",
+          "state",
+          "municipality_code",
+          "municipality",
+          "indicator_id",
+          "indicator_name",
+          "unit",
+          "value",
+          "period",
+          "source",
+          "retrieved_at",
+          "value_status"
+        ],
+        "title": "Observation"
+      },
+      "ObservationsOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items",
+          "next_after",
+          "scope"
+        ],
+        "title": "ObservationsOut"
+      },
+      "OptionMatch": {
+        "properties": {
+          "option_a": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_+.-]{1,100}$",
+            "title": "Option A"
+          },
+          "option_b": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_+.-]{1,100}$",
+            "title": "Option B"
+          },
+          "evidence_url": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Evidence Url"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "option_a",
+          "option_b",
+          "evidence_url",
+          "note"
+        ],
+        "title": "OptionMatch"
+      },
+      "OptionOut": {
+        "properties": {
+          "option_code": {
+            "type": "string",
+            "title": "Option Code"
+          },
+          "option_name": {
+            "type": "string",
+            "title": "Option Name"
+          },
+          "units_reported": {
+            "type": "integer",
+            "title": "Units Reported"
+          },
+          "units_with_known_votes": {
+            "type": "integer",
+            "title": "Units With Known Votes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "option_code",
+          "option_name",
+          "units_reported",
+          "units_with_known_votes"
+        ],
+        "title": "OptionOut"
+      },
+      "OptionsOut": {
+        "properties": {
+          "states": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "States"
+          },
+          "municipalities": {
+            "items": {
+              "$ref": "#/components/schemas/Municipality"
+            },
+            "type": "array",
+            "title": "Municipalities"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/Series"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "states",
+          "municipalities",
+          "series",
+          "periods",
+          "sources"
+        ],
+        "title": "OptionsOut"
+      },
       "PasswordChange": {
         "properties": {
           "old_password": {
@@ -2813,6 +5839,67 @@
           "height"
         ],
         "title": "Photo"
+      },
+      "Position": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "office": {
+            "type": "string",
+            "title": "Office"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "party_or_coalition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Or Coalition"
+          },
+          "is_current": {
+            "type": "integer",
+            "title": "Is Current"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "office",
+          "condition",
+          "is_current"
+        ],
+        "title": "Position"
       },
       "PositionCreate": {
         "properties": {
@@ -2937,6 +6024,72 @@
           "is_current"
         ],
         "title": "PositionOut"
+      },
+      "PreviewOut": {
+        "properties": {
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "vote_rows": {
+            "type": "integer",
+            "title": "Vote Rows"
+          },
+          "content_sha256": {
+            "type": "string",
+            "title": "Content Sha256"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "duplicate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "units",
+          "vote_rows",
+          "content_sha256",
+          "warnings",
+          "duplicate_id"
+        ],
+        "title": "PreviewOut"
+      },
+      "Profile": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "active"
+        ],
+        "title": "Profile"
       },
       "ProfileActive": {
         "properties": {
@@ -3194,6 +6347,126 @@
         ],
         "title": "Rename"
       },
+      "ReportedMetric": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "source_field": {
+            "type": "string",
+            "title": "Source Field"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "status",
+          "reason",
+          "source_field"
+        ],
+        "title": "ReportedMetric"
+      },
+      "ResearchOut": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "reviewed_on": {
+            "type": "string",
+            "title": "Reviewed On"
+          },
+          "surveys": {
+            "items": {
+              "$ref": "#/components/schemas/SurveyOut"
+            },
+            "type": "array",
+            "title": "Surveys"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            },
+            "type": "array",
+            "title": "Positions"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            },
+            "type": "array",
+            "title": "Documents"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "coalitions": {
+            "items": {
+              "$ref": "#/components/schemas/Coalition"
+            },
+            "type": "array",
+            "title": "Coalitions"
+          },
+          "totals": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Totals"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "reviewed_on",
+          "surveys",
+          "positions",
+          "documents",
+          "evidence",
+          "coalitions",
+          "totals",
+          "truncated",
+          "warnings"
+        ],
+        "title": "ResearchOut"
+      },
       "ResponseWrite": {
         "properties": {
           "assignment_generation": {
@@ -3249,6 +6522,255 @@
         ],
         "title": "ResponseWrite"
       },
+      "ResultImport": {
+        "properties": {
+          "election_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Election Id"
+          },
+          "geography_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Geography Id"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "entity",
+              "municipality",
+              "federal_district",
+              "local_district",
+              "section"
+            ],
+            "title": "Level"
+          },
+          "vote_basis": {
+            "type": "string",
+            "enum": [
+              "party",
+              "candidacy",
+              "ballot_combination"
+            ],
+            "title": "Vote Basis"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "coverage_note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Coverage Note"
+          },
+          "supersedes_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes Id"
+          },
+          "csv_content": {
+            "type": "string",
+            "maxLength": 5000000,
+            "minLength": 1,
+            "title": "Csv Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "election_id",
+          "geography_id",
+          "level",
+          "vote_basis",
+          "source",
+          "coverage_note",
+          "csv_content"
+        ],
+        "title": "ResultImport"
+      },
+      "ResultOut": {
+        "properties": {
+          "import_id": {
+            "type": "integer",
+            "title": "Import Id"
+          },
+          "unit_code": {
+            "type": "string",
+            "title": "Unit Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "entity_code": {
+            "type": "string",
+            "title": "Entity Code"
+          },
+          "municipality_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Code"
+          },
+          "federal_district_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Federal District Code"
+          },
+          "local_district_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local District Code"
+          },
+          "nominal_list": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nominal List"
+          },
+          "total_votes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Votes"
+          },
+          "null_votes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Null Votes"
+          },
+          "unregistered_votes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unregistered Votes"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/VoteOut"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "import_id",
+          "unit_code",
+          "name",
+          "entity_code",
+          "municipality_code",
+          "federal_district_code",
+          "local_district_code",
+          "nominal_list",
+          "total_votes",
+          "null_votes",
+          "unregistered_votes",
+          "options"
+        ],
+        "title": "ResultOut"
+      },
+      "ResultPage": {
+        "properties": {
+          "import_id": {
+            "type": "integer",
+            "title": "Import Id"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "entity",
+              "municipality",
+              "federal_district",
+              "local_district",
+              "section"
+            ],
+            "title": "Level"
+          },
+          "vote_basis": {
+            "type": "string",
+            "enum": [
+              "party",
+              "candidacy",
+              "ballot_combination",
+              "legacy_reported"
+            ],
+            "title": "Vote Basis"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ResultOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "import_id",
+          "level",
+          "vote_basis",
+          "items",
+          "next_after"
+        ],
+        "title": "ResultPage"
+      },
       "Review": {
         "properties": {
           "decision": {
@@ -3299,6 +6821,98 @@
         ],
         "title": "Scope"
       },
+      "Selection": {
+        "properties": {
+          "import_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Import Id"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "validated",
+              "exploratory"
+            ],
+            "title": "Mode",
+            "default": "validated"
+          },
+          "option_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_+.-]{1,100}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Code"
+          },
+          "denominator": {
+            "type": "string",
+            "enum": [
+              "valid_votes",
+              "emitted_votes"
+            ],
+            "title": "Denominator",
+            "default": "valid_votes"
+          },
+          "participation_proxy": {
+            "type": "boolean",
+            "title": "Participation Proxy",
+            "default": false
+          },
+          "entity_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Code"
+          },
+          "unit_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]{2,6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Code"
+          },
+          "after": {
+            "type": "string",
+            "pattern": "^[0-9]{0,6}$",
+            "title": "After",
+            "default": ""
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 100
+          },
+          "allow_superseded": {
+            "type": "boolean",
+            "title": "Allow Superseded",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "import_id"
+        ],
+        "title": "Selection"
+      },
       "Sender": {
         "properties": {
           "id": {
@@ -3318,6 +6932,135 @@
           "is_bot"
         ],
         "title": "Sender"
+      },
+      "Series": {
+        "properties": {
+          "indicator_id": {
+            "type": "string",
+            "title": "Indicator Id"
+          },
+          "indicator_name": {
+            "type": "string",
+            "title": "Indicator Name"
+          },
+          "family": {
+            "type": "string",
+            "title": "Family"
+          }
+        },
+        "type": "object",
+        "required": [
+          "indicator_id",
+          "indicator_name",
+          "family"
+        ],
+        "title": "Series"
+      },
+      "Source": {
+        "properties": {
+          "authority": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Authority"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "published_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published On"
+          },
+          "retrieved_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Retrieved On"
+          },
+          "cutoff_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff On"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Version"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "geography",
+              "official_computation",
+              "final_judgment",
+              "legacy_snapshot"
+            ],
+            "title": "Stage"
+          },
+          "methodology": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Methodology"
+          },
+          "legacy_source_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Source Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "authority",
+          "url",
+          "title",
+          "published_on",
+          "retrieved_on",
+          "cutoff_on",
+          "version",
+          "stage",
+          "methodology"
+        ],
+        "title": "Source"
       },
       "SurveyAssignment": {
         "properties": {
@@ -3341,6 +7084,153 @@
           "questionnaire_id"
         ],
         "title": "SurveyAssignment"
+      },
+      "SurveyOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "profile_id": {
+            "type": "integer",
+            "title": "Profile Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "pollster": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pollster"
+          },
+          "territory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Territory"
+          },
+          "fieldwork_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fieldwork Date"
+          },
+          "sample_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Size"
+          },
+          "methodology": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Methodology"
+          },
+          "profile_result_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Result Pct"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "classification_status": {
+            "type": "string",
+            "title": "Classification Status"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          },
+          "metadata_missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Metadata Missing"
+          },
+          "review_note": {
+            "type": "string",
+            "title": "Review Note"
+          },
+          "indicators": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ReportedMetric"
+            },
+            "type": "object",
+            "title": "Indicators"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profile_id",
+          "name",
+          "kind",
+          "classification_status",
+          "fingerprint",
+          "metadata_missing",
+          "review_note",
+          "indicators"
+        ],
+        "title": "SurveyOut"
       },
       "TaskPage": {
         "properties": {
@@ -3462,6 +7352,179 @@
           "generation"
         ],
         "title": "TaskResult"
+      },
+      "UnitComparison": {
+        "properties": {
+          "unit_code": {
+            "type": "string",
+            "title": "Unit Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "object",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_code",
+          "name",
+          "metrics"
+        ],
+        "title": "UnitComparison"
+      },
+      "UnitIndicators": {
+        "properties": {
+          "unit_code": {
+            "type": "string",
+            "title": "Unit Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "object",
+            "title": "Metrics"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "reported_options": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Reported Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_code",
+          "name",
+          "metrics",
+          "warnings",
+          "reported_options"
+        ],
+        "title": "UnitIndicators"
+      },
+      "UnitOut": {
+        "properties": {
+          "geography_id": {
+            "type": "integer",
+            "title": "Geography Id"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "entity",
+              "municipality",
+              "federal_district",
+              "local_district",
+              "section"
+            ],
+            "title": "Level"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "entity_code": {
+            "type": "string",
+            "title": "Entity Code"
+          },
+          "municipality_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Code"
+          },
+          "federal_district_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Federal District Code"
+          },
+          "local_district_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local District Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geography_id",
+          "level",
+          "code",
+          "name",
+          "entity_code",
+          "municipality_code",
+          "federal_district_code",
+          "local_district_code"
+        ],
+        "title": "UnitOut"
+      },
+      "UnitPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UnitOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "UnitPage"
       },
       "Update": {
         "properties": {
@@ -3758,6 +7821,41 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VoteOut": {
+        "properties": {
+          "unit_code": {
+            "type": "string",
+            "title": "Unit Code"
+          },
+          "option_code": {
+            "type": "string",
+            "title": "Option Code"
+          },
+          "option_name": {
+            "type": "string",
+            "title": "Option Name"
+          },
+          "votes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Votes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_code",
+          "option_code",
+          "option_name",
+          "votes"
+        ],
+        "title": "VoteOut"
       },
       "WorkerCreate": {
         "properties": {

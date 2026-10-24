@@ -1,9 +1,63 @@
 # Go2Win API — backend
 
-Guía del estado actual **0.14.0**. FastAPI concentra el acceso a PostgreSQL y las reglas de
+Guía del estado actual **0.19.0**. FastAPI concentra el acceso a PostgreSQL y las reglas de
 permisos de las funciones migradas: perfiles y elección, administración de usuarios,
 operación de Telegram, Planes de acción y el portal del trabajador.
 El frontend actual sigue siendo Streamlit; React queda como una siguiente etapa.
+
+## Dashboard de las 45 variables
+
+La versión 0.18.0 añade **Dashboard de indicadores** en el bloque de diagnóstico.
+Presenta las 45 fichas con su estado revisado, cuatro cálculos exploratorios y consulta
+de series INEGI existentes por entidad, municipio, periodo y fuente, sin agregar universos
+distintos. Requiere sesión Bearer de administrador y usa únicamente HTTP desde Streamlit.
+No requiere migración SQL ni crea un cubo OLAP.
+
+Consultar [DASHBOARD.md](DASHBOARD.md) y la [matriz revisada](AVAILABILITY_MATRIX.md).
+
+La versión 0.19.0 conecta además encuestas y expedientes existentes mediante
+`GET /api/v1/indicators/dashboard/research?profile_id=...`. Permite seleccionar perfil y
+reactivo, mostrar preferencias e indecisión reportadas cuando tienen clasificación revisada
+y metadatos mínimos, y consultar cargos, documentos, evidencias y escenarios de coalición.
+No mezcla aprobación con preferencia ni convierte puntuaciones de viabilidad en porcentajes.
+
+## Motor de indicadores — Fase 2
+
+La versión 0.17.0 incorpora un catálogo de los 45 indicadores del modelo y un motor para
+16 indicadores electorales, condicionado a insumos, calidad y comparabilidad. Incluye
+fórmulas, numeradores, denominadores, cortes, versiones y huellas reproducibles; faltantes
+sin imputación, promedios ponderados y bloqueos de comparación entre universos distintos.
+
+La pantalla **Motor de indicadores** consulta `/api/v1/indicators` y permite evaluar un lote,
+comparar elecciones con equivalencias documentadas, revisar el catálogo y graficar una página
+de unidades. Las cargas anteriores requieren modo exploratorio explícito y conservan su
+marca de acreditación pendiente. No se modifican resultados, pendientes, perfiles ni visores.
+
+Consultar [INDICATORS.md](INDICATORS.md) para las rutas, fórmulas, fuentes, pruebas y límites.
+Colección: [Go2Win-indicators](postman/Go2Win-indicators.postman_collection.json).
+
+## Base histórica electoral — Fase 1 del modelo de inteligencia
+
+La versión 0.15.0 incorpora catálogos de entidades, municipios, distritos federales/locales
+y secciones con geografía versionada, elecciones y resultados oficiales normalizados.
+Incluye preview de carga, conciliación, preservación de faltantes, fuentes y revisiones,
+API administrativa `/api/v1/history` y pantalla **Base histórica electoral**.
+
+Antes de usarla, aplicar una vez la migración explícita:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.migrate_history
+```
+
+La estructura se crea vacía en `electoral_history`; no se alteran tablas operativas.
+No se incluyen cifras oficiales precargadas. La versión 0.16.0 añade un migrador explícito
+de cargas anteriores con respaldo compartido verificado, archivo íntegro de cada original,
+conciliación exacta, pendientes e idempotencia. No cambia perfiles ni consultas de los visores.
+Las cargas copiadas se identifican como pendientes de acreditación, sin inventar fechas
+ni atribuir automáticamente los votos a partidos o candidaturas.
+Consultar [LEGACY_MIGRATION.md](LEGACY_MIGRATION.md) antes de ejecutar esa copia.
+Consultar [HISTORY.md](HISTORY.md) para el modelo, formatos CSV, fuentes, todas las rutas,
+pruebas y límites. Colección: [Go2Win-history](postman/Go2Win-history.postman_collection.json).
 
 ## Arquitectura y alcance
 

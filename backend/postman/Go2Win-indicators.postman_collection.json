@@ -1,0 +1,266 @@
+{
+  "info": {
+    "name": "Go2Win API - Motor de indicadores electorales",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Fase 2. Solo lectura y cálculo, requiere administrador. Elegir lotes explícitos y revisar cobertura y fuentes. Las cargas anteriores requieren mode=exploratory; siguen sin atribución acreditada y no se desbloquean comparaciones incompatibles. Equivalencias option_a/option_b/evidence_url/note; ver backend/INDICATORS.md."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "datasets_after",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "dataset_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dataset_a",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dataset_b",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mode",
+      "value": "validated",
+      "type": "string"
+    },
+    {
+      "key": "option_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "option_a",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "option_b",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "denominator",
+      "value": "valid_votes",
+      "type": "string"
+    },
+    {
+      "key": "participation_proxy",
+      "value": "false",
+      "type": "string"
+    },
+    {
+      "key": "entity_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "unit_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "after",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "allow_superseded",
+      "value": "false",
+      "type": "string"
+    },
+    {
+      "key": "coverage_mode",
+      "value": "exact",
+      "type": "string"
+    },
+    {
+      "key": "option_mapping",
+      "value": "[]",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Login administrador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{{indicator_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set(\"indicator_body\", JSON.stringify({username:pm.collectionVariables.get(\"username\"),password:pm.collectionVariables.get(\"password\")}));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) pm.collectionVariables.set(\"access_token\", pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Catálogo de 45 indicadores",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/indicators/catalog"
+      },
+      "event": []
+    },
+    {
+      "name": "03 Lotes disponibles",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/indicators/datasets?after={{datasets_after}}&limit=100"
+      },
+      "event": []
+    },
+    {
+      "name": "04 Opciones reportadas en el lote",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/indicators/datasets/{{dataset_id}}/options"
+      },
+      "event": []
+    },
+    {
+      "name": "05 Evaluar indicadores sin escribir",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/indicators/evaluate",
+        "body": {
+          "mode": "raw",
+          "raw": "{{indicator_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "const v=k=>pm.collectionVariables.get(k);",
+              "const selection=(id,option)=>({import_id:Number(v(id)),mode:v(\"mode\"),option_code:v(option)||null,denominator:v(\"denominator\"),participation_proxy:v(\"participation_proxy\")===\"true\",entity_code:v(\"entity_code\")||null,unit_code:v(\"unit_code\")||null,after:v(\"after\")||\"\",limit:100,allow_superseded:v(\"allow_superseded\")===\"true\"});",
+              "pm.variables.set(\"indicator_body\", JSON.stringify(selection(\"dataset_id\",\"option_code\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Comparar elecciones y revisar bloqueos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/indicators/compare",
+        "body": {
+          "mode": "raw",
+          "raw": "{{indicator_body}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "const v=k=>pm.collectionVariables.get(k);",
+              "const selection=(id,option)=>({import_id:Number(v(id)),mode:v(\"mode\"),option_code:v(option)||null,denominator:v(\"denominator\"),participation_proxy:v(\"participation_proxy\")===\"true\",entity_code:v(\"entity_code\")||null,unit_code:v(\"unit_code\")||null,after:v(\"after\")||\"\",limit:100,allow_superseded:v(\"allow_superseded\")===\"true\"});",
+              "",
+              "pm.variables.set(\"indicator_body\", JSON.stringify({a:selection(\"dataset_a\",\"option_a\"),b:selection(\"dataset_b\",\"option_b\"),coverage_mode:v(\"coverage_mode\"),option_mapping:JSON.parse(v(\"option_mapping\"))}));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

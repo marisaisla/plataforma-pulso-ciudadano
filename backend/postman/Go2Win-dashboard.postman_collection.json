@@ -1,0 +1,138 @@
+{
+  "info": {
+    "name": "Go2Win API - Dashboard de indicadores",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Dashboard de 45 variables: datos electorales exploratorios, INEGI y encuestas/expedientes existentes por perfil. Sesión Bearer de administrador. Fuentes, tipos de medición y referencias sin convertir puntuaciones en porcentajes."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "state",
+      "value": ""
+    },
+    {
+      "key": "period",
+      "value": ""
+    },
+    {
+      "key": "source",
+      "value": ""
+    },
+    {
+      "key": "indicator_id",
+      "value": ""
+    },
+    {
+      "key": "family",
+      "value": "IT10"
+    },
+    {
+      "key": "import_id",
+      "value": "1"
+    },
+    {
+      "key": "profile_id",
+      "value": "10"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Las 45 tarjetas y disponibilidad",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/indicators/dashboard/cards"
+      }
+    },
+    {
+      "name": "02 Entidades y series INEGI",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/indicators/dashboard/inegi/options"
+      }
+    },
+    {
+      "name": "03 Opciones de la entidad",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/indicators/dashboard/inegi/options?state={{state}}"
+      }
+    },
+    {
+      "name": "04 Observaciones INEGI",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/indicators/dashboard/inegi?state={{state}}&period={{period}}&source={{source}}&family={{family}}&indicator_id={{indicator_id}}&limit=100"
+      }
+    },
+    {
+      "name": "05 Lotes electorales",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/indicators/datasets?limit=100"
+      }
+    },
+    {
+      "name": "06 Indicadores exploratorios sin proxy",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/indicators/evaluate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"import_id\": {{import_id}},\n  \"mode\": \"exploratory\",\n  \"participation_proxy\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "07 Indicadores exploratorios con proxy",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/indicators/evaluate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"import_id\": {{import_id}},\n  \"mode\": \"exploratory\",\n  \"participation_proxy\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "08 Perfiles para encuestas y expedientes",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/profiles?active_only=true"
+      }
+    },
+    {
+      "name": "09 Encuestas y expediente del perfil",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/indicators/dashboard/research?profile_id={{profile_id}}"
+      }
+    }
+  ]
+}
